@@ -130,3 +130,20 @@ export const instancesOf = (project: Project, mainId: string) => {
   for (const s of project.screens) walkNodes(s, n => n.component === mainId && out.push(n))
   return out
 }
+
+/**
+ * The screen a node shows on when the UI runs: its own, or, for a main component and its
+ * layers (which live on the Components screen), the screen of the first instance.
+ */
+export function liveScreenOf(project: Project, id: string, depth = 0): Screen | undefined {
+  const contains = (n: Node) => {
+    let hit = false
+    walkNodes(n, x => void (hit ||= x.id === id))
+    return hit
+  }
+  const screen = project.screens.find(contains)
+  if (!screen || !isLibrary(screen) || depth > 8) return screen
+  const main = screen.children.find(contains)
+  const instance = main && instancesOf(project, main.id)[0]
+  return instance && liveScreenOf(project, instance.id, depth + 1)
+}

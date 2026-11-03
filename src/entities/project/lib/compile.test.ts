@@ -1,7 +1,8 @@
 import { readFileSync } from "node:fs"
 import { beforeAll, describe, expect, it } from "vitest"
 import { ALIGN, BIND_FLAGS, BIND_STATES, EVENTS, FLEX_ALIGN, FLEX_FLOW, LvglRuntime, SCREEN_LOAD_ANIM, Scene, STYLE_PROPS, WIDGETS, stylePropConst, type Op } from "@/shared/lvgl"
-import { createAnimation, createEmptyProject, createNode, createSampleProject } from "../model/factory"
+import { createInstance, instanceChildId, instancesOf, liveScreenOf, makeComponent } from "../model/components"
+import { createAnimation, createEmptyProject, createNode, createSampleProject, newId } from "../model/factory"
 import { compile, safeFormat } from "./compile"
 
 let rt: LvglRuntime
@@ -143,6 +144,42 @@ describe("timelines", () => {
     const [out, back] = sample([[0, 0], [400, 100]], true, [200, 600])
     expect(Math.abs(out - 50)).toBeLessThan(12)
     expect(Math.abs(back - 50)).toBeLessThan(12)
+  })
+})
+
+describe("timelines on components", () => {
+  it("animate a main component's layer in every instance", () => {
+    const p = createEmptyProject()
+    const [home] = p.screens
+    const card = createNode("container", { name: "card", layout: { x: 0, y: 0, w: 100, h: 60, align: "LV_ALIGN_TOP_LEFT" } })
+    const dot = createNode("label", { name: "dot" })
+    card.children = [dot]
+    home.children = [card]
+    makeComponent(p, card.id)
+    home.children.push(createInstance(p, card.id, "card_2")!)
+    const anim = { ...createAnimation("slide"), autoplay: true }
+    anim.tracks.push({ id: newId(), node: dot.id, prop: "translate_x", keyframes: [{ t: 0, value: 0, easing: "linear" }, { t: 200, value: 40, easing: "linear" }] })
+    p.animations.push(anim)
+    // the main lives on the Components screen, which isn't built: Play starts where the instances are
+    expect(liveScreenOf(p, dot.id)?.id).toBe(home.id)
+
+    const program = compile(p, "play")
+    const display = rt.createDisplay(240, 240)
+    display.makeDefault()
+    const setup = new Scene(rt)
+    setup.run(program.setup)
+    const scene = new Scene(rt, setup)
+    for (const s of program.screens) scene.run(s.ops)
+    scene.run(program.wiring)
+    const copies = instancesOf(p, card.id).map(i => scene.get("obj", instanceChildId(i.id, dot.id))!)
+    const before = copies.map(h => rt.coords(h).x)
+    rt.x.lv_screen_load(scene.screen(0))
+    for (let t = 0; t < 400; t += 33) rt.tick(33)
+    expect(copies.map((h, i) => rt.coords(h).x - before[i])).toEqual([40, 40])
+    display.release()
+    scene.dispose()
+    setup.dispose()
+    display.delete()
   })
 })
 

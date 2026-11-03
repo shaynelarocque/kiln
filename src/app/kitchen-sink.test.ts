@@ -83,6 +83,8 @@ function kitchenSink(): Project {
   const second = createInstance(p, tile.id, "tile_2")!
   second.overrides = { [caption.id]: { props: { text: "Switch" } }, [reading.id]: { variable: on.id } }
   other.children.push(second)
+  // a timeline on a layer of the main runs in both instances
+  p.animations.push({ ...createAnimation("blink"), tracks: [{ id: newId(), node: reading.id, prop: "opa", keyframes: [{ t: 0, value: 255, easing: "linear" }, { t: 300, value: 80, easing: "ease-out" }] }] })
 
   // an imported font at two sizes: on a widget, and through a shared style
   if (existsSync(lato)) {
@@ -143,5 +145,8 @@ describe("a project that uses everything", () => {
     const other = files.find(f => f.path === "src/ui/ui_other.c")!.content
     expect(other).toContain('lv_label_set_text(ui_caption_2, "Switch");')
     expect(other).toContain("lv_label_bind_text(ui_reading_2, ui_var_on,")
+    const wire = files.find(f => f.path === "src/ui/ui.c")!.content
+    expect(wire).toContain("lv_anim_set_var(&a, ui_reading);")
+    expect(wire).toContain("lv_anim_set_var(&a, ui_reading_2);")
   })
 })

@@ -20,7 +20,8 @@ What you see is what flashes.
   ⌘-click goes deepest, and dragging on a screen's background draws a selection box. Align and
   distribute with Figma's keys (⌥A/D/W/S/H/V, ⌃⌥H/V); a single layer aligns in its parent through
   its LVGL align, so it stays put when the parent resizes. Make any layer a **component**: the main lives on a Components screen, and
-  each instance can override its texts and point its bindings at different variables.
+  each instance can override its texts and point its bindings at different variables. Animate a
+  main's layers and every instance follows.
 - **Style like CSS.** Every LVGL style property, per part (`indicator`, `knob`…) and per state
   (`pressed`, `checked`… and combinations like `checked+pressed`). Shared styles work like classes,
   colour tokens like CSS variables, and transitions like `transition:`. Import your own TTF or OTF

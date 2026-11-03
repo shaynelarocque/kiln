@@ -30,11 +30,11 @@ import {
   type Program,
   type WidgetDef,
 } from "@/shared/lvgl"
-import { resolveScreens } from "../model/components"
+import { instancesOf, resolveScreens } from "../model/components"
 import type { Animation, Binding, Interaction, Node, Project, StyleValue } from "../model/types"
 import { ttfUses } from "./fonts"
 import { cNames } from "./names"
-import { findNode, screenOf, walk } from "./tree"
+import { screenOf, walk } from "./tree"
 
 /** edit: per-screen preview, no events or timelines. play: everything. export: play minus demo data. */
 export type CompileMode = "edit" | "play" | "export"
@@ -295,7 +295,7 @@ export function compile(source: Project, mode: CompileMode): Program {
     return { id: screen.id, ops }
   })
 
-  return { names, setup, screens, wiring: mode === "edit" ? [] : wiringOps(project) }
+  return { names, setup, screens, wiring: mode === "edit" ? [] : wiringOps(project, trackTargets(source, project)) }
 }
 
 function clamp(v: number, a: number, b: number) {
@@ -332,8 +332,26 @@ function segmentOps(nodeId: string, prop: AnimProp, seg: Segment, first: boolean
   return ops
 }
 
-function timelineOps(project: Project, anim: Animation): Op[] {
-  const tracks = anim.tracks.filter(t => t.keyframes.length >= 2 && findNode(project, t.node))
+/** Node ids a track's node maps to once instances are expanded (see trackTargets). */
+type Targets = (nodeId: string) => string[]
+
+/**
+ * Where an animated node ends up in the built UI: the node itself (unless it sits on the
+ * Components screen, which isn't built), its copies inside instances (ids ending in /<id>),
+ * and, for a main component, every instance of it, nested ones included.
+ */
+function trackTargets(source: Project, resolved: Project): Targets {
+  const ids: string[] = []
+  for (const s of resolved.screens) walk(s, n => void ids.push(n.id))
+  return nodeId => {
+    const from = [nodeId, ...instancesOf(source, nodeId).map(i => i.id)]
+    return ids.filter(id => from.some(f => id === f || id.endsWith(`/${f}`)))
+  }
+}
+
+function timelineOps(project: Project, anim: Animation, targets: Targets): Op[] {
+  // one track per node it lands on, each with its own segments
+  const tracks = anim.tracks.flatMap(t => (t.keyframes.length >= 2 ? targets(t.node).map(node => ({ ...t, node })) : []))
   if (!tracks.length) return []
   const tl: Arg = { k: "timeline", id: anim.id }
   const ops: Op[] = [{ op: "call", fn: "lv_anim_timeline_create", args: [], ret: { kind: "timeline", id: anim.id } }]
@@ -359,7 +377,7 @@ function timelineOps(project: Project, anim: Animation): Op[] {
   return ops
 }
 
-function actionOp(project: Project, node: Node, ev: Interaction): Op | null {
+function actionOp(project: Project, node: Node, ev: Interaction, timelines: Map<string, Op[]>): Op | null {
   if (!known(EVENTS, ev.trigger)) return null
   const o = obj(node.id)
   const trigger = c(ev.trigger)
@@ -384,19 +402,20 @@ function actionOp(project: Project, node: Node, ev: Interaction): Op | null {
     }
     case "play": {
       const anim = project.animations.find(x => x.id === a.animation)
-      return anim && timelineOps(project, anim).length
+      return anim && timelines.get(anim.id)?.length
         ? call("kiln_obj_add_play_event", o, trigger, { k: "timeline", id: anim.id }, int(finite(a.delay)), bool(Boolean(a.reverse)))
         : null
     }
   }
 }
 
-function wiringOps(project: Project): Op[] {
-  const ops = project.animations.flatMap(anim => timelineOps(project, anim))
+function wiringOps(project: Project, targets: Targets): Op[] {
+  const timelines = new Map(project.animations.map(anim => [anim.id, timelineOps(project, anim, targets)]))
+  const ops = [...timelines.values()].flat()
   for (const screen of project.screens)
     walk(screen, node => {
       for (const ev of node.events) {
-        const op = actionOp(project, node, ev)
+        const op = actionOp(project, node, ev, timelines)
         if (op) ops.push(op)
       }
     })
