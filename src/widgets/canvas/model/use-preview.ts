@@ -2,17 +2,15 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import { editorApi } from "@/entities/editor"
 import { ProjectPreview, useProjectStore, type Project } from "@/entities/project"
 import { getRuntime, onRuntimeReset, resetRuntime } from "@/shared/lvgl"
-import type { Rects } from "./interactions"
 
 /**
- * Keeps an LVGL preview in step with the project: syncs on every change, reads back where
- * LVGL laid each node out, and paints at display rate. A trap reloads the runtime, and the
- * project that caused it isn't retried until it changes.
+ * Keeps an LVGL preview in step with the project: syncs on every change, publishes where
+ * LVGL laid each node out (the editor store's rects), and paints at display rate. A trap
+ * reloads the runtime, and the project that caused it isn't retried until it changes.
  */
 export function usePreview() {
   const project = useProjectStore(s => s.project)
   const [preview, setPreview] = useState<ProjectPreview | null>(null)
-  const [rects, setRects] = useState<Map<string, Rects>>(new Map())
   const failed = useRef<Project | null>(null)
 
   useEffect(() => {
@@ -39,8 +37,7 @@ export function usePreview() {
     if (!preview || project === failed.current) return
     try {
       preview.sync(project)
-      setRects(new Map(project.screens.map(s => [s.id, preview.rects(s.id)])))
-      editorApi.getState().set({ error: null })
+      editorApi.getState().set({ rects: new Map(project.screens.map(s => [s.id, preview.rects(s.id)])), error: null })
     } catch (e) {
       failed.current = project
       editorApi.getState().set({ error: e instanceof Error ? e.message : String(e) })
@@ -66,5 +63,5 @@ export function usePreview() {
     return () => cancelAnimationFrame(raf)
   }, [preview])
 
-  return { preview, rects }
+  return preview
 }

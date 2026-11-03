@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { createNode } from "@/entities/project"
-import { alignFactors, flexDrop, hitChain, pickDeeper, pickTarget, resizeLayout, snapMove, type Rects } from "./interactions"
+import { alignFactors, alignName } from "@/shared/lvgl"
+import { flexDrop, hitChain, marqueeHits, pickDeeper, pickTarget, resizeLayout, snapMove, type Rects } from "./interactions"
 
 function tree() {
   const screen = createNode("screen", { name: "s" })
@@ -36,6 +37,17 @@ describe("hit testing", () => {
     card.hidden = true
     expect(hitChain(screen, rects, 35, 35)).toEqual([screen])
   })
+
+  it("marquees the top-level layers a box touches", () => {
+    const { screen, card, top, rects } = tree()
+    // touches the card's corner only, and the label inside it isn't top level
+    expect(marqueeHits(screen, rects, { x: 0, y: 0, w: 25, h: 25 })).toEqual([card.id])
+    expect(marqueeHits(screen, rects, { x: 90, y: 90, w: 20, h: 20 })).toEqual([card.id, top.id])
+    // edges that only meet don't count
+    expect(marqueeHits(screen, rects, { x: 160, y: 160, w: 10, h: 10 })).toEqual([])
+    top.locked = true
+    expect(marqueeHits(screen, rects, { x: 90, y: 90, w: 20, h: 20 })).toEqual([card.id])
+  })
 })
 
 describe("geometry", () => {
@@ -45,6 +57,8 @@ describe("geometry", () => {
     expect(alignFactors("LV_ALIGN_BOTTOM_RIGHT")).toEqual([1, 1])
     expect(alignFactors("LV_ALIGN_LEFT_MID")).toEqual([0, 0.5])
     expect(alignFactors("LV_ALIGN_TOP_MID")).toEqual([0.5, 0])
+    expect(alignName(0.5, 1)).toBe("LV_ALIGN_BOTTOM_MID")
+    expect(alignName(...alignFactors("LV_ALIGN_RIGHT_MID"))).toBe("LV_ALIGN_RIGHT_MID")
   })
 
   it("keeps the opposite edge put when resizing", () => {

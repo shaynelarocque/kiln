@@ -1,12 +1,32 @@
-import { Group, Trash } from "lucide-react"
+import {
+  AlignCenterHorizontal,
+  AlignCenterVertical,
+  AlignEndHorizontal,
+  AlignEndVertical,
+  AlignHorizontalSpaceBetween,
+  AlignStartHorizontal,
+  AlignStartVertical,
+  AlignVerticalSpaceBetween,
+  Group,
+  Trash,
+} from "lucide-react"
 import { WidgetIcon } from "@/entities/project"
-import { deleteSelection, groupSelection } from "@/features/node-actions"
-import { Button, Hint, Tabs } from "@/shared/ui"
+import { alignSelection, deleteSelection, distributeSelection, groupSelection, type AlignEdge } from "@/features/node-actions"
+import { Button, Hint, IconButton, Tabs } from "@/shared/ui"
 import { useInspector } from "../model/use-inspector"
 import { BindTab } from "./BindTab"
 import { DesignTab } from "./DesignTab"
 import { InteractTab } from "./InteractTab"
 import s from "./inspector.module.css"
+
+const ALIGNS: [AlignEdge, string, React.ReactNode][] = [
+  ["left", "Align left (⌥A)", <AlignStartVertical />],
+  ["hcenter", "Align horizontal centres (⌥H)", <AlignCenterVertical />],
+  ["right", "Align right (⌥D)", <AlignEndVertical />],
+  ["top", "Align top (⌥W)", <AlignStartHorizontal />],
+  ["vcenter", "Align vertical centres (⌥V)", <AlignCenterHorizontal />],
+  ["bottom", "Align bottom (⌥S)", <AlignEndHorizontal />],
+]
 
 export function Inspector() {
   const vm = useInspector()
@@ -15,6 +35,20 @@ export function Inspector() {
     return (
       <div className={s.empty}>
         <strong>{vm.selection.length} layers selected</strong>
+        <div className={s.alignBar}>
+          {ALIGNS.map(([edge, label, icon]) => (
+            <IconButton key={edge} label={label} onClick={() => alignSelection(edge)}>
+              {icon}
+            </IconButton>
+          ))}
+          <span className={s.alignGap} />
+          <IconButton label='Distribute horizontal spacing (⌃⌥H)' disabled={vm.selection.length < 3} onClick={() => distributeSelection("x")}>
+            <AlignHorizontalSpaceBetween />
+          </IconButton>
+          <IconButton label='Distribute vertical spacing (⌃⌥V)' disabled={vm.selection.length < 3} onClick={() => distributeSelection("y")}>
+            <AlignVerticalSpaceBetween />
+          </IconButton>
+        </div>
         <div className={s.actions}>
           <Button icon={<Group />} onClick={groupSelection}>
             Group

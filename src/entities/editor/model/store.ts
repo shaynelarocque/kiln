@@ -1,5 +1,5 @@
 import { create } from "zustand"
-import { MAIN_DEFAULT } from "@/shared/lvgl"
+import { MAIN_DEFAULT, type Rect } from "@/shared/lvgl"
 
 export type LeftTab = "layers" | "data" | "styles" | "assets"
 export type RightTab = "design" | "bind" | "interact"
@@ -23,6 +23,8 @@ type EditorState = {
   preview: string | null
   dialog: Dialog
   error: string | null
+  /** where LVGL laid out each node, in display pixels: screen id → node id → box */
+  rects: Map<string, Map<string, Rect>>
 
   select: (ids: string[]) => void
   setHover: (id: string | null) => void
@@ -44,6 +46,7 @@ export const useEditorStore = create<EditorState>()(set => ({
   preview: null,
   dialog: null,
   error: null,
+  rects: new Map(),
 
   select: ids => set(s => (sameIds(s.selection, ids) ? s : { selection: ids, selector: MAIN_DEFAULT })),
   setHover: hover => set({ hover }),

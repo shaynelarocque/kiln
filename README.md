@@ -17,7 +17,9 @@ What you see is what flashes.
 - **Design like Figma.** Screens sit side by side on an infinite canvas. Insert widgets, drag with
   smart guides, resize from any handle, nest with auto layout (flexbox), group, copy and paste, undo
   everything. Click picks the top-level layer, double-click goes deeper (or edits text in place),
-  ⌘-click goes deepest. Make any layer a **component**: the main lives on a Components screen, and
+  ⌘-click goes deepest, and dragging on a screen's background draws a selection box. Align and
+  distribute with Figma's keys (⌥A/D/W/S/H/V, ⌃⌥H/V); a single layer aligns in its parent through
+  its LVGL align, so it stays put when the parent resizes. Make any layer a **component**: the main lives on a Components screen, and
   each instance can override its texts and point its bindings at different variables.
 - **Style like CSS.** Every LVGL style property, per part (`indicator`, `knob`…) and per state
   (`pressed`, `checked`… and combinations like `checked+pressed`). Shared styles work like classes,

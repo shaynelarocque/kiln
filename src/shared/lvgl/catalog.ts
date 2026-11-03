@@ -55,6 +55,19 @@ export const ALIGN: Option[] = [
   { value: "LV_ALIGN_BOTTOM_RIGHT", label: "Bottom right" },
 ]
 
+/** How an LVGL align anchors a box: 0 left/top, 0.5 middle, 1 right/bottom. */
+export function alignFactors(align: string): [number, number] {
+  const ax = /RIGHT/.test(align) ? 1 : /MID|CENTER/.test(align) && !/LEFT_MID|RIGHT_MID/.test(align) ? 0.5 : 0
+  const ay = /BOTTOM/.test(align) ? 1 : /LEFT_MID|RIGHT_MID|CENTER/.test(align) ? 0.5 : 0
+  return [ax, ay]
+}
+
+/** The in-parent LV_ALIGN_* for anchor factors (alignFactors' inverse). */
+export function alignName(ax: number, ay: number) {
+  const index = [0, 0.5, 1].indexOf(ay) * 3 + [0, 0.5, 1].indexOf(ax)
+  return ["LV_ALIGN_TOP_LEFT", "LV_ALIGN_TOP_MID", "LV_ALIGN_TOP_RIGHT", "LV_ALIGN_LEFT_MID", "LV_ALIGN_CENTER", "LV_ALIGN_RIGHT_MID", "LV_ALIGN_BOTTOM_LEFT", "LV_ALIGN_BOTTOM_MID", "LV_ALIGN_BOTTOM_RIGHT"][index]
+}
+
 export const FLEX_FLOW: Option[] = [
   { value: "LV_FLEX_FLOW_ROW", label: "Row" },
   { value: "LV_FLEX_FLOW_COLUMN", label: "Column" },

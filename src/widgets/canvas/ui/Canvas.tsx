@@ -88,6 +88,7 @@ function Artboard({ vm, screen, width, height, round }: { vm: CanvasViewModel; s
           <span key={i} className={s.guide} style={g.axis === "x" ? { left: g.at, top: 0, height } : { top: g.at, left: 0, width }} data-axis={g.axis} />
         ))}
         {drag?.drop && <Box rect={drag.drop} className={s.drop} />}
+        {drag?.marquee && <Box rect={drag.marquee} className={s.marquee} />}
         {vm.editing?.screen === screen.id && rects?.get(vm.editing.id) && <TextEditor vm={vm} rect={rects.get(vm.editing.id)!} />}
       </div>
     </div>

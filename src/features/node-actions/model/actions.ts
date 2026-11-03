@@ -1,5 +1,7 @@
 import { editorApi } from "@/entities/editor"
-import { canContain, cloneNode, createNode, edit, findParent, insertNode, locate, moveNode, projectApi, removeNodes, uniqueName, type Node } from "@/entities/project"
+import { canContain, cloneNode, createNode, edit, findParent, insertNode, locate, moveNode, projectApi, removeNodes, screenOf, uniqueName, type Node } from "@/entities/project"
+import { alignFactors, alignName } from "@/shared/lvgl"
+import { alignMoves, distributeMoves, type AlignEdge, type Move } from "../lib/align"
 
 const selection = () => editorApi.getState().selection
 const project = () => projectApi.getState().project
@@ -112,4 +114,52 @@ export function selectAllSiblings() {
   const parent = first ? findParent(project(), first) : project().screens[0]
   const scope = parent ?? locate(project(), first)?.node
   if (scope) editorApi.getState().select(scope.children.map(c => c.id))
+}
+
+/** Selected layers placed by x/y: not screens, and not laid out by a parent's auto layout. */
+const placeable = () => selectedNodes().filter(id => !findParent(project(), id)?.layout.flex)
+
+/** Placeable selected layers with their boxes, from the first one's screen (boxes are per-screen pixels). */
+function selectedBoxes() {
+  const ids = placeable()
+  const screen = ids.length ? screenOf(project(), ids[0]) : undefined
+  const rects = screen && editorApi.getState().rects.get(screen.id)
+  return ids.flatMap(id => (rects?.has(id) ? [{ id, box: rects.get(id)! }] : []))
+}
+
+/** An align offset moves the box by the same amount whatever the alignment, so box deltas apply as is. */
+function shift(ids: string[], moves: Move[]) {
+  edit(d =>
+    ids.forEach((id, i) => {
+      const n = locate(d, id)?.node
+      if (n && moves[i].dx && typeof n.layout.x === "number") n.layout.x += moves[i].dx
+      if (n && moves[i].dy && typeof n.layout.y === "number") n.layout.y += moves[i].dy
+    }),
+  )
+}
+
+/**
+ * Lines layers up like Figma's ⌥A/D/H and ⌥W/S/V. Several share the selection's outer edge or
+ * centre; one lines up in its parent through its LVGL align, so it stays put if the parent resizes.
+ */
+export function alignSelection(edge: AlignEdge) {
+  const ids = placeable()
+  if (ids.length === 1) {
+    const horizontal = edge === "left" || edge === "hcenter" || edge === "right"
+    const f = edge === "left" || edge === "top" ? 0 : edge === "right" || edge === "bottom" ? 1 : 0.5
+    return updateNode(ids[0], n => {
+      const [ax, ay] = alignFactors(n.layout.align)
+      n.layout.align = horizontal ? alignName(f, ay) : alignName(ax, f)
+      if (horizontal) n.layout.x = 0
+      else n.layout.y = 0
+    })
+  }
+  const boxes = selectedBoxes()
+  if (boxes.length > 1) shift(boxes.map(b => b.id), alignMoves(boxes.map(b => b.box), edge))
+}
+
+/** Equal gaps between three or more layers; the outermost two stay put (Figma's ⌃⌥H / ⌃⌥V). */
+export function distributeSelection(axis: "x" | "y") {
+  const boxes = selectedBoxes()
+  if (boxes.length > 2) shift(boxes.map(b => b.id), distributeMoves(boxes.map(b => b.box), axis))
 }

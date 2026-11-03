@@ -2,8 +2,24 @@ import { useEffect } from "react"
 import { editorApi } from "@/entities/editor"
 import { findParent, projectApi } from "@/entities/project"
 import { redo, undo } from "@/features/history"
-import { copySelection, cutSelection, deleteSelection, duplicateSelection, groupSelection, nudge, paste, restack, selectAllSiblings } from "@/features/node-actions"
+import {
+  alignSelection,
+  copySelection,
+  cutSelection,
+  deleteSelection,
+  distributeSelection,
+  duplicateSelection,
+  groupSelection,
+  nudge,
+  paste,
+  restack,
+  selectAllSiblings,
+  type AlignEdge,
+} from "@/features/node-actions"
 import { openProject, saveProject } from "@/features/project-file"
+
+/** Figma's align keys, by physical key: ⌥ turns e.key into symbols on a Mac */
+const ALIGN_KEYS: Record<string, AlignEdge> = { KeyA: "left", KeyD: "right", KeyH: "hcenter", KeyW: "top", KeyS: "bottom", KeyV: "vcenter" }
 
 const typing = (t: EventTarget | null) =>
   t instanceof HTMLInputElement || t instanceof HTMLTextAreaElement || t instanceof HTMLSelectElement || (t instanceof HTMLElement && t.isContentEditable)
@@ -20,6 +36,10 @@ export function useShortcuts() {
       const editor = editorApi.getState()
       if (typing(e.target) || editor.dialog) return
       if (editor.playing) return key === "escape" && run(() => editor.set({ playing: false }))
+      // synthetic events (automation, some remote desktops) can leave code empty
+      const code = e.code || `Key${key.toUpperCase()}`
+      if (e.altKey && e.ctrlKey && (code === "KeyH" || code === "KeyV")) return run(() => distributeSelection(code === "KeyH" ? "x" : "y"))
+      if (e.altKey && !mod && ALIGN_KEYS[code]) return run(() => alignSelection(ALIGN_KEYS[code]))
       if (mod && key === "z") return run(e.shiftKey ? redo : undo)
       if (mod && key === "y") return run(redo)
       if (mod && key === "d") return run(duplicateSelection)

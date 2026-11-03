@@ -70,6 +70,10 @@
 .drop {
   outline: calc(2px / var(--z)) solid var(--accent);
 }
+.marquee {
+  outline: calc(1px / var(--z)) solid var(--select);
+  background: var(--select-soft);
+}
 .handle {
   width: calc(8px / var(--z));
   height: calc(8px / var(--z));

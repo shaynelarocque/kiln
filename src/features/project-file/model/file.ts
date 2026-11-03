@@ -107,22 +107,27 @@ export function startAutosave() {
     // a bad or missing autosave just means starting from the sample
   }
   let timer = 0
-  const stop = projectApi.subscribe(s => {
+  const write = () => {
     clearTimeout(timer)
-    timer = window.setTimeout(() => {
-      try {
-        localStorage.setItem(AUTOSAVE, JSON.stringify({ project: s.project, path: s.path, dirty: s.project !== s.saved }))
-      } catch {
-        // over quota (big images): the file on disk is still the source of truth
-      }
-    }, 500)
+    const s = projectApi.getState()
+    try {
+      localStorage.setItem(AUTOSAVE, JSON.stringify({ project: s.project, path: s.path, dirty: s.project !== s.saved }))
+    } catch {
+      // over quota (big images): the file on disk is still the source of truth
+    }
+  }
+  const stop = projectApi.subscribe(() => {
+    clearTimeout(timer)
+    timer = window.setTimeout(write, 500)
   })
-  const unload = (e: BeforeUnloadEvent) => isDirty() && e.preventDefault()
+  // leaving writes the last half second of edits too
+  const unload = (e: BeforeUnloadEvent) => (write(), isDirty() && e.preventDefault())
   window.addEventListener("beforeunload", unload)
   let unlisten: (() => void) | undefined
   if (inTauri())
     import("@tauri-apps/api/window").then(async ({ getCurrentWindow }) => {
       unlisten = await getCurrentWindow().onCloseRequested(async e => {
+        write()
         if (isDirty() && !(await confirmAction("Quit without saving? Your changes stay in Kiln's autosave."))) e.preventDefault()
       })
     })

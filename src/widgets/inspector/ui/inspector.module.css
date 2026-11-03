@@ -21,6 +21,17 @@
   display: flex;
   gap: 6px;
 }
+.alignBar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.alignGap {
+  width: 1px;
+  height: 16px;
+  margin: 0 6px;
+  background: var(--line);
+}
 .head {
   display: flex;
   align-items: center;

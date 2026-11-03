@@ -2,10 +2,10 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { editorApi, useEditorStore } from "@/entities/editor"
 import { edit, findNode, findParent, locate, moveNode, projectApi, useProjectStore, type Phase, type Screen } from "@/entities/project"
 import type { Rect } from "@/shared/lvgl"
-import { flexDrop, hitChain, isNumber, pickDeeper, pickTarget, resizeLayout, snapMove, type Guide, type Handle } from "./interactions"
+import { flexDrop, hitChain, isNumber, marqueeHits, pickDeeper, pickTarget, resizeLayout, snapMove, type Guide, type Handle } from "./interactions"
 import { usePreview } from "./use-preview"
 
-export type DragState = { screen: string; guides: Guide[]; drop: Rect | null }
+export type DragState = { screen: string; guides: Guide[]; drop: Rect | null; marquee?: Rect }
 
 const MIN_ZOOM = 0.1
 const MAX_ZOOM = 16
@@ -36,9 +36,9 @@ function drag(e: React.PointerEvent, onMove: (dx: number, dy: number, phase: Pha
 }
 
 export function useCanvas() {
-  const { preview, rects } = usePreview()
+  const preview = usePreview()
   const project = useProjectStore(s => s.project)
-  const { zoom, pan, selection, hover } = useEditorStore()
+  const { zoom, pan, selection, hover, rects } = useEditorStore()
   const viewport = useRef<HTMLDivElement>(null)
   const [spaceDown, setSpaceDown] = useState(false)
   const [dragState, setDragState] = useState<DragState | null>(null)
@@ -139,16 +139,34 @@ export function useCanvas() {
     e.stopPropagation()
     const { selection, select } = editorApi.getState()
     const target = pickTarget(chainAt(screen, e), selection, e.metaKey || e.ctrlKey)
+    if (target.widget === "screen") return startMarquee(screen, e)
     if (e.shiftKey) {
       select(selection.includes(target.id) ? selection.filter(id => id !== target.id) : [...selection.filter(id => id !== screen.id), target.id])
       return
     }
     const ids = selection.includes(target.id) ? selection : [target.id]
     select(ids)
-    if (target.widget !== "screen") startMove(screen, ids, e)
+    // like Figma, a click that doesn't drag narrows a selection to the layer clicked
+    startMove(screen, ids, e, () => select([target.id]))
   }
 
-  const startMove = (screen: Screen, ids: string[], e: React.PointerEvent) => {
+  /** Dragging on a screen's background selects the layers the box touches (⇧ adds); a click selects the screen. */
+  const startMarquee = (screen: Screen, e: React.PointerEvent) => {
+    const [x0, y0] = local(e, e.currentTarget as HTMLElement)
+    const screenRects = rects.get(screen.id) ?? new Map<string, Rect>()
+    const keep = e.shiftKey ? editorApi.getState().selection.filter(id => id !== screen.id) : []
+    drag(
+      e,
+      (dx, dy, phase) => {
+        const box = { x: Math.min(x0, x0 + dx), y: Math.min(y0, y0 + dy), w: Math.abs(dx), h: Math.abs(dy) }
+        editorApi.getState().select([...keep, ...marqueeHits(screen, screenRects, box).filter(id => !keep.includes(id))])
+        setDragState(phase === "end" ? null : { screen: screen.id, guides: [], drop: null, marquee: box })
+      },
+      () => !e.shiftKey && editorApi.getState().select([screen.id]),
+    )
+  }
+
+  const startMove = (screen: Screen, ids: string[], e: React.PointerEvent, onClick: () => void) => {
     const project = projectApi.getState().project
     const screenRects = rects.get(screen.id) ?? new Map<string, Rect>()
     const parent = findParent(project, ids[0])
@@ -164,7 +182,7 @@ export function useCanvas() {
           setDragState(null)
           edit(d => moveNode(d, ids[0], parent.id, index))
         }
-      })
+      }, onClick)
       return
     }
 
@@ -190,7 +208,7 @@ export function useCanvas() {
           }
         }
       }, phase)
-    })
+    }, onClick)
   }
 
   /** Double-click: edit a selected text in place, otherwise select one level deeper. */

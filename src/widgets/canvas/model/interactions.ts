@@ -1,5 +1,5 @@
 import type { Layout, Node } from "@/entities/project"
-import type { Rect } from "@/shared/lvgl"
+import { alignFactors, type Rect } from "@/shared/lvgl"
 
 export type Rects = Map<string, Rect>
 export type Handle = "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw"
@@ -22,6 +22,16 @@ export function hitChain(screen: Node, rects: Rects, x: number, y: number): Node
     chain.push(next)
     level = next
   }
+}
+
+/** The screen's top-level layers a marquee touches; like Figma, overlapping is enough. */
+export function marqueeHits(screen: Node, rects: Rects, box: Rect): string[] {
+  return screen.children
+    .filter(c => {
+      const r = rects.get(c.id)
+      return r && !c.hidden && !c.locked && r.x < box.x + box.w && box.x < r.x + r.w && r.y < box.y + box.h && box.y < r.y + r.h
+    })
+    .map(c => c.id)
 }
 
 /**
@@ -68,13 +78,6 @@ export function snapMove(box: Rect, targets: Rect[], dx: number, dy: number, thr
     return d + best.delta
   }
   return { dx: snap("x", dx), dy: snap("y", dy), guides }
-}
-
-/** How an LVGL align anchors a box: 0 left/top, 0.5 middle, 1 right/bottom. */
-export function alignFactors(align: string): [number, number] {
-  const ax = /RIGHT/.test(align) ? 1 : /MID|CENTER/.test(align) && !/LEFT_MID|RIGHT_MID/.test(align) ? 0.5 : 0
-  const ay = /BOTTOM/.test(align) ? 1 : /LEFT_MID|RIGHT_MID|CENTER/.test(align) ? 0.5 : 0
-  return [ax, ay]
 }
 
 /**
