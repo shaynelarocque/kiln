@@ -1,4 +1,4 @@
-import { Clapperboard, Cpu, Download, FilePlus, FolderOpen, Play, Redo2, Save, Undo2 } from "lucide-react"
+import { Clapperboard, Cpu, Download, FilePlus, FolderOpen, Keyboard, Play, Redo2, Save, Undo2 } from "lucide-react"
 import { useState } from "react"
 import { findBoard, formatBytes, useBoards } from "@/entities/board"
 import { editorApi, useEditorStore } from "@/entities/editor"
@@ -66,6 +66,9 @@ export function Toolbar() {
         <span className={s.sep} />
         <IconButton label='Animations timeline' active={timelineOpen} onClick={() => editorApi.getState().set({ timelineOpen: !timelineOpen })}>
           <Clapperboard />
+        </IconButton>
+        <IconButton label='Keyboard shortcuts (?)' onClick={() => editorApi.getState().set({ dialog: "shortcuts" })}>
+          <Keyboard />
         </IconButton>
       </div>
 

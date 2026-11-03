@@ -42,6 +42,7 @@ export function useCanvas() {
   const viewport = useRef<HTMLDivElement>(null)
   const [spaceDown, setSpaceDown] = useState(false)
   const [dragState, setDragState] = useState<DragState | null>(null)
+  const [editing, setEditing] = useState<{ screen: string; id: string } | null>(null)
 
   const setView = editorApi.getState().setView
 
@@ -196,8 +197,14 @@ export function useCanvas() {
     })
   }
 
+  /** Double-click: edit a selected text in place, otherwise select one level deeper. */
   const onArtboardDoubleClick = (screen: Screen, e: React.MouseEvent) => {
-    const next = pickDeeper(chainAt(screen, e), editorApi.getState().selection)
+    const chain = chainAt(screen, e)
+    const { selection } = editorApi.getState()
+    const selected = chain.find(n => n.id === selection[0])
+    if (selected && typeof selected.props.text === "string" && !selected.component && !selected.bindings.some(b => b.kind === "text"))
+      return setEditing({ screen: screen.id, id: selected.id })
+    const next = pickDeeper(chain, selection)
     if (next) editorApi.getState().select([next.id])
   }
 
@@ -265,6 +272,11 @@ export function useCanvas() {
     onArtboardPointerLeave: () => editorApi.getState().setHover(null),
     onHandlePointerDown,
     onTitlePointerDown,
+    editing,
+    finishEditing: (text: string | null) => {
+      if (editing && text !== null) edit(d => void (locate(d, editing.id)!.node.props.text = text))
+      setEditing(null)
+    },
   }
 }
 

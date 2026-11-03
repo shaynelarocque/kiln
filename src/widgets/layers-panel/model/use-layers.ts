@@ -40,6 +40,13 @@ export function useLayers() {
     editorApi.getState().select([screen.id])
   }
 
+  /** The first screen is the one the board shows at boot. */
+  const makeStart = (id: string) =>
+    edit(d => {
+      const i = d.screens.findIndex(s => s.id === id)
+      if (i > 0) d.screens.unshift(...d.screens.splice(i, 1))
+    })
+
   const deleteScreen = (id: string) => {
     if (project.screens.length < 2) return
     edit(d => removeNodes(d, [id]))
@@ -85,6 +92,8 @@ export function useLayers() {
     toggleLocked: (id: string) => updateNode(id, n => void (n.locked = !n.locked)),
     addScreen,
     deleteScreen,
+    makeStart,
+    startId: project.screens.find(sc => !sc.library)?.id,
     dropAt,
     finishDrop,
     clearDrop: () => setDrop(null),

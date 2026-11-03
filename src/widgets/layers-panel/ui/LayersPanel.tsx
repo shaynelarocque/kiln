@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronRight, Component, Eye, EyeOff, Lock, LockOpen, Plus, Trash } from "lucide-react"
+import { ChevronDown, ChevronRight, Component, Eye, EyeOff, House, Lock, LockOpen, Plus, Trash } from "lucide-react"
 import { useState } from "react"
 import { WidgetIcon } from "@/entities/project"
 import { IconButton, Section } from "@/shared/ui"
@@ -24,8 +24,19 @@ export function LayersPanel() {
               className={`${s.row} ${vm.selection.includes(screen.id) ? s.on : ""} ${vm.active.id === screen.id ? s.active : ""}`}
               onClick={e => vm.select(screen.id, e.shiftKey)}
             >
-              <WidgetIcon type='screen' className={s.icon} />
+              {screen.library ? <Component className={`${s.icon} ${s.instance}`} /> : <WidgetIcon type='screen' className={s.icon} />}
               <Name value={screen.name} onRename={name => vm.rename(screen.id, name)} />
+              {screen.id === vm.startId ? (
+                <span className={s.badge} title='Shown at boot'>
+                  start
+                </span>
+              ) : (
+                !screen.library && (
+                  <IconButton label='Set as start screen' className={s.tool} onClick={e => (e.stopPropagation(), vm.makeStart(screen.id))}>
+                    <House />
+                  </IconButton>
+                )
+              )}
               {vm.project.screens.length > 1 && (
                 <IconButton label='Delete screen' className={s.tool} onClick={e => (e.stopPropagation(), vm.deleteScreen(screen.id))}>
                   <Trash />

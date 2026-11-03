@@ -3,7 +3,7 @@ import { MAIN_DEFAULT } from "@/shared/lvgl"
 
 export type LeftTab = "layers" | "data" | "styles" | "assets"
 export type RightTab = "design" | "bind" | "interact"
-export type Dialog = null | "board" | "export"
+export type Dialog = null | "board" | "export" | "shortcuts"
 
 /** Session state: what's selected and how the editor is arranged. Not saved, not undoable. */
 type EditorState = {

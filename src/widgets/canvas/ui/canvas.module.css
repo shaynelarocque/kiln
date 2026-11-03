@@ -134,3 +134,16 @@
   font-variant-numeric: tabular-nums;
   cursor: pointer;
 }
+.textEdit {
+  padding: 2px;
+  border: calc(1.5px / var(--z)) solid var(--select);
+  border-radius: 2px;
+  background: rgba(23, 27, 36, 0.92);
+  color: #fff;
+  font-family: "Montserrat", var(--font);
+  line-height: 1.2;
+  resize: none;
+  outline: none;
+  pointer-events: auto;
+  field-sizing: content;
+}

@@ -1,0 +1,21 @@
+.grid {
+  display: grid;
+  gap: 16px;
+}
+.grid h3 {
+  margin: 0 0 6px;
+  font-size: 12px;
+  color: var(--text-strong);
+}
+.row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--text-dim);
+}
+.row kbd {
+  color: var(--text);
+  font-family: var(--font);
+}

@@ -16,12 +16,15 @@ What you see is what flashes.
 
 - **Design like Figma.** Screens sit side by side on an infinite canvas. Insert widgets, drag with
   smart guides, resize from any handle, nest with auto layout (flexbox), group, copy and paste, undo
-  everything. Click picks the top-level layer, double-click goes deeper, ⌘-click goes deepest.
+  everything. Click picks the top-level layer, double-click goes deeper (or edits text in place),
+  ⌘-click goes deepest. Make any layer a **component**: the main lives on a Components screen, and
+  each instance can override its texts and point its bindings at different variables.
 - **Style like CSS.** Every LVGL style property, per part (`indicator`, `knob`…) and per state
   (`pressed`, `checked`… and combinations like `checked+pressed`). Shared styles work like classes,
   colour tokens like CSS variables, and transitions like `transition:`.
-- **Animate like the web.** Keyframe timelines with `cubic-bezier` easing, delays, repeat and
-  alternate, started when a screen loads or when something is tapped.
+- **Animate like the web.** A timeline with keyframes you drag along a ruler: `cubic-bezier`
+  easing, delays, repeat and alternate, started when a screen loads or when something is tapped.
+  Opacity, scale, rotation, translation, size and colour all animate.
 - **Bind to the board.** Variables are LVGL subjects. Bind text, values, checked state, visibility,
   states, chart history, or any numeric style property mapped from one range to another. Feed a
   variable from an ADC pin, a digital pin, uptime, free heap, the chip's temperature or any C
@@ -31,7 +34,10 @@ What you see is what flashes.
   animations, and simulated sensors you can scrub.
 - **Export it.** `ui.h`, `ui.c` and one file per screen in readable LVGL C, an `lv_conf.h` with only
   the fonts you used, a LovyanGFX panel config, the hardware glue, and a `platformio.ini`. Your code
-  goes in `src/app.cpp`, which Kiln writes once and never touches again.
+  goes in `src/app.cpp`, which Kiln writes once and never touches again. The output uses LVGL 9.6's
+  current API (`lv_subject_create`, `lv_obj_set_hidden`…), so it compiles without a single warning.
+- **Build and flash it.** In the desktop app, Export writes the project, runs `pio run`, and uploads
+  to the port you pick, streaming PlatformIO's log.
 - **Know if it fits.** A flash and RAM meter estimates the build against the board's real limits,
   read from PlatformIO's board definitions.
 
@@ -98,8 +104,14 @@ pnpm check                 # typecheck, Steiger, and the vitest suite
 cd src-tauri && cargo test # the Rust file-writing guards
 ```
 
-The suite runs the sample project on the real wasm LVGL (bindings, taps, screen loads), and compiles
-the exported C against the LVGL 9.6 headers with clang.
+The suite runs the sample project on the real wasm LVGL (bindings, taps, screen loads). A
+"kitchen sink" project uses every widget, binding, action, animated property, image format and
+component feature; it plays on the wasm LVGL without a logged error, and its export compiles against
+the LVGL 9.6 headers with clang, failing on any deprecated API. Both the sample and the kitchen sink
+have also been built with `pio run` for `esp32-c3-devkitm-1` (956 KB and 814 KB of the 1.25 MB app
+partition, 27% RAM), with no warnings from the generated code.
+
+CI (`.github/workflows/ci.yml`) runs the same checks plus the production build and the Rust tests.
 
 ## Status
 

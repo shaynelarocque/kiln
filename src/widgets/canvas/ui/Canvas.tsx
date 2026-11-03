@@ -88,8 +88,32 @@ function Artboard({ vm, screen, width, height, round }: { vm: CanvasViewModel; s
           <span key={i} className={s.guide} style={g.axis === "x" ? { left: g.at, top: 0, height } : { top: g.at, left: 0, width }} data-axis={g.axis} />
         ))}
         {drag?.drop && <Box rect={drag.drop} className={s.drop} />}
+        {vm.editing?.screen === screen.id && rects?.get(vm.editing.id) && <TextEditor vm={vm} rect={rects.get(vm.editing.id)!} />}
       </div>
     </div>
+  )
+}
+
+/** In-place text editing over a label, sized to its font. */
+function TextEditor({ vm, rect }: { vm: CanvasViewModel; rect: { x: number; y: number; w: number; h: number } }) {
+  const node = findNode(vm.project, vm.editing!.id)!
+  const font = String(node.style["main:default"]?.text_font ?? "lv_font_montserrat_14")
+  const size = Number(/(\d+)$/.exec(font)?.[1] ?? 14)
+  return (
+    <textarea
+      className={s.textEdit}
+      autoFocus
+      defaultValue={String(node.props.text)}
+      style={{ left: rect.x - 2, top: rect.y - 2, minWidth: rect.w + 24, minHeight: rect.h + 4, fontSize: size }}
+      onFocus={e => e.target.select()}
+      onBlur={e => vm.finishEditing(e.target.value)}
+      onKeyDown={e => {
+        e.stopPropagation()
+        if (e.key === "Escape") vm.finishEditing(null)
+        if (e.key === "Enter" && !e.shiftKey) (e.preventDefault(), (e.target as HTMLTextAreaElement).blur())
+      }}
+      onPointerDown={e => e.stopPropagation()}
+    />
   )
 }
 

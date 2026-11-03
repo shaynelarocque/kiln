@@ -37,6 +37,7 @@ export function useShortcuts() {
       if (key === "arrowdown") return run(() => nudge(0, step))
       if (key === "]" && editor.selection[0]) return run(() => restack(editor.selection[0], 1))
       if (key === "[" && editor.selection[0]) return run(() => restack(editor.selection[0], -1))
+      if (e.key === "?") return run(() => editor.set({ dialog: "shortcuts" }))
       if (key === "escape") {
         const parent = editor.selection[0] && findParent(projectApi.getState().project, editor.selection[0])
         return run(() => editor.select(parent ? [parent.id] : []))

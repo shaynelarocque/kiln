@@ -10,6 +10,7 @@ import { ExportDialog } from "@/widgets/export-dialog"
 import { Inspector } from "@/widgets/inspector"
 import { LayersPanel } from "@/widgets/layers-panel"
 import { Player } from "@/widgets/player"
+import { ShortcutsDialog } from "@/widgets/shortcuts-dialog"
 import { StylesPanel } from "@/widgets/styles-panel"
 import { Timeline } from "@/widgets/timeline"
 import { Toolbar } from "@/widgets/toolbar"
@@ -59,6 +60,7 @@ export function EditorPage() {
       {playing && <Player />}
       {dialog === "board" && <BoardDialog />}
       {dialog === "export" && <ExportDialog />}
+      {dialog === "shortcuts" && <ShortcutsDialog />}
     </div>
   )
 }
