@@ -1,7 +1,25 @@
-import { Search } from "lucide-react"
-import { DISPLAY_DRIVERS, DISPLAY_PRESETS, formatBytes } from "@/entities/board"
-import type { DisplayConfig } from "@/entities/project"
-import { Button, Dialog, Field, Hint, NumberInput, Select, Toggle } from "@/shared/ui"
+import { Plus, Search, Trash2 } from "lucide-react"
+import {
+  DISPLAY_DRIVERS,
+  DISPLAY_PRESETS,
+  TOUCH_DRIVERS,
+  TOUCH_TURNS,
+  formatBytes,
+} from "@/entities/board"
+import type { ButtonKey, DisplayConfig, TouchConfig, TouchDriver } from "@/entities/project"
+import { BUTTON_KEYS } from "@/shared/lvgl"
+import {
+  Button,
+  Dialog,
+  Field,
+  Hint,
+  IconButton,
+  NumberInput,
+  Select,
+  TextInput,
+  Toggle,
+} from "@/shared/ui"
+import { KITS } from "../model/kits"
 import { useBoardDialog } from "../model/use-board-dialog"
 import s from "./board-dialog.module.css"
 
@@ -12,6 +30,21 @@ const PIN_LABELS: { key: keyof DisplayConfig["pins"]; label: string }[] = [
   { key: "dc", label: "DC" },
   { key: "rst", label: "Reset" },
   { key: "bl", label: "Backlight" },
+]
+
+type TouchPin = { key: keyof TouchConfig["pins"]; label: string }
+const I2C_TOUCH_PINS: TouchPin[] = [
+  { key: "sda", label: "Touch SDA" },
+  { key: "scl", label: "Touch SCL" },
+  { key: "int", label: "Touch INT" },
+  { key: "rst", label: "Touch reset" },
+]
+const SPI_TOUCH_PINS: TouchPin[] = [
+  { key: "cs", label: "Touch CS" },
+  { key: "miso", label: "Touch MISO" },
+  { key: "sck", label: "Touch SCK" },
+  { key: "mosi", label: "Touch MOSI" },
+  { key: "int", label: "Touch IRQ" },
 ]
 
 export function BoardDialog() {
@@ -38,6 +71,14 @@ export function BoardDialog() {
       <div className={s.grid}>
         <section>
           <h3>Board</h3>
+          <Field label='Dev kit'>
+            <Select
+              value={vm.kitIndex >= 0 ? String(vm.kitIndex) : ""}
+              placeholder='None: pick the parts'
+              options={KITS.map((k, i) => ({ value: String(i), label: k.label }))}
+              onChange={i => i !== "" && vm.applyKit(KITS[Number(i)])}
+            />
+          </Field>
           <label className={s.search}>
             <Search />
             <input
@@ -154,6 +195,66 @@ export function BoardDialog() {
             Wrong colours or a shifted picture on the real panel? Inversion, red/blue and the
             offsets are the usual fixes.
           </Hint>
+
+          <h3>Touch</h3>
+          <Field label='Controller'>
+            <Select
+              value={d.touch?.driver ?? ""}
+              options={[
+                { value: "", label: "None" },
+                ...TOUCH_DRIVERS.map(x => ({ value: x.value, label: x.label })),
+              ]}
+              onChange={v => vm.setTouchDriver(v ? (v as TouchDriver) : null)}
+            />
+          </Field>
+          {d.touch && (
+            <>
+              <Field label='Raw X'>
+                <NumberInput
+                  prefix='Min'
+                  value={d.touch.xMin}
+                  min={0}
+                  max={65535}
+                  onChange={(xMin, phase) => vm.setTouch({ xMin }, phase)}
+                />
+                <NumberInput
+                  prefix='Max'
+                  value={d.touch.xMax}
+                  min={0}
+                  max={65535}
+                  onChange={(xMax, phase) => vm.setTouch({ xMax }, phase)}
+                />
+              </Field>
+              <Field label='Raw Y'>
+                <NumberInput
+                  prefix='Min'
+                  value={d.touch.yMin}
+                  min={0}
+                  max={65535}
+                  onChange={(yMin, phase) => vm.setTouch({ yMin }, phase)}
+                />
+                <NumberInput
+                  prefix='Max'
+                  value={d.touch.yMax}
+                  min={0}
+                  max={65535}
+                  onChange={(yMax, phase) => vm.setTouch({ yMax }, phase)}
+                />
+              </Field>
+              <Field label='Orientation'>
+                <Select
+                  value={String(d.touch.rotation)}
+                  options={TOUCH_TURNS.map((label, i) => ({ value: String(i), label }))}
+                  onChange={v => vm.setTouch({ rotation: Number(v) })}
+                />
+              </Field>
+              <Hint>
+                {d.touch.driver === "xpt2046"
+                  ? "Resistive panels vary: if taps land off target, widen or narrow the raw range, or turn the touch layer."
+                  : "Capacitive chips report pixels. If taps land mirrored or turned, change the orientation."}
+              </Hint>
+            </>
+          )}
         </section>
 
         <section>
@@ -167,6 +268,60 @@ export function BoardDialog() {
               />
             </Field>
           ))}
+          {d.touch &&
+            (d.touch.driver === "xpt2046" ? SPI_TOUCH_PINS : I2C_TOUCH_PINS).map(p => (
+              <Field key={p.key} label={p.label}>
+                <Select
+                  value={String(d.touch!.pins[p.key])}
+                  options={pinOptions}
+                  onChange={v => vm.setTouchPin(p.key, Number(v))}
+                />
+              </Field>
+            ))}
+
+          <h3>Buttons</h3>
+          {vm.buttons.map(b => (
+            <div key={b.id} className={s.button}>
+              <div className={s.buttonHead}>
+                <TextInput value={b.name} onChange={name => vm.setButton(b.id, { name })} />
+                <IconButton label={`Remove ${b.name}`} onClick={() => vm.removeButton(b.id)}>
+                  <Trash2 />
+                </IconButton>
+              </div>
+              <Field label='Pin'>
+                <Select
+                  value={String(b.pin)}
+                  options={pinOptions}
+                  onChange={v => vm.setButton(b.id, { pin: Number(v) })}
+                />
+              </Field>
+              <Field label='Sends'>
+                <Select
+                  value={b.key}
+                  options={BUTTON_KEYS.map(k => ({ value: k.value, label: k.label }))}
+                  onChange={v => vm.setButton(b.id, { key: v as ButtonKey })}
+                />
+              </Field>
+              <Field label='Pressed'>
+                <Select
+                  value={b.activeLow ? "low" : "high"}
+                  options={[
+                    { value: "low", label: "Pulls the pin low (to GND)" },
+                    { value: "high", label: "Pulls the pin high (to 3V3)" },
+                  ]}
+                  onChange={v => vm.setButton(b.id, { activeLow: v === "low" })}
+                />
+              </Field>
+            </div>
+          ))}
+          <Button icon={<Plus />} onClick={vm.addButton}>
+            Add button
+          </Button>
+          <Hint>
+            Buttons work the screen like a keypad: “Next widget” moves the focus, “Press” clicks
+            what has it. In Play, your keyboard stands in for them.
+          </Hint>
+
           <div className={s.problems}>
             {vm.problems.length === 0 ? (
               <Hint tone='ok'>All {vm.mcu} pins check out.</Hint>

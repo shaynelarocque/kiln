@@ -53,6 +53,15 @@ void kiln_animimg_notify_done(lv_obj_t * obj);
 /** Append each new subject value to a chart series, so the chart shows its history. */
 lv_observer_t * kiln_chart_bind_series(lv_obj_t * chart, lv_chart_series_t * series, lv_subject_t * subject);
 
+/**
+ * Adds a widget to its screen's focus group, made on first use: the widgets physical buttons
+ * reach, in order. Keypads switch to a screen's group when it loads, and the group goes with it.
+ */
+void kiln_focus_add(lv_obj_t * screen, lv_obj_t * obj);
+
+/** The screen's focus group, or NULL if nothing on it takes focus. */
+lv_group_t * kiln_focus_group(lv_obj_t * screen);
+
 #ifdef __cplusplus
 } /*extern "C"*/
 #endif

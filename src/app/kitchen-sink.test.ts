@@ -248,6 +248,18 @@ function kitchenSink(): Project {
     p.styles.push(small)
     caption.classes = [{ style: small.id, selector: "main:default" }]
   }
+
+  // a touch panel and three buttons, on the GPIOs the default display wiring leaves free
+  p.target.display.touch = {
+    driver: "cst816s",
+    pins: { sda: 0, scl: 1, int: 2, rst: 20, cs: -1, sck: -1, mosi: -1, miso: -1 },
+    ...{ xMin: 0, xMax: 239, yMin: 0, yMax: 239, rotation: 0 },
+  }
+  p.target.buttons = [
+    { id: newId(), name: "Next", pin: 8, activeLow: true, key: "next" },
+    { id: newId(), name: "Select", pin: 9, activeLow: true, key: "enter" },
+    { id: newId(), name: 'Back "esc"', pin: 21, activeLow: false, key: "esc" },
+  ]
   return p
 }
 

@@ -9,7 +9,13 @@ export {
   type PinProblem,
   type PinUse,
 } from "./model/board"
-export { DISPLAY_DRIVERS, DISPLAY_PRESETS, type DisplayPreset } from "./model/displays"
+export {
+  DISPLAY_DRIVERS,
+  DISPLAY_PRESETS,
+  TOUCH_DRIVERS,
+  TOUCH_TURNS,
+  type DisplayPreset,
+} from "./model/displays"
 export {
   appPartition,
   estimateBudget,

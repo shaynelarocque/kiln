@@ -154,6 +154,33 @@ EXPORT void kiln_pointer(lv_display_t * disp, int32_t x, int32_t y, bool pressed
     lv_indev_read(pointer);
 }
 
+static lv_indev_t * keypad;
+static uint32_t keypad_key;
+static bool keypad_pressed;
+
+static void keypad_read(lv_indev_t * indev, lv_indev_data_t * data)
+{
+    LV_UNUSED(indev);
+    data->key = keypad_key;
+    data->state = keypad_pressed ? LV_INDEV_STATE_PRESSED : LV_INDEV_STATE_RELEASED;
+}
+
+/** A physical button going down or up, as the LVGL key it sends (LV_KEY_NEXT, LV_KEY_ENTER, ...). */
+EXPORT void kiln_key(lv_display_t * disp, uint32_t key, bool pressed)
+{
+    if(!keypad) {
+        keypad = lv_indev_create();
+        lv_indev_set_type(keypad, LV_INDEV_TYPE_KEYPAD);
+        lv_indev_set_read_cb(keypad, keypad_read);
+    }
+    lv_indev_set_display(keypad, disp);
+    /* made after the screen loaded, so it asks the screen for its group */
+    lv_indev_set_group(keypad, kiln_focus_group(lv_display_get_screen_active(disp)));
+    keypad_key = key;
+    keypad_pressed = pressed;
+    lv_indev_read(keypad);
+}
+
 /*---------- style values (lv_style_value_t is passed by pointer in the wasm ABI) ----------*/
 
 EXPORT void kiln_obj_style_num(lv_obj_t * obj, lv_style_prop_t prop, int32_t v, lv_style_selector_t sel)

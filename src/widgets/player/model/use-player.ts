@@ -1,7 +1,26 @@
 import { useEffect, useRef, useState } from "react"
 import { editorApi } from "@/entities/editor"
-import { ProjectPlayer, liveScreenOf, useProjectStore } from "@/entities/project"
-import { getRuntime, resetRuntime } from "@/shared/lvgl"
+import {
+  ProjectPlayer,
+  liveScreenOf,
+  useProjectStore,
+  type ButtonKey,
+  type HardwareButton,
+} from "@/entities/project"
+import { BUTTON_KEYS, getRuntime, resetRuntime } from "@/shared/lvgl"
+
+/** Keyboard keys that stand in for the board's buttons, by what the button sends. */
+const KEYBOARD: Record<string, ButtonKey> = {
+  Enter: "enter",
+  Backspace: "esc",
+  ArrowLeft: "left",
+  ArrowRight: "right",
+  ArrowUp: "up",
+  ArrowDown: "down",
+}
+const keyFor = (e: KeyboardEvent): ButtonKey | undefined =>
+  e.key === "Tab" ? (e.shiftKey ? "prev" : "next") : KEYBOARD[e.key]
+const lvKey = (key: ButtonKey) => BUTTON_KEYS.find(k => k.value === key)!.key
 
 /**
  * Play mode: the whole UI running on one device-sized LVGL display, with real input,
@@ -15,6 +34,9 @@ export function usePlayer() {
   const [screen, setScreen] = useState<string | undefined>()
   const [run, setRun] = useState(0)
   const [failure, setFailure] = useState<string | null>(null)
+  /** what the held buttons send, to light them up */
+  const [held, setHeld] = useState<ButtonKey[]>([])
+  const buttons = project.target.buttons ?? []
 
   useEffect(() => {
     let alive = true
@@ -91,6 +113,40 @@ export function usePlayer() {
     }
   }
 
+  /** A board button going down or up, sent to LVGL as its key. */
+  const press = (key: ButtonKey, down: boolean) => {
+    setHeld(h => (down ? [...h, key] : h.filter(k => k !== key)))
+    guarded(p => p.key(lvKey(key), down))
+  }
+
+  // the keyboard works the buttons the board has, and only those
+  useEffect(() => {
+    if (!buttons.length) return
+    const down = new Map<string, ButtonKey>()
+    const onDown = (e: KeyboardEvent) => {
+      const key = keyFor(e)
+      if (!key || !buttons.some(b => b.key === key)) return
+      e.preventDefault()
+      // LVGL repeats a held key itself
+      if (e.repeat || down.has(e.code)) return
+      down.set(e.code, key)
+      press(key, true)
+    }
+    const onUp = (e: KeyboardEvent) => {
+      const key = down.get(e.code)
+      if (!key) return
+      down.delete(e.code)
+      press(key, false)
+    }
+    window.addEventListener("keydown", onDown)
+    window.addEventListener("keyup", onUp)
+    return () => {
+      window.removeEventListener("keydown", onDown)
+      window.removeEventListener("keyup", onUp)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [run])
+
   /** Pointer position in display pixels; the canvas is scaled up on screen. */
   const point = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const box = e.currentTarget.getBoundingClientRect()
@@ -112,6 +168,10 @@ export function usePlayer() {
     },
     close: () => editorApi.getState().set({ playing: false }),
     setValue: (id: string, v: number) => guarded(p => p.set(id, v)),
+    buttons,
+    isHeld: (b: HardwareButton) => held.includes(b.key),
+    buttonDown: (b: HardwareButton) => press(b.key, true),
+    buttonUp: (b: HardwareButton) => held.includes(b.key) && press(b.key, false),
     onPointerDown: (e: React.PointerEvent<HTMLCanvasElement>) => {
       e.currentTarget.setPointerCapture(e.pointerId)
       const at = point(e)

@@ -117,3 +117,19 @@
   border-radius: 2px;
   margin-right: 2px;
 }
+.button {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 8px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.buttonHead {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.buttonHead > :first-child {
+  flex: 1;
+}

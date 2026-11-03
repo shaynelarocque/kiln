@@ -90,3 +90,62 @@
 .var small {
   color: var(--text-faint);
 }
+
+/* the board's push buttons, as tactile caps that sink while held */
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px;
+}
+.hwButton {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  cursor: pointer;
+  touch-action: none;
+}
+.hwButton small {
+  color: var(--text-dim);
+  font-size: 11px;
+}
+.hwButton kbd {
+  padding: 0 4px;
+  border: 1px solid var(--line-strong);
+  border-radius: 3px;
+  font: inherit;
+}
+.cap {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #4a5163, #232834 70%);
+  box-shadow:
+    0 4px 0 #0d1017,
+    0 6px 12px rgba(0, 0, 0, 0.45),
+    inset 0 1px 1px rgba(255, 255, 255, 0.18);
+  transition:
+    transform 0.06s,
+    box-shadow 0.06s;
+}
+.hwButton:hover .cap {
+  background: radial-gradient(circle at 35% 30%, #555d71, #282e3b 70%);
+}
+.hwButton[data-held] .cap {
+  transform: translateY(3px);
+  box-shadow:
+    0 1px 0 #0d1017,
+    0 2px 4px rgba(0, 0, 0, 0.45),
+    inset 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+.hwButton[data-held] strong {
+  color: var(--accent);
+}
+.hwButton:focus-visible .cap {
+  outline: 2px solid var(--select);
+  outline-offset: 3px;
+}

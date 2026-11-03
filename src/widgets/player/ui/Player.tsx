@@ -1,4 +1,5 @@
 import { RotateCw, X } from "lucide-react"
+import { BUTTON_KEYS } from "@/shared/lvgl"
 import { Hint, IconButton } from "@/shared/ui"
 import { usePlayer } from "../model/use-player"
 import s from "./player.module.css"
@@ -36,10 +37,41 @@ export function Player() {
             onPointerUp={vm.onPointerUp}
           />
         </div>
+        {vm.buttons.length > 0 && (
+          <div className={s.buttons}>
+            {vm.buttons.map(b => {
+              const key = BUTTON_KEYS.find(k => k.value === b.key)
+              return (
+                <button
+                  key={b.id}
+                  className={s.hwButton}
+                  data-held={vm.isHeld(b) || undefined}
+                  title={`${key?.label}: GPIO${b.pin}`}
+                  onPointerDown={e => {
+                    e.currentTarget.setPointerCapture(e.pointerId)
+                    vm.buttonDown(b)
+                  }}
+                  onPointerUp={() => vm.buttonUp(b)}
+                  onPointerCancel={() => vm.buttonUp(b)}
+                >
+                  <span className={s.cap} aria-hidden />
+                  <strong>{b.name}</strong>
+                  <small>
+                    {key?.label} · <kbd>{key?.keyboard}</kbd>
+                  </small>
+                </button>
+              )
+            })}
+          </div>
+        )}
         {vm.failure && <Hint tone='error'>{vm.failure}</Hint>}
         <Hint>
-          Pixel-exact: the same LVGL build, RGB565 colour and fonts the board gets. Tap and drag
-          like a touch screen.
+          Pixel-exact: the same LVGL build, RGB565 colour and fonts the board gets.{" "}
+          {vm.project.target.display.touch
+            ? "Tap and drag like the touch screen."
+            : vm.buttons.length
+              ? "The board has buttons and no touch panel, so tapping here is a preview-only shortcut."
+              : "Tap and drag to try it; on the board, add a touch panel or buttons to make it interactive."}
         </Hint>
       </div>
       <aside className={s.side}>

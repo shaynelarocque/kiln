@@ -40,8 +40,16 @@ What you see is what flashes.
   variable from an ADC pin, a digital pin, uptime, free heap, the chip's temperature or any C
   expression; let one drive a GPIO or PWM. Pins are checked against the MCU: ADC capability,
   strapping, flash and USB pins, double use.
+- **Touch it, or press it.** Give the panel a touch chip (CST816S, FT6x36, GT911 or the resistive
+  XPT2046, on the display's SPI bus or its own) and LovyanGFX feeds it to LVGL as a pointer, turned
+  with the panel. Push buttons on GPIOs become an LVGL keypad: each screen keeps a focus group of its
+  interactive widgets, "Next widget" moves through it and "Press" clicks what has focus, so a UI with
+  no touch panel works on three buttons. Pick a dev kit (the ESP32-2424S012, Waveshare's round
+  S3 touch board, the "Cheap Yellow Display", LilyGO's T-Display) and the board, panel, touch and
+  buttons are all filled in.
 - **Play it.** Play mode runs the whole UI on real LVGL: taps, events, screen transitions,
-  animations, and simulated sensors you can scrub. With the Interact tab open, every navigation
+  animations, and simulated sensors you can scrub. The board's buttons sit under the device and
+  your keyboard stands in for them (Tab, Enter, arrows). With the Interact tab open, every navigation
   shows on the canvas as a prototype noodle, and dragging one from a widget to a screen makes it.
 - **Export it.** `ui.h`, `ui.c` and one file per screen in readable LVGL C, an `lv_conf.h` with only
   the fonts you used, a LovyanGFX panel config, the hardware glue, and a `platformio.ini`. Your code

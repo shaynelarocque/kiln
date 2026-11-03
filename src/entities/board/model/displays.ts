@@ -7,6 +7,27 @@ export const DISPLAY_DRIVERS = [
   { value: "st7796", label: "ST7796", panel: "Panel_ST7796" },
 ] as const
 
+/** Touch chips the firmware export can read (through LovyanGFX). */
+export const TOUCH_DRIVERS = [
+  { value: "cst816s", label: "CST816S · capacitive, I2C", touch: "Touch_CST816S", addr: 0x15 },
+  { value: "ft6x36", label: "FT6x36 · capacitive, I2C", touch: "Touch_FT5x06", addr: 0x38 },
+  // the GT911 answers at 0x14 or 0x5D, depending on its pins at reset; LovyanGFX tries both
+  { value: "gt911", label: "GT911 · capacitive, I2C", touch: "Touch_GT911", addr: 0x14 },
+  { value: "xpt2046", label: "XPT2046 · resistive, SPI", touch: "Touch_XPT2046", addr: 0 },
+] as const
+
+/** LovyanGFX's touch offset_rotation: how the touch layer sits on the panel (4-7 mirror it). */
+export const TOUCH_TURNS = [
+  "Same as the panel",
+  "Turned 90°",
+  "Turned 180°",
+  "Turned 270°",
+  "Mirrored",
+  "Mirrored, turned 90°",
+  "Mirrored, turned 180°",
+  "Mirrored, turned 270°",
+]
+
 export type DisplayPreset = {
   label: string
   driver: (typeof DISPLAY_DRIVERS)[number]["value"]

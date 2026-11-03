@@ -222,3 +222,38 @@ void kiln_animimg_notify_done(lv_obj_t * obj)
     LV_UNUSED(obj);
 #endif
 }
+
+static void focus_screen_loaded(lv_event_t * e)
+{
+    lv_group_t * group = lv_event_get_user_data(e);
+    for(lv_indev_t * i = lv_indev_get_next(NULL); i; i = lv_indev_get_next(i))
+        if(lv_indev_get_type(i) == LV_INDEV_TYPE_KEYPAD || lv_indev_get_type(i) == LV_INDEV_TYPE_ENCODER)
+            lv_indev_set_group(i, group);
+}
+
+static void focus_screen_deleted(lv_event_t * e)
+{
+    lv_group_delete(lv_event_get_user_data(e));
+}
+
+lv_group_t * kiln_focus_group(lv_obj_t * screen)
+{
+    if(screen == NULL) return NULL;
+    uint32_t count = lv_obj_get_event_count(screen);
+    for(uint32_t i = 0; i < count; i++) {
+        lv_event_dsc_t * dsc = lv_obj_get_event_dsc(screen, i);
+        if(lv_event_dsc_get_cb(dsc) == focus_screen_loaded) return lv_event_dsc_get_user_data(dsc);
+    }
+    return NULL;
+}
+
+void kiln_focus_add(lv_obj_t * screen, lv_obj_t * obj)
+{
+    lv_group_t * group = kiln_focus_group(screen);
+    if(group == NULL) {
+        group = lv_group_create();
+        lv_obj_add_event_cb(screen, focus_screen_loaded, LV_EVENT_SCREEN_LOADED, group);
+        lv_obj_add_event_cb(screen, focus_screen_deleted, LV_EVENT_DELETE, group);
+    }
+    lv_group_add_obj(group, obj);
+}

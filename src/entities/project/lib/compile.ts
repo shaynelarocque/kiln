@@ -61,6 +61,21 @@ const POINTER_EVENTS = new Set([
   "LV_EVENT_LONG_PRESSED",
 ])
 
+/** Widgets LVGL lets you work without a pointer; with buttons on the board, they take focus. */
+const FOCUSABLE = new Set<Node["widget"]>([
+  "button",
+  "arc",
+  "slider",
+  "switch",
+  "checkbox",
+  "dropdown",
+  "roller",
+])
+
+/** Whether buttons can reach a node: LVGL's interactive widgets, and anything that takes clicks. */
+const focusable = (n: Node) =>
+  n.clickable ?? (FOCUSABLE.has(n.widget) || n.events.some(ev => POINTER_EVENTS.has(ev.trigger)))
+
 const COMPARE: Record<string, string> = {
   eq: "KILN_EQ",
   not_eq: "KILN_NOT_EQ",
@@ -653,5 +668,12 @@ function wiringOps(project: Project, targets: Targets): Op[] {
         if (op) ops.push(op)
       }
     })
+  // buttons work the screen's widgets in tree order, like Tab through a page
+  if (project.target.buttons?.length)
+    for (const screen of project.screens)
+      walk(screen, node => {
+        if (node !== screen && focusable(node))
+          ops.push(call("kiln_focus_add", obj(screen.id), obj(node.id)))
+      })
   return ops
 }

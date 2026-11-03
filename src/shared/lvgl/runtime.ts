@@ -190,6 +190,11 @@ export class Display {
     this.rt.x.kiln_pointer(this.ptr, Math.round(x), Math.round(y), +pressed)
   }
 
+  /** A physical button going down or up, as an LVGL key name like "LV_KEY_ENTER". */
+  key(name: string, pressed: boolean) {
+    this.rt.x.kiln_key(this.ptr, this.rt.const(name), +pressed)
+  }
+
   delete() {
     this.rt.x.kiln_display_delete(this.ptr)
   }

@@ -168,6 +168,11 @@ export class ProjectPlayer {
     this.display.pointer(x, y, pressed)
   }
 
+  /** A physical button going down or up; `key` is its LVGL key name. */
+  key(key: string, pressed: boolean) {
+    this.display.key(key, pressed)
+  }
+
   /** Simulations step at 20 Hz, like a sensor poll would; LVGL ticks every frame. */
   frame(ms: number, ctx: CanvasRenderingContext2D) {
     this.time += ms

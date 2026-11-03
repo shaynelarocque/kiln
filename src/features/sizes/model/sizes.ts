@@ -8,8 +8,10 @@ export const sizeLabel = (d: Pick<DisplayConfig, "width" | "height" | "round">) 
 /** Adds a size for a display module, on the base board, and switches to it. */
 export function addSize(preset: DisplayPreset) {
   const { doc } = projectApi.getState()
+  // another module has its own touch panel, if any: the base's calibration wouldn't fit it
+  const { touch: _, ...base } = doc.target.display
   const display: DisplayConfig = {
-    ...doc.target.display,
+    ...base,
     driver: preset.driver,
     width: preset.width,
     height: preset.height,
@@ -26,7 +28,7 @@ export function addSize(preset: DisplayPreset) {
       void d.sizes.push({
         id,
         name: sizeLabel(display),
-        target: { board: doc.target.board, display },
+        target: { ...doc.target, display },
       }),
   )
   projectApi.getState().setSize(id)

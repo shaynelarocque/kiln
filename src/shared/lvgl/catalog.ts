@@ -142,6 +142,23 @@ export const SCREEN_LOAD_ANIM: Option[] = [
   { value: "LV_SCREEN_LOAD_ANIM_OVER_BOTTOM", label: "Slide over down" },
 ]
 
+/**
+ * What a physical button sends: an LVGL key for the screen's focused widget. Next and previous
+ * move focus; the focused widget takes the rest (Enter clicks it, arrows step sliders and lists).
+ * `keyboard` is the key that stands in for the button in Play.
+ */
+export const BUTTON_KEYS = [
+  { value: "next", label: "Next widget", key: "LV_KEY_NEXT", keyboard: "Tab" },
+  { value: "prev", label: "Previous widget", key: "LV_KEY_PREV", keyboard: "⇧Tab" },
+  { value: "enter", label: "Press", key: "LV_KEY_ENTER", keyboard: "Enter" },
+  // Esc closes Play, so Backspace stands in
+  { value: "esc", label: "Escape", key: "LV_KEY_ESC", keyboard: "⌫" },
+  { value: "left", label: "Left · less", key: "LV_KEY_LEFT", keyboard: "←" },
+  { value: "right", label: "Right · more", key: "LV_KEY_RIGHT", keyboard: "→" },
+  { value: "up", label: "Up", key: "LV_KEY_UP", keyboard: "↑" },
+  { value: "down", label: "Down", key: "LV_KEY_DOWN", keyboard: "↓" },
+] as const
+
 export const EVENTS: Option[] = [
   { value: "LV_EVENT_CLICKED", label: "Click" },
   { value: "LV_EVENT_PRESSED", label: "Press" },

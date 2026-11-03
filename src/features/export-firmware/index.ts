@@ -6,7 +6,7 @@ export {
   type Boxes,
   type FirmwareFile,
 } from "./lib/firmware"
-export { pinClaims } from "./lib/pins"
+export { pinClaims, spiHosts, touchSharesBus, wiringProblems } from "./lib/pins"
 export {
   pickFolder,
   pioInfo,

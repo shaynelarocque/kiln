@@ -234,6 +234,47 @@ export type DisplayDriver = "st7789" | "ili9341" | "st7735" | "st7796" | "gc9a01
 
 export type Pins = { sck: number; mosi: number; cs: number; dc: number; rst: number; bl: number }
 
+export type TouchDriver = "cst816s" | "ft6x36" | "gt911" | "xpt2046"
+
+/**
+ * A touch panel over the display, read through LovyanGFX. The capacitive chips talk I2C (sda,
+ * scl); the resistive XPT2046 talks SPI, on the display's bus when its sck/mosi are the display's.
+ */
+export type TouchConfig = {
+  driver: TouchDriver
+  pins: {
+    sda: number
+    scl: number
+    /** interrupt, or the XPT2046's IRQ: optional, -1 polls */
+    int: number
+    rst: number
+    cs: number
+    sck: number
+    mosi: number
+    miso: number
+  }
+  /** raw readings at the panel's edges: capacitive chips report pixels, resistive ones need calibrating */
+  xMin: number
+  xMax: number
+  yMin: number
+  yMax: number
+  /** LovyanGFX's offset_rotation, 0-7: quarter turns from the panel to the touch layer (4-7 mirror) */
+  rotation: number
+}
+
+/** What a physical button does: the LVGL key it sends to the focused widget. */
+export type ButtonKey = "next" | "prev" | "enter" | "esc" | "left" | "right" | "up" | "down"
+
+/** A push button on a GPIO. */
+export type HardwareButton = {
+  id: string
+  name: string
+  pin: number
+  /** pressed pulls the pin low (wired to GND, with the internal pull-up), or high */
+  activeLow: boolean
+  key: ButtonKey
+}
+
 export type DisplayConfig = {
   driver: DisplayDriver
   width: number
@@ -251,10 +292,13 @@ export type DisplayConfig = {
   pins: Pins
   /** rows in each of the two partial render buffers */
   bufferRows: number
+  touch?: TouchConfig
 }
 
 export type Target = {
   /** a PlatformIO board id, e.g. esp32-c3-devkitm-1 */
   board: string
   display: DisplayConfig
+  /** push buttons that drive the UI like a keypad: focus moves between widgets, Enter clicks */
+  buttons?: HardwareButton[]
 }
