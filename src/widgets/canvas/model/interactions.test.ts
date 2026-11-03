@@ -47,6 +47,13 @@ describe("hit testing", () => {
     expect(hitChain(screen, rects, 35, 35)).toEqual([screen])
   })
 
+  it("skips what LVGL isn't drawing, like a layer a binding hides", () => {
+    const { screen, card, top, rects } = tree()
+    rects.set(top.id, { ...rects.get(top.id)!, hidden: true })
+    expect(hitChain(screen, rects, 110, 110).at(-1)).toBe(card)
+    expect(marqueeHits(screen, rects, { x: 90, y: 90, w: 20, h: 20 })).toEqual([card.id])
+  })
+
   it("marquees the top-level layers a box touches", () => {
     const { screen, card, top, rects } = tree()
     // touches the card's corner only, and the label inside it isn't top level

@@ -80,7 +80,13 @@ export class ProjectPreview {
   rects(screenId: string) {
     const out = new Map<string, Rect>()
     const scene = this.boards.get(screenId)?.scene
-    if (scene) for (const [id, h] of scene.objects()) out.set(id, this.rt.coords(h))
+    if (scene)
+      for (const [id, h] of scene.objects()) {
+        const r: Rect = this.rt.coords(h)
+        // bindings can hide parts of a design; clicks shouldn't land on what isn't drawn
+        if (!this.rt.x.lv_obj_is_visible(h)) r.hidden = true
+        out.set(id, r)
+      }
     return out
   }
 

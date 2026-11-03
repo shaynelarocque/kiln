@@ -309,9 +309,16 @@ export function createPetProject(): Project {
       { y: "22%" },
       { at: smallFont("lv_font_montserrat_12"), ...extra },
     )
+  // sized to its words, not the screen: an empty full-screen box would catch every click
   const sayTipsy = group("say_tipsy", {
+    layout: { x: 0, y: "22%", w: "content", h: "content", align: "LV_ALIGN_CENTER" },
     bindings: [hiddenWhen(booze.id, "gt", 70)],
-    children: [say("say_hic", "hic! one more?", { bindings: [hiddenWhen(booze.id, "le", 30)] })],
+    children: [
+      say("say_hic", "hic! one more?", {
+        layout: { x: 0, y: 0, w: "content", h: "content", align: "LV_ALIGN_CENTER" },
+        bindings: [hiddenWhen(booze.id, "le", 30)],
+      }),
+    ],
   })
   const meter = createNode("bar", {
     name: "meter",

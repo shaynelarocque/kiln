@@ -17,7 +17,7 @@ export function hitChain(screen: Node, rects: Rects, x: number, y: number): Node
     // later siblings draw on top, so the last hit wins
     for (const child of level.children) {
       const r = rects.get(child.id)
-      if (r && !child.hidden && !child.locked && inside(r, x, y)) next = child
+      if (r && !r.hidden && !child.hidden && !child.locked && inside(r, x, y)) next = child
     }
     if (!next) return chain
     chain.push(next)
@@ -32,6 +32,7 @@ export function marqueeHits(screen: Node, rects: Rects, box: Rect): string[] {
       const r = rects.get(c.id)
       return (
         r &&
+        !r.hidden &&
         !c.hidden &&
         !c.locked &&
         r.x < box.x + box.w &&
