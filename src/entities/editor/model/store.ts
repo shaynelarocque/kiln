@@ -48,15 +48,18 @@ export const useEditorStore = create<EditorState>()(set => ({
   error: null,
   rects: new Map(),
 
-  select: ids => set(s => (sameIds(s.selection, ids) ? s : { selection: ids, selector: MAIN_DEFAULT })),
+  select: ids =>
+    set(s => (sameIds(s.selection, ids) ? s : { selection: ids, selector: MAIN_DEFAULT })),
   setHover: hover => set({ hover }),
   setView: (zoom, pan) => set({ zoom, pan }),
   set: patch => set(patch),
 }))
 
-const sameIds = (a: string[], b: string[]) => a.length === b.length && a.every((id, i) => id === b[i])
+const sameIds = (a: string[], b: string[]) =>
+  a.length === b.length && a.every((id, i) => id === b[i])
 
 /** Every laid-out box by node id, across screens (node ids are unique project-wide). */
-export const nodeBoxes = (rects: EditorState["rects"]) => new Map([...rects.values()].flatMap(m => [...m]))
+export const nodeBoxes = (rects: EditorState["rects"]) =>
+  new Map([...rects.values()].flatMap(m => [...m]))
 
 export const editorApi = useEditorStore

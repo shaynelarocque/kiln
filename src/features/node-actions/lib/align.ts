@@ -34,7 +34,9 @@ export function distributeMoves(boxes: Rect[], axis: "x" | "y"): Move[] {
   const order = boxes.map((b, i) => ({ b, i })).sort((a, c) => pos(a.b) - pos(c.b))
   const first = order[0].b
   const last = order.at(-1)!.b
-  const gap = (pos(last) + size(last) - pos(first) - order.reduce((s, o) => s + size(o.b), 0)) / (boxes.length - 1)
+  const gap =
+    (pos(last) + size(last) - pos(first) - order.reduce((s, o) => s + size(o.b), 0)) /
+    (boxes.length - 1)
   const moves = boxes.map(() => ({ dx: 0, dy: 0 }))
   let at = pos(first)
   for (const { b, i } of order) {

@@ -11,7 +11,13 @@ import {
   Trash,
 } from "lucide-react"
 import { WidgetIcon } from "@/entities/project"
-import { alignSelection, deleteSelection, distributeSelection, groupSelection, type AlignEdge } from "@/features/node-actions"
+import {
+  alignSelection,
+  deleteSelection,
+  distributeSelection,
+  groupSelection,
+  type AlignEdge,
+} from "@/features/node-actions"
 import { Button, Hint, IconButton, Tabs } from "@/shared/ui"
 import { useInspector } from "../model/use-inspector"
 import { BindTab } from "./BindTab"
@@ -42,10 +48,18 @@ export function Inspector() {
             </IconButton>
           ))}
           <span className={s.alignGap} />
-          <IconButton label='Distribute horizontal spacing (⌃⌥H)' disabled={vm.selection.length < 3} onClick={() => distributeSelection("x")}>
+          <IconButton
+            label='Distribute horizontal spacing (⌃⌥H)'
+            disabled={vm.selection.length < 3}
+            onClick={() => distributeSelection("x")}
+          >
             <AlignHorizontalSpaceBetween />
           </IconButton>
-          <IconButton label='Distribute vertical spacing (⌃⌥V)' disabled={vm.selection.length < 3} onClick={() => distributeSelection("y")}>
+          <IconButton
+            label='Distribute vertical spacing (⌃⌥V)'
+            disabled={vm.selection.length < 3}
+            onClick={() => distributeSelection("y")}
+          >
             <AlignVerticalSpaceBetween />
           </IconButton>
         </div>
@@ -64,7 +78,10 @@ export function Inspector() {
     return (
       <div className={s.empty}>
         <strong>Nothing selected</strong>
-        <Hint>Click a widget on the canvas, or a screen's name to edit the screen. Space-drag pans, pinch or ⌘-scroll zooms.</Hint>
+        <Hint>
+          Click a widget on the canvas, or a screen's name to edit the screen. Space-drag pans,
+          pinch or ⌘-scroll zooms.
+        </Hint>
       </div>
     )
 
@@ -77,7 +94,11 @@ export function Inspector() {
           className={s.headName}
           defaultValue={vm.node.name}
           aria-label='Name'
-          onBlur={e => e.target.value.trim() && e.target.value !== vm.node!.name && vm.rename(e.target.value.trim())}
+          onBlur={e =>
+            e.target.value.trim() &&
+            e.target.value !== vm.node!.name &&
+            vm.rename(e.target.value.trim())
+          }
           onKeyDown={e => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
         />
         <code title='The variable this widget gets in the generated C'>{vm.cName}</code>
@@ -87,8 +108,14 @@ export function Inspector() {
         onChange={vm.setTab}
         tabs={[
           { value: "design", label: "Design" },
-          { value: "bind", label: `Bind${vm.node.bindings.length ? ` · ${vm.node.bindings.length}` : ""}` },
-          { value: "interact", label: `Interact${vm.node.events.length ? ` · ${vm.node.events.length}` : ""}` },
+          {
+            value: "bind",
+            label: `Bind${vm.node.bindings.length ? ` · ${vm.node.bindings.length}` : ""}`,
+          },
+          {
+            value: "interact",
+            label: `Interact${vm.node.events.length ? ` · ${vm.node.events.length}` : ""}`,
+          },
         ]}
       />
       <div className={s.scroll}>

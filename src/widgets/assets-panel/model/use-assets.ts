@@ -1,6 +1,15 @@
 import { useState } from "react"
 import { editorApi, useEditorStore } from "@/entities/editor"
-import { allNodes, edit, findNode, ttfUses, useProjectStore, type Asset, type FontAsset, type ImageFormat } from "@/entities/project"
+import {
+  allNodes,
+  edit,
+  findNode,
+  ttfUses,
+  useProjectStore,
+  type Asset,
+  type FontAsset,
+  type ImageFormat,
+} from "@/entities/project"
 import { importFonts } from "@/features/import-font"
 import { bytesPerPixel, importImages, reconvert } from "@/features/import-image"
 import { fontFamily } from "@/shared/lib/font-faces"
@@ -32,7 +41,10 @@ export function useAssets() {
     over,
     imageTarget: selected?.widget === "image" ? selected : undefined,
     flashBytes: (a: Asset) => a.width * a.height * bytesPerPixel[a.format],
-    usesOf: (a: Asset) => nodes.filter(n => n.props.src === a.id || Object.values(n.style).some(p => p.bg_image_src === a.id)).length,
+    usesOf: (a: Asset) =>
+      nodes.filter(
+        n => n.props.src === a.id || Object.values(n.style).some(p => p.bg_image_src === a.id),
+      ).length,
     pick: () => pickFiles("image/png,image/jpeg,image/gif,image/webp,image/svg+xml", importImages),
     fonts: project.fonts,
     /** the selected layer, which "Use on" sets the font of */
@@ -50,7 +62,10 @@ export function useAssets() {
         if (!n) return
         const style = (n.style["main:default"] ??= {})
         const current = String(style.text_font ?? DEFAULT_FONT)
-        style.text_font = ttfFont(fontId, parseTtfFont(current)?.size ?? Number(/(\d+)$/.exec(current)?.[1] ?? 14))
+        style.text_font = ttfFont(
+          fontId,
+          parseTtfFont(current)?.size ?? Number(/(\d+)$/.exec(current)?.[1] ?? 14),
+        )
       })
       editorApi.getState().set({ rightTab: "design" })
     },

@@ -1,5 +1,19 @@
 import { editorApi } from "@/entities/editor"
-import { canContain, cloneNode, createNode, edit, findParent, insertNode, locate, moveNode, projectApi, removeNodes, screenOf, uniqueName, type Node } from "@/entities/project"
+import {
+  canContain,
+  cloneNode,
+  createNode,
+  edit,
+  findParent,
+  insertNode,
+  locate,
+  moveNode,
+  projectApi,
+  removeNodes,
+  screenOf,
+  uniqueName,
+  type Node,
+} from "@/entities/project"
 import { alignFactors, alignName } from "@/shared/lvgl"
 import { alignMoves, distributeMoves, type AlignEdge, type Move } from "../lib/align"
 
@@ -47,7 +61,11 @@ export function cutSelection() {
 export function paste() {
   if (!clipboard.length) return
   const hit = locate(project(), selection()[0] ?? "")
-  const parent = hit ? (canContain(hit.node) && !clipboard.some(c => c.id === hit.node.id) ? hit.node : (hit.parent ?? hit.node)) : project().screens[0]
+  const parent = hit
+    ? canContain(hit.node) && !clipboard.some(c => c.id === hit.node.id)
+      ? hit.node
+      : (hit.parent ?? hit.node)
+    : project().screens[0]
   const pasted: string[] = []
   edit(d => {
     for (const node of clipboard) {
@@ -90,19 +108,35 @@ export function groupSelection() {
   const group = createNode("container", {
     name: uniqueName(project(), "group"),
     layout: { x: 0, y: 0, w: "content", h: "content", align: "LV_ALIGN_TOP_LEFT" },
-    style: { "main:default": { bg_opa: 0, border_width: 0, pad_top: 0, pad_bottom: 0, pad_left: 0, pad_right: 0 } },
+    style: {
+      "main:default": {
+        bg_opa: 0,
+        border_width: 0,
+        pad_top: 0,
+        pad_bottom: 0,
+        pad_left: 0,
+        pad_right: 0,
+      },
+    },
   })
   edit(d => {
     const p = locate(d, parent.id)!.node
     const index = Math.min(...ids.map(id => p.children.findIndex(c => c.id === id)))
-    group.children = ids.map(id => p.children.find(c => c.id === id)!).filter(Boolean).map(c => structuredClone(c))
+    group.children = ids
+      .map(id => p.children.find(c => c.id === id)!)
+      .filter(Boolean)
+      .map(c => structuredClone(c))
     p.children = p.children.filter(c => !ids.includes(c.id))
     p.children.splice(index, 0, group)
   })
   editorApi.getState().select([group.id])
 }
 
-export function updateNode(id: string, recipe: (node: Node) => void, phase?: "start" | "move" | "end") {
+export function updateNode(
+  id: string,
+  recipe: (node: Node) => void,
+  phase?: "start" | "move" | "end",
+) {
   edit(d => {
     const n = locate(d, id)?.node
     if (n) recipe(n)
@@ -146,7 +180,8 @@ export function alignSelection(edge: AlignEdge) {
   const ids = placeable()
   if (ids.length === 1) {
     const horizontal = edge === "left" || edge === "hcenter" || edge === "right"
-    const f = edge === "left" || edge === "top" ? 0 : edge === "right" || edge === "bottom" ? 1 : 0.5
+    const f =
+      edge === "left" || edge === "top" ? 0 : edge === "right" || edge === "bottom" ? 1 : 0.5
     return updateNode(ids[0], n => {
       const [ax, ay] = alignFactors(n.layout.align)
       n.layout.align = horizontal ? alignName(f, ay) : alignName(ax, f)
@@ -155,11 +190,25 @@ export function alignSelection(edge: AlignEdge) {
     })
   }
   const boxes = selectedBoxes()
-  if (boxes.length > 1) shift(boxes.map(b => b.id), alignMoves(boxes.map(b => b.box), edge))
+  if (boxes.length > 1)
+    shift(
+      boxes.map(b => b.id),
+      alignMoves(
+        boxes.map(b => b.box),
+        edge,
+      ),
+    )
 }
 
 /** Equal gaps between three or more layers; the outermost two stay put (Figma's ⌃⌥H / ⌃⌥V). */
 export function distributeSelection(axis: "x" | "y") {
   const boxes = selectedBoxes()
-  if (boxes.length > 2) shift(boxes.map(b => b.id), distributeMoves(boxes.map(b => b.box), axis))
+  if (boxes.length > 2)
+    shift(
+      boxes.map(b => b.id),
+      distributeMoves(
+        boxes.map(b => b.box),
+        axis,
+      ),
+    )
 }

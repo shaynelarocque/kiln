@@ -49,8 +49,8 @@ What you see is what flashes.
   LVGL draws a rotated or scaled widget through a layer on its heap, which the preview's roomy heap
   would never show; Kiln sizes the board's heap for the biggest one and says which widget it is.
 
-| Components | Board, display and pins | Export |
-|---|---|---|
+| Components                         | Board, display and pins         | Export                     |
+| ---------------------------------- | ------------------------------- | -------------------------- |
 | ![Components](docs/components.png) | ![Board dialog](docs/board.png) | ![Export](docs/export.png) |
 
 ## Getting started
@@ -84,14 +84,14 @@ export.
 
 The frontend follows [Feature-Sliced Design](https://feature-sliced.design), checked by Steiger:
 
-| Layer | What's there |
-|---|---|
-| `app` | entry point, global styles |
-| `pages/editor` | the editor layout and keyboard shortcuts |
-| `widgets` | canvas, layers, inspector, data, styles, assets, timeline, player, dialogs |
-| `features` | insert widget, node actions, history, project files, firmware export |
-| `entities` | `project` (document, compiler, preview), `board` (PlatformIO boards, pins, budget), `editor` (selection, view) |
-| `shared` | `lvgl` (catalog, ops, wasm runtime, C printer), `ui` kit, Tauri bridge |
+| Layer          | What's there                                                                                                   |
+| -------------- | -------------------------------------------------------------------------------------------------------------- |
+| `app`          | entry point, global styles                                                                                     |
+| `pages/editor` | the editor layout and keyboard shortcuts                                                                       |
+| `widgets`      | canvas, layers, inspector, data, styles, assets, timeline, player, dialogs                                     |
+| `features`     | insert widget, node actions, history, project files, firmware export                                           |
+| `entities`     | `project` (document, compiler, preview), `board` (PlatformIO boards, pins, budget), `editor` (selection, view) |
+| `shared`       | `lvgl` (catalog, ops, wasm runtime, C printer), `ui` kit, Tauri bridge                                         |
 
 Each slice is MVVM: views in `ui/` stay dumb and read a view-model hook in `model/` (for example
 `useCanvas`, `useInspector`, `useLayers`), which is the only thing that talks to the stores.

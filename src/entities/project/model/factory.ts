@@ -88,7 +88,13 @@ export function createEmptyProject(name = "Untitled"): Project {
   }
 }
 
-const label = (name: string, text: string, font: string, color: string, extra: Partial<Node> = {}) =>
+const label = (
+  name: string,
+  text: string,
+  font: string,
+  color: string,
+  extra: Partial<Node> = {},
+) =>
   createNode("label", {
     name,
     props: { text, longMode: "LV_LABEL_LONG_MODE_WRAP" },
@@ -133,12 +139,29 @@ export function createSampleProject(): Project {
   const card = {
     id: newId(),
     name: "card",
-    props: { bg_color: "#1b222c", bg_opa: 255, radius: 14, border_width: 0, pad_top: 10, pad_bottom: 10, pad_left: 14, pad_right: 14 },
+    props: {
+      bg_color: "#1b222c",
+      bg_opa: 255,
+      radius: 14,
+      border_width: 0,
+      pad_top: 10,
+      pad_bottom: 10,
+      pad_left: 14,
+      pad_right: 14,
+    },
   }
 
   const dial = createNode("arc", {
     name: "dial",
-    props: { min: 10, max: 30, value: 23, bgStart: 135, bgEnd: 45, rotation: 0, mode: "LV_ARC_MODE_NORMAL" },
+    props: {
+      min: 10,
+      max: 30,
+      value: 23,
+      bgStart: 135,
+      bgEnd: 45,
+      rotation: 0,
+      mode: "LV_ARC_MODE_NORMAL",
+    },
     layout: { x: 0, y: 0, w: 210, h: 210, align: "LV_ALIGN_CENTER" },
     style: {
       "main:default": { arc_width: 14, arc_color: "#1f2933" },
@@ -146,7 +169,12 @@ export function createSampleProject(): Project {
       "knob:default": { bg_color: "#ffffff", pad_top: 2, pad_bottom: 2, pad_left: 2, pad_right: 2 },
       "knob:pressed": { transform_scale_x: 320, transform_scale_y: 320 },
     },
-    transition: { props: ["transform_scale_x", "transform_scale_y"], duration: 160, delay: 0, easing: "ease-out" },
+    transition: {
+      props: ["transform_scale_x", "transform_scale_y"],
+      duration: 160,
+      delay: 0,
+      easing: "ease-out",
+    },
     bindings: [{ kind: "value", variable: target.id }],
   })
   const temp = label("temperature", "21°", "lv_font_montserrat_48", "#ffffff", {
@@ -159,7 +187,9 @@ export function createSampleProject(): Project {
   })
   const flame = label("heating_icon", "\uf0e7 Heating", "lv_font_montserrat_14", `$${accent.id}`, {
     layout: { x: 0, y: -52, w: "content", h: "content", align: "LV_ALIGN_CENTER" },
-    bindings: [{ kind: "flag", variable: heating.id, flag: "LV_OBJ_FLAG_HIDDEN", compare: "eq", ref: 0 }],
+    bindings: [
+      { kind: "flag", variable: heating.id, flag: "LV_OBJ_FLAG_HIDDEN", compare: "eq", ref: 0 },
+    ],
   })
   const settingsButton = createNode("button", {
     name: "settings_button",
@@ -181,13 +211,34 @@ export function createSampleProject(): Project {
   const row = (name: string, text: string, control: Node) => {
     const r = createNode("container", {
       name,
-      layout: { x: 0, y: 0, w: 168, h: "content", align: "LV_ALIGN_TOP_LEFT", flex: { flow: "LV_FLEX_FLOW_ROW", main: "LV_FLEX_ALIGN_SPACE_BETWEEN", cross: "LV_FLEX_ALIGN_CENTER", track: "LV_FLEX_ALIGN_CENTER" } },
+      layout: {
+        x: 0,
+        y: 0,
+        w: 168,
+        h: "content",
+        align: "LV_ALIGN_TOP_LEFT",
+        flex: {
+          flow: "LV_FLEX_FLOW_ROW",
+          main: "LV_FLEX_ALIGN_SPACE_BETWEEN",
+          cross: "LV_FLEX_ALIGN_CENTER",
+          track: "LV_FLEX_ALIGN_CENTER",
+        },
+      },
       classes: [{ style: card.id, selector: "main:default" }],
     })
-    r.children = [label(`${name}_label`, text, "lv_font_montserrat_14", "#e4e7eb", { layout: { x: 0, y: 0, w: "content", h: "content", align: "LV_ALIGN_TOP_LEFT" } }), control]
+    r.children = [
+      label(`${name}_label`, text, "lv_font_montserrat_14", "#e4e7eb", {
+        layout: { x: 0, y: 0, w: "content", h: "content", align: "LV_ALIGN_TOP_LEFT" },
+      }),
+      control,
+    ]
     return r
   }
-  const ecoSwitch = createNode("switch", { name: "eco_switch", bindings: [{ kind: "checked", variable: eco.id }], layout: { x: 0, y: 0, w: 44, h: 24, align: "LV_ALIGN_TOP_LEFT" } })
+  const ecoSwitch = createNode("switch", {
+    name: "eco_switch",
+    bindings: [{ kind: "checked", variable: eco.id }],
+    layout: { x: 0, y: 0, w: 44, h: 24, align: "LV_ALIGN_TOP_LEFT" },
+  })
   const dim = createNode("slider", {
     name: "brightness_slider",
     props: { min: 5, max: 100, value: 80 },
@@ -196,16 +247,55 @@ export function createSampleProject(): Project {
   })
   const list = createNode("container", {
     name: "settings_list",
-    layout: { x: 0, y: 6, w: "content", h: "content", align: "LV_ALIGN_CENTER", flex: { flow: "LV_FLEX_FLOW_COLUMN", main: "LV_FLEX_ALIGN_START", cross: "LV_FLEX_ALIGN_CENTER", track: "LV_FLEX_ALIGN_CENTER" } },
-    style: { "main:default": { bg_opa: 0, border_width: 0, pad_row: 10, pad_top: 0, pad_bottom: 0, pad_left: 0, pad_right: 0 } },
+    layout: {
+      x: 0,
+      y: 6,
+      w: "content",
+      h: "content",
+      align: "LV_ALIGN_CENTER",
+      flex: {
+        flow: "LV_FLEX_FLOW_COLUMN",
+        main: "LV_FLEX_ALIGN_START",
+        cross: "LV_FLEX_ALIGN_CENTER",
+        track: "LV_FLEX_ALIGN_CENTER",
+      },
+    },
+    style: {
+      "main:default": {
+        bg_opa: 0,
+        border_width: 0,
+        pad_row: 10,
+        pad_top: 0,
+        pad_bottom: 0,
+        pad_left: 0,
+        pad_right: 0,
+      },
+    },
   })
   const brightnessCard = createNode("container", {
     name: "brightness_row",
-    layout: { x: 0, y: 0, w: 168, h: "content", align: "LV_ALIGN_TOP_LEFT", flex: { flow: "LV_FLEX_FLOW_COLUMN", main: "LV_FLEX_ALIGN_START", cross: "LV_FLEX_ALIGN_CENTER", track: "LV_FLEX_ALIGN_CENTER" } },
+    layout: {
+      x: 0,
+      y: 0,
+      w: 168,
+      h: "content",
+      align: "LV_ALIGN_TOP_LEFT",
+      flex: {
+        flow: "LV_FLEX_FLOW_COLUMN",
+        main: "LV_FLEX_ALIGN_START",
+        cross: "LV_FLEX_ALIGN_CENTER",
+        track: "LV_FLEX_ALIGN_CENTER",
+      },
+    },
     classes: [{ style: card.id, selector: "main:default" }],
     style: { "main:default": { pad_row: 10 } },
   })
-  brightnessCard.children = [label("brightness_label", "Brightness", "lv_font_montserrat_14", "#e4e7eb", { layout: { x: 0, y: 0, w: "content", h: "content", align: "LV_ALIGN_TOP_LEFT" } }), dim]
+  brightnessCard.children = [
+    label("brightness_label", "Brightness", "lv_font_montserrat_14", "#e4e7eb", {
+      layout: { x: 0, y: 0, w: "content", h: "content", align: "LV_ALIGN_TOP_LEFT" },
+    }),
+    dim,
+  ]
   list.children = [row("eco_row", "Eco mode", ecoSwitch), brightnessCard]
   const back = createNode("button", {
     name: "back_button",
@@ -219,19 +309,63 @@ export function createSampleProject(): Project {
   settings.children = [title, list, back]
 
   settingsButton.events = [
-    { id: newId(), trigger: "LV_EVENT_CLICKED", action: { type: "navigate", screen: settings.id, anim: "LV_SCREEN_LOAD_ANIM_MOVE_LEFT", duration: 300, delay: 0 } },
+    {
+      id: newId(),
+      trigger: "LV_EVENT_CLICKED",
+      action: {
+        type: "navigate",
+        screen: settings.id,
+        anim: "LV_SCREEN_LOAD_ANIM_MOVE_LEFT",
+        duration: 300,
+        delay: 0,
+      },
+    },
   ]
   back.events = [
-    { id: newId(), trigger: "LV_EVENT_CLICKED", action: { type: "navigate", screen: home.id, anim: "LV_SCREEN_LOAD_ANIM_MOVE_RIGHT", duration: 300, delay: 0 } },
+    {
+      id: newId(),
+      trigger: "LV_EVENT_CLICKED",
+      action: {
+        type: "navigate",
+        screen: home.id,
+        anim: "LV_SCREEN_LOAD_ANIM_MOVE_RIGHT",
+        duration: 300,
+        delay: 0,
+      },
+    },
   ]
 
   const intro: Animation = {
     ...createAnimation("intro"),
     autoplay: true,
     tracks: [
-      { id: newId(), node: dial.id, prop: "scale", keyframes: [{ t: 0, value: 180, easing: "ease-out" }, { t: 600, value: 256, easing: "linear" }] },
-      { id: newId(), node: dial.id, prop: "opa", keyframes: [{ t: 0, value: 0, easing: "ease-out" }, { t: 450, value: 255, easing: "linear" }] },
-      { id: newId(), node: temp.id, prop: "translate_y", keyframes: [{ t: 150, value: 16, easing: "overshoot" }, { t: 650, value: 0, easing: "linear" }] },
+      {
+        id: newId(),
+        node: dial.id,
+        prop: "scale",
+        keyframes: [
+          { t: 0, value: 180, easing: "ease-out" },
+          { t: 600, value: 256, easing: "linear" },
+        ],
+      },
+      {
+        id: newId(),
+        node: dial.id,
+        prop: "opa",
+        keyframes: [
+          { t: 0, value: 0, easing: "ease-out" },
+          { t: 450, value: 255, easing: "linear" },
+        ],
+      },
+      {
+        id: newId(),
+        node: temp.id,
+        prop: "translate_y",
+        keyframes: [
+          { t: 150, value: 16, easing: "overshoot" },
+          { t: 650, value: 0, easing: "linear" },
+        ],
+      },
     ],
   }
   const pulse: Animation = {
@@ -239,7 +373,17 @@ export function createSampleProject(): Project {
     autoplay: true,
     repeat: -1,
     alternate: true,
-    tracks: [{ id: newId(), node: flame.id, prop: "opa", keyframes: [{ t: 0, value: 255, easing: "ease-in-out" }, { t: 900, value: 90, easing: "linear" }] }],
+    tracks: [
+      {
+        id: newId(),
+        node: flame.id,
+        prop: "opa",
+        keyframes: [
+          { t: 0, value: 255, easing: "ease-in-out" },
+          { t: 900, value: 90, easing: "linear" },
+        ],
+      },
+    ],
   }
 
   return {

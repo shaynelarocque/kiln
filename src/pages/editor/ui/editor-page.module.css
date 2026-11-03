@@ -1,6 +1,9 @@
 .page {
   display: grid;
-  grid-template: "toolbar toolbar toolbar" 44px "left center right" minmax(0, 1fr) / 248px minmax(0, 1fr) 280px;
+  grid-template:
+    "toolbar toolbar toolbar" 44px
+    "left center right" minmax(0, 1fr)
+    / 248px minmax(0, 1fr) 280px;
   height: 100%;
 }
 .page > header {

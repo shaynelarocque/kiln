@@ -1,12 +1,26 @@
 import { describe, expect, it } from "vitest"
 import { createEmptyProject, createNode, createVariable } from "./factory"
-import { createInstance, detachInstance, expandInstance, instanceChildId, instancesOf, makeComponent, resolveScreens } from "./components"
+import {
+  createInstance,
+  detachInstance,
+  expandInstance,
+  instanceChildId,
+  instancesOf,
+  makeComponent,
+  resolveScreens,
+} from "./components"
 import { locate } from "./mutations"
 
 function withCard() {
   const p = createEmptyProject()
-  const title = createNode("label", { name: "title", props: { text: "Temp", longMode: "LV_LABEL_LONG_MODE_WRAP" } })
-  const value = createNode("label", { name: "value", props: { text: "--", longMode: "LV_LABEL_LONG_MODE_WRAP" } })
+  const title = createNode("label", {
+    name: "title",
+    props: { text: "Temp", longMode: "LV_LABEL_LONG_MODE_WRAP" },
+  })
+  const value = createNode("label", {
+    name: "value",
+    props: { text: "--", longMode: "LV_LABEL_LONG_MODE_WRAP" },
+  })
   const a = createVariable("a")
   const b = createVariable("b")
   value.bindings = [{ kind: "text", variable: a.id, format: "%d" }]
@@ -33,7 +47,10 @@ describe("components", () => {
     const { p, card, title, value, b } = withCard()
     makeComponent(p, card.id)
     const second = createInstance(p, card.id, "card_2")!
-    second.overrides = { [title.id]: { props: { text: "Humidity" } }, [value.id]: { variable: b.id } }
+    second.overrides = {
+      [title.id]: { props: { text: "Humidity" } },
+      [value.id]: { variable: b.id },
+    }
     p.screens[0].children.push(second)
 
     const expanded = expandInstance(p, second)
@@ -44,7 +61,9 @@ describe("components", () => {
 
     expect(resolveScreens(p, false).map(s => s.name)).toEqual(["Home"])
     expect(resolveScreens(p, true).map(s => s.name)).toEqual(["Home", "Components"])
-    expect(resolveScreens(p, false)[0].children.every(n => !n.component && n.children.length === 2)).toBe(true)
+    expect(
+      resolveScreens(p, false)[0].children.every(n => !n.component && n.children.length === 2),
+    ).toBe(true)
   })
 
   it("detaches into an independent copy", () => {

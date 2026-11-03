@@ -7,7 +7,11 @@ export function InsertBar() {
   return (
     <>
       {INSERTABLE.map(type => (
-        <IconButton key={type} label={`Add ${WIDGETS[type].label.toLowerCase()}`} onClick={() => insertWidget(type)}>
+        <IconButton
+          key={type}
+          label={`Add ${WIDGETS[type].label.toLowerCase()}`}
+          onClick={() => insertWidget(type)}
+        >
           <WidgetIcon type={type} />
         </IconButton>
       ))}

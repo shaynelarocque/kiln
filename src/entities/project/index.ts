@@ -16,6 +16,26 @@ export { cNames, slug } from "./lib/names"
 export { ttfFallbacks, ttfUses } from "./lib/fonts"
 export { transformedNodes, type Transform } from "./lib/transforms"
 export { allNodes, findNode, findParent, screenOf, walk } from "./lib/tree"
-export { canContain, cloneNode, insertNode, locate, moveNode, removeNodes, uniqueName, type Found } from "./model/mutations"
+export {
+  canContain,
+  cloneNode,
+  insertNode,
+  locate,
+  moveNode,
+  removeNodes,
+  uniqueName,
+  type Found,
+} from "./model/mutations"
 export { WidgetIcon } from "./ui/WidgetIcon"
-export { createInstance, detachInstance, expandInstance, findMain, instanceChildId, instancesOf, isLibrary, liveScreenOf, makeComponent, resolveScreens } from "./model/components"
+export {
+  createInstance,
+  detachInstance,
+  expandInstance,
+  findMain,
+  instanceChildId,
+  instancesOf,
+  isLibrary,
+  liveScreenOf,
+  makeComponent,
+  resolveScreens,
+} from "./model/components"

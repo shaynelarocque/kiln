@@ -37,7 +37,9 @@ export function usePreview() {
     if (!preview || project === failed.current) return
     try {
       preview.sync(project)
-      editorApi.getState().set({ rects: new Map(project.screens.map(s => [s.id, preview.rects(s.id)])), error: null })
+      editorApi
+        .getState()
+        .set({ rects: new Map(project.screens.map(s => [s.id, preview.rects(s.id)])), error: null })
     } catch (e) {
       failed.current = project
       editorApi.getState().set({ error: e instanceof Error ? e.message : String(e) })

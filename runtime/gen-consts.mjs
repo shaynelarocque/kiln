@@ -8,7 +8,10 @@ const root = join(import.meta.dirname, "..")
 const names = new Set()
 
 const styleH = readFileSync(join(import.meta.dirname, "lvgl/include/lvgl/core/lv_style.h"), "utf8")
-const styleEnum = styleH.slice(styleH.indexOf("LV_STYLE_PROP_INV"), styleH.indexOf("LV_STYLE_LAST_BUILT_IN_PROP"))
+const styleEnum = styleH.slice(
+  styleH.indexOf("LV_STYLE_PROP_INV"),
+  styleH.indexOf("LV_STYLE_LAST_BUILT_IN_PROP"),
+)
 for (const [name] of styleEnum.matchAll(/LV_STYLE_[A-Z0-9_]+/g)) names.add(name)
 
 const walk = dir => {
@@ -16,7 +19,9 @@ const walk = dir => {
     const path = join(dir, entry.name)
     if (entry.isDirectory()) walk(path)
     else if (/\.tsx?$/.test(entry.name) && !/\.test\.tsx?$/.test(entry.name))
-      for (const [, name] of readFileSync(path, "utf8").matchAll(/["'`]((?:LV|KILN)_[A-Z0-9_]+)["'`]/g))
+      for (const [, name] of readFileSync(path, "utf8").matchAll(
+        /["'`]((?:LV|KILN)_[A-Z0-9_]+)["'`]/g,
+      ))
         names.add(name)
   }
 }
@@ -24,7 +29,9 @@ walk(join(root, "src"))
 
 // Config switches, fonts and symbol strings aren't integer constants (font kerning modes are).
 const list = [...names]
-  .filter(n => !/^LV_(USE|SYMBOL|CONF)_|^LV_FONT_(?!KERNING_)/.test(n) && n !== "LV_COLOR_FORMAT_DEFAULT")
+  .filter(
+    n => !/^LV_(USE|SYMBOL|CONF)_|^LV_FONT_(?!KERNING_)/.test(n) && n !== "LV_COLOR_FORMAT_DEFAULT",
+  )
   .sort()
 writeFileSync(join(import.meta.dirname, "consts.inc"), list.map(n => `K(${n})`).join("\n") + "\n")
 console.log(`consts.inc: ${list.length} constants`)

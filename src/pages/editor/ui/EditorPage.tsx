@@ -36,7 +36,11 @@ export function EditorPage() {
     <div className={s.page}>
       <Toolbar />
       <aside className={s.left}>
-        <Tabs value={leftTab} tabs={LEFT_TABS} onChange={leftTab => editorApi.getState().set({ leftTab })} />
+        <Tabs
+          value={leftTab}
+          tabs={LEFT_TABS}
+          onChange={leftTab => editorApi.getState().set({ leftTab })}
+        />
         <div className={s.leftBody}>
           {leftTab === "layers" && <LayersPanel />}
           {leftTab === "data" && <DataPanel />}

@@ -27,10 +27,22 @@ export async function importImages(files: FileList | File[]) {
       const { w, h, rgba, png } = await decode(file, max)
       const format: ImageFormat = hasAlpha(rgba) ? "RGB565A8" : "RGB565"
       const { data, stride } = convert(rgba, w, h, format, false)
-      const asset: Asset = { id: newId(), name: slug(file.name.replace(/\.\w+$/, "")), width: w, height: h, format, dither: false, png, data: toBase64(data), stride }
+      const asset: Asset = {
+        id: newId(),
+        name: slug(file.name.replace(/\.\w+$/, "")),
+        width: w,
+        height: h,
+        format,
+        dither: false,
+        png,
+        data: toBase64(data),
+        stride,
+      }
       edit(d => void d.assets.push(asset))
     } catch (e) {
-      editorApi.getState().set({ error: `Couldn't import ${file.name}: ${e instanceof Error ? e.message : e}` })
+      editorApi
+        .getState()
+        .set({ error: `Couldn't import ${file.name}: ${e instanceof Error ? e.message : e}` })
     }
   }
 }

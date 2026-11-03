@@ -42,7 +42,17 @@ const PIN_MAPS: Record<string, PinMap> = {
     adc2: [5],
     inputOnly: [],
     strapping: [2, 8, 9],
-    reserved: { 11: "VDD_SPI", 12: "flash", 13: "flash", 14: "flash", 15: "flash", 16: "flash", 17: "flash", 18: "USB D−", 19: "USB D+" },
+    reserved: {
+      11: "VDD_SPI",
+      12: "flash",
+      13: "flash",
+      14: "flash",
+      15: "flash",
+      16: "flash",
+      17: "flash",
+      18: "USB D−",
+      19: "USB D+",
+    },
   },
   ESP32S3: {
     gpios: [...range(0, 21), ...range(33, 48)],
@@ -50,7 +60,20 @@ const PIN_MAPS: Record<string, PinMap> = {
     adc2: range(11, 20),
     inputOnly: [],
     strapping: [0, 3, 45, 46],
-    reserved: { 19: "USB D−", 20: "USB D+", 26: "flash", 27: "flash", 28: "flash", 29: "flash", 30: "flash", 31: "flash", 32: "flash", 35: "PSRAM (octal)", 36: "PSRAM (octal)", 37: "PSRAM (octal)" },
+    reserved: {
+      19: "USB D−",
+      20: "USB D+",
+      26: "flash",
+      27: "flash",
+      28: "flash",
+      29: "flash",
+      30: "flash",
+      31: "flash",
+      32: "flash",
+      35: "PSRAM (octal)",
+      36: "PSRAM (octal)",
+      37: "PSRAM (octal)",
+    },
   },
   ESP32S2: {
     gpios: [...range(0, 21), ...range(26, 46)],
@@ -74,7 +97,16 @@ const PIN_MAPS: Record<string, PinMap> = {
     adc2: [0, 2, 4, 12, 13, 14, 15, 25, 26, 27],
     inputOnly: range(34, 39),
     strapping: [0, 2, 5, 12, 15],
-    reserved: { 6: "flash", 7: "flash", 8: "flash", 9: "flash", 10: "flash", 11: "flash", 1: "UART0 TX", 3: "UART0 RX" },
+    reserved: {
+      6: "flash",
+      7: "flash",
+      8: "flash",
+      9: "flash",
+      10: "flash",
+      11: "flash",
+      1: "UART0 TX",
+      3: "UART0 RX",
+    },
   },
   RP2040: {
     gpios: range(0, 29),
@@ -82,12 +114,24 @@ const PIN_MAPS: Record<string, PinMap> = {
     adc2: [],
     inputOnly: [],
     strapping: [],
-    reserved: { 23: "power save (Pico)", 24: "VBUS sense (Pico)", 25: "LED (Pico)", 29: "VSYS/3 (Pico)" },
+    reserved: {
+      23: "power save (Pico)",
+      24: "VBUS sense (Pico)",
+      25: "LED (Pico)",
+      29: "VSYS/3 (Pico)",
+    },
   },
 }
 
 export const pinMap = (mcu: string): PinMap =>
-  PIN_MAPS[mcu.toUpperCase()] ?? { gpios: range(0, 39), adc: range(0, 39), adc2: [], inputOnly: [], strapping: [], reserved: {} }
+  PIN_MAPS[mcu.toUpperCase()] ?? {
+    gpios: range(0, 39),
+    adc: range(0, 39),
+    adc2: [],
+    inputOnly: [],
+    strapping: [],
+    reserved: {},
+  }
 
 export type PinClaim = { pin: number; who: string; use: PinUse }
 export type PinProblem = { pin: number; level: "error" | "warn"; message: string }
@@ -100,18 +144,45 @@ export function checkPins(mcu: string, claims: PinClaim[]): PinProblem[] {
   for (const c of claims) {
     if (c.pin < 0) continue
     owners.set(c.pin, [...(owners.get(c.pin) ?? []), c.who])
-    if (map.reserved[c.pin]) problems.push({ pin: c.pin, level: "error", message: `GPIO${c.pin} is ${map.reserved[c.pin]} on ${mcu}` })
-    else if (!map.gpios.includes(c.pin)) problems.push({ pin: c.pin, level: "error", message: `${mcu} has no GPIO${c.pin}` })
+    if (map.reserved[c.pin])
+      problems.push({
+        pin: c.pin,
+        level: "error",
+        message: `GPIO${c.pin} is ${map.reserved[c.pin]} on ${mcu}`,
+      })
+    else if (!map.gpios.includes(c.pin))
+      problems.push({ pin: c.pin, level: "error", message: `${mcu} has no GPIO${c.pin}` })
     if (c.use === "adc" && !map.adc.includes(c.pin) && !map.adc2.includes(c.pin))
-      problems.push({ pin: c.pin, level: "error", message: `${c.who}: GPIO${c.pin} can't read analog on ${mcu} (ADC pins: ${map.adc.join(", ")})` })
+      problems.push({
+        pin: c.pin,
+        level: "error",
+        message: `${c.who}: GPIO${c.pin} can't read analog on ${mcu} (ADC pins: ${map.adc.join(", ")})`,
+      })
     if (c.use === "adc" && map.adc2.includes(c.pin))
-      problems.push({ pin: c.pin, level: "warn", message: `${c.who}: GPIO${c.pin} is on ADC2, which stops working while Wi-Fi is on` })
+      problems.push({
+        pin: c.pin,
+        level: "warn",
+        message: `${c.who}: GPIO${c.pin} is on ADC2, which stops working while Wi-Fi is on`,
+      })
     if (c.use === "output" && map.inputOnly.includes(c.pin))
-      problems.push({ pin: c.pin, level: "error", message: `${c.who}: GPIO${c.pin} is input-only on ${mcu}` })
+      problems.push({
+        pin: c.pin,
+        level: "error",
+        message: `${c.who}: GPIO${c.pin} is input-only on ${mcu}`,
+      })
     if (map.strapping.includes(c.pin))
-      problems.push({ pin: c.pin, level: "warn", message: `${c.who}: GPIO${c.pin} is a strapping pin; make sure nothing holds it at reset` })
+      problems.push({
+        pin: c.pin,
+        level: "warn",
+        message: `${c.who}: GPIO${c.pin} is a strapping pin; make sure nothing holds it at reset`,
+      })
   }
   for (const [pin, who] of owners)
-    if (who.length > 1) problems.push({ pin, level: "error", message: `GPIO${pin} is used twice: ${who.join(" and ")}` })
+    if (who.length > 1)
+      problems.push({
+        pin,
+        level: "error",
+        message: `GPIO${pin} is used twice: ${who.join(" and ")}`,
+      })
   return problems
 }

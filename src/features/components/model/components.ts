@@ -1,5 +1,16 @@
 import { editorApi } from "@/entities/editor"
-import { createInstance, detachInstance, edit, findMain, insertNode, isLibrary, locate, makeComponent, projectApi, screenOf } from "@/entities/project"
+import {
+  createInstance,
+  detachInstance,
+  edit,
+  findMain,
+  insertNode,
+  isLibrary,
+  locate,
+  makeComponent,
+  projectApi,
+  screenOf,
+} from "@/entities/project"
 
 /** Turns the selected node into a main component, leaving an instance where it was. */
 export function componentFromSelection() {
@@ -16,7 +27,8 @@ export function insertInstance(mainId: string) {
   const main = findMain(project, mainId)
   if (!main) return
   const selected = editorApi.getState().selection[0]
-  const screen = (selected && screenOf(project, selected)) || project.screens.find(s => !isLibrary(s))!
+  const screen =
+    (selected && screenOf(project, selected)) || project.screens.find(s => !isLibrary(s))!
   if (isLibrary(screen)) return
   const count = project.screens.flatMap(s => s.children).filter(n => n.component === mainId).length
   const instance = createInstance(project, mainId, `${main.name}_${count + 1}`)!

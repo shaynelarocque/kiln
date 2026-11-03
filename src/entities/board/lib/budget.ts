@@ -45,15 +45,23 @@ const TINY_TTF_FLASH = 26 * KB
  * width times the rows that map back onto one refresh band of `bufferRows`. LVGL pads it by
  * 5 px a side.
  */
-export function transformLayerBytes(w: number, h: number, t: { rotates: boolean; minScale: number; shadow: number }, bufferRows: number) {
+export function transformLayerBytes(
+  w: number,
+  h: number,
+  t: { rotates: boolean; minScale: number; shadow: number },
+  bufferRows: number,
+) {
   const width = w + 2 * t.shadow + 10
   const height = h + 2 * t.shadow + 10
-  const rows = t.rotates ? height : Math.min(height, Math.ceil((bufferRows * 256) / Math.max(1, t.minScale)) + 10)
+  const rows = t.rotates
+    ? height
+    : Math.min(height, Math.ceil((bufferRows * 256) / Math.max(1, t.minScale)) + 10)
   return width * rows * 4
 }
 
 /** A TinyTTF font's glyph cache when full: A8 bitmaps of about 0.45 px² each, plus cache bookkeeping. */
-export const ttfCacheBytes = (size: number) => TTF_GLYPH_CACHE * Math.round(0.45 * size * size + 200)
+export const ttfCacheBytes = (size: number) =>
+  TTF_GLYPH_CACHE * Math.round(0.45 * size * size + 200)
 
 /** Montserrat at 4 bpp is roughly 45 bytes per pixel of size squared (ASCII plus symbols). */
 export const fontBytes = (font: string) => {
@@ -72,8 +80,19 @@ export function estimateBudget(i: BudgetInput): Budget {
   // ~200 bytes per object with its styles, observers and timelines, plus TinyTTF's glyph caches,
   // then 50% headroom, then room for the biggest transform layer; never under 48 KB
   const caches = i.ttfSizes.reduce((sum, s) => sum + ttfCacheBytes(s), 0)
-  const heap = Math.max(48 * KB, Math.ceil(((i.objects * 200 + i.styleProps * 10 + i.stringBytes + caches) * 1.5 + 16 * KB + i.layerBytes) / KB) * KB)
-  const fonts = i.fonts.reduce((sum, f) => sum + fontBytes(f), 0) + i.ttfBytes + (i.ttfSizes.length ? TINY_TTF_FLASH : 0)
+  const heap = Math.max(
+    48 * KB,
+    Math.ceil(
+      ((i.objects * 200 + i.styleProps * 10 + i.stringBytes + caches) * 1.5 +
+        16 * KB +
+        i.layerBytes) /
+        KB,
+    ) * KB,
+  )
+  const fonts =
+    i.fonts.reduce((sum, f) => sum + fontBytes(f), 0) +
+    i.ttfBytes +
+    (i.ttfSizes.length ? TINY_TTF_FLASH : 0)
   const ram = [
     { label: "Draw buffers", bytes: drawBuffers },
     { label: "LVGL heap", bytes: heap },
@@ -94,4 +113,5 @@ export function estimateBudget(i: BudgetInput): Budget {
   }
 }
 
-export const formatBytes = (n: number) => (n >= 1024 * 1024 ? `${(n / 1024 / 1024).toFixed(1)} MB` : `${Math.round(n / 1024)} KB`)
+export const formatBytes = (n: number) =>
+  n >= 1024 * 1024 ? `${(n / 1024 / 1024).toFixed(1)} MB` : `${Math.round(n / 1024)} KB`

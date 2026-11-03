@@ -7,7 +7,13 @@ const px = (...rgba: number[]) => new Uint8Array(rgba)
 describe("image conversion", () => {
   it("packs RGB565 little-endian", () => {
     // pure red, green, blue, white
-    const { data, stride } = convert(px(255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255, 255, 255, 255, 255), 4, 1, "RGB565", false)
+    const { data, stride } = convert(
+      px(255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255, 255, 255, 255, 255),
+      4,
+      1,
+      "RGB565",
+      false,
+    )
     expect(stride).toBe(8)
     expect([...data]).toEqual([0x00, 0xf8, 0xe0, 0x07, 0x1f, 0x00, 0xff, 0xff])
   })

@@ -1,4 +1,15 @@
-import { Clapperboard, Cpu, Download, FilePlus, FolderOpen, Keyboard, Play, Redo2, Save, Undo2 } from "lucide-react"
+import {
+  Clapperboard,
+  Cpu,
+  Download,
+  FilePlus,
+  FolderOpen,
+  Keyboard,
+  Play,
+  Redo2,
+  Save,
+  Undo2,
+} from "lucide-react"
 import { useMemo, useState } from "react"
 import { findBoard, formatBytes, useBoards } from "@/entities/board"
 import { editorApi, nodeBoxes, useEditorStore } from "@/entities/editor"
@@ -44,7 +55,11 @@ export function Toolbar() {
             onKeyDown={e => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
           />
         ) : (
-          <button className={s.title} onDoubleClick={() => setNaming(true)} title='Double-click to rename'>
+          <button
+            className={s.title}
+            onDoubleClick={() => setNaming(true)}
+            title='Double-click to rename'
+          >
             {project.name}
             {dirty && <span className={s.dirty} title='Unsaved changes' />}
           </button>
@@ -66,10 +81,17 @@ export function Toolbar() {
           <Redo2 />
         </IconButton>
         <span className={s.sep} />
-        <IconButton label='Animations timeline' active={timelineOpen} onClick={() => editorApi.getState().set({ timelineOpen: !timelineOpen })}>
+        <IconButton
+          label='Animations timeline'
+          active={timelineOpen}
+          onClick={() => editorApi.getState().set({ timelineOpen: !timelineOpen })}
+        >
           <Clapperboard />
         </IconButton>
-        <IconButton label='Keyboard shortcuts (?)' onClick={() => editorApi.getState().set({ dialog: "shortcuts" })}>
+        <IconButton
+          label='Keyboard shortcuts (?)'
+          onClick={() => editorApi.getState().set({ dialog: "shortcuts" })}
+        >
           <Keyboard />
         </IconButton>
       </div>
@@ -80,23 +102,39 @@ export function Toolbar() {
       </div>
 
       <div className={s.group}>
-        <button className={s.board} onClick={() => editorApi.getState().set({ dialog: "board" })} title='Board, display and pins'>
+        <button
+          className={s.board}
+          onClick={() => editorApi.getState().set({ dialog: "board" })}
+          title='Board, display and pins'
+        >
           <Cpu />
           <span>
             <strong>{board?.name ?? project.target.board}</strong>
             <small>
-              {project.target.display.driver.toUpperCase()} {project.target.display.width}×{project.target.display.height}
+              {project.target.display.driver.toUpperCase()} {project.target.display.width}×
+              {project.target.display.height}
             </small>
           </span>
-          <span className={s.meters} title={`Flash ${formatBytes(budget.flash.used)} of ${formatBytes(budget.flash.total)} · RAM ${formatBytes(budget.ram.used)} of ${formatBytes(budget.ram.total)} (estimated)`}>
+          <span
+            className={s.meters}
+            title={`Flash ${formatBytes(budget.flash.used)} of ${formatBytes(budget.flash.total)} · RAM ${formatBytes(budget.ram.used)} of ${formatBytes(budget.ram.total)} (estimated)`}
+          >
             <Meter label='Flash' value={flash} />
             <Meter label='RAM' value={ram} />
           </span>
         </button>
-        <Button icon={<Play />} onClick={() => editorApi.getState().set({ playing: true })} title='Play (⌘↵)'>
+        <Button
+          icon={<Play />}
+          onClick={() => editorApi.getState().set({ playing: true })}
+          title='Play (⌘↵)'
+        >
           Play
         </Button>
-        <Button icon={<Download />} variant='primary' onClick={() => editorApi.getState().set({ dialog: "export" })}>
+        <Button
+          icon={<Download />}
+          variant='primary'
+          onClick={() => editorApi.getState().set({ dialog: "export" })}
+        >
           Export
         </Button>
       </div>

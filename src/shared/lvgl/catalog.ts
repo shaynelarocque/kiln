@@ -57,7 +57,11 @@ export const ALIGN: Option[] = [
 
 /** How an LVGL align anchors a box: 0 left/top, 0.5 middle, 1 right/bottom. */
 export function alignFactors(align: string): [number, number] {
-  const ax = /RIGHT/.test(align) ? 1 : /MID|CENTER/.test(align) && !/LEFT_MID|RIGHT_MID/.test(align) ? 0.5 : 0
+  const ax = /RIGHT/.test(align)
+    ? 1
+    : /MID|CENTER/.test(align) && !/LEFT_MID|RIGHT_MID/.test(align)
+      ? 0.5
+      : 0
   const ay = /BOTTOM/.test(align) ? 1 : /LEFT_MID|RIGHT_MID|CENTER/.test(align) ? 0.5 : 0
   return [ax, ay]
 }
@@ -65,7 +69,17 @@ export function alignFactors(align: string): [number, number] {
 /** The in-parent LV_ALIGN_* for anchor factors (alignFactors' inverse). */
 export function alignName(ax: number, ay: number) {
   const index = [0, 0.5, 1].indexOf(ay) * 3 + [0, 0.5, 1].indexOf(ax)
-  return ["LV_ALIGN_TOP_LEFT", "LV_ALIGN_TOP_MID", "LV_ALIGN_TOP_RIGHT", "LV_ALIGN_LEFT_MID", "LV_ALIGN_CENTER", "LV_ALIGN_RIGHT_MID", "LV_ALIGN_BOTTOM_LEFT", "LV_ALIGN_BOTTOM_MID", "LV_ALIGN_BOTTOM_RIGHT"][index]
+  return [
+    "LV_ALIGN_TOP_LEFT",
+    "LV_ALIGN_TOP_MID",
+    "LV_ALIGN_TOP_RIGHT",
+    "LV_ALIGN_LEFT_MID",
+    "LV_ALIGN_CENTER",
+    "LV_ALIGN_RIGHT_MID",
+    "LV_ALIGN_BOTTOM_LEFT",
+    "LV_ALIGN_BOTTOM_MID",
+    "LV_ALIGN_BOTTOM_RIGHT",
+  ][index]
 }
 
 export const FLEX_FLOW: Option[] = [
@@ -160,7 +174,9 @@ export const COMPARE: Option[] = [
 
 /*---------- fonts ----------*/
 
-export const FONT_SIZES = [8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48]
+export const FONT_SIZES = [
+  8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48,
+]
 export const FONTS: Option[] = [
   ...FONT_SIZES.map(s => ({ value: `lv_font_montserrat_${s}`, label: `Montserrat ${s}` })),
   { value: "lv_font_unscii_8", label: "Unscii 8 (pixel)" },
@@ -172,7 +188,8 @@ export const DEFAULT_FONT = "lv_font_montserrat_14"
 export const fontConfName = (font: string) => font.replace(/^lv_font_/, "LV_FONT_").toUpperCase()
 
 /** The built-in Montserrat size nearest to `px`. */
-export const nearestFontSize = (px: number) => FONT_SIZES.reduce((a, b) => (Math.abs(b - px) < Math.abs(a - px) ? b : a))
+export const nearestFontSize = (px: number) =>
+  FONT_SIZES.reduce((a, b) => (Math.abs(b - px) < Math.abs(a - px) ? b : a))
 
 /** Pixel sizes an imported font can be used at (TinyTTF draws any size; LVGL asserts on 0). */
 export const TTF_SIZES = { min: 6, max: 160 }
@@ -191,16 +208,7 @@ export function parseTtfFont(value: unknown) {
 /*---------- style props ----------*/
 
 export type StyleType =
-  | "color"
-  | "opa"
-  | "px"
-  | "int"
-  | "angle"
-  | "scale"
-  | "enum"
-  | "font"
-  | "bool"
-  | "image"
+  "color" | "opa" | "px" | "int" | "angle" | "scale" | "enum" | "font" | "bool" | "image"
 
 export const STYLE_GROUPS = [
   { value: "fill", label: "Fill" },
@@ -335,7 +343,8 @@ const BEZIER: Record<string, [number, number, number, number]> = {
 export function easingPath(easing: Easing): { path: string; bezier?: number[] } {
   const custom = /^cubic-bezier\((.+)\)$/.exec(easing)?.[1].split(",").map(Number)
   const curve = custom?.length === 4 && custom.every(Number.isFinite) ? custom : BEZIER[easing]
-  if (curve) return { path: "lv_anim_path_custom_bezier3", bezier: curve.map(v => Math.round(v * 1024)) }
+  if (curve)
+    return { path: "lv_anim_path_custom_bezier3", bezier: curve.map(v => Math.round(v * 1024)) }
   if (easing === "overshoot" || easing === "bounce" || easing === "step" || easing === "linear")
     return { path: `lv_anim_path_${easing}` }
   return { path: "lv_anim_path_linear" }
@@ -787,17 +796,64 @@ export const INSERTABLE: WidgetType[] = [
 /*---------- LVGL's built-in icon glyphs (in every Montserrat font) ----------*/
 
 export const SYMBOLS: { name: string; cp: number }[] = [
-  ["AUDIO", 0xf001], ["VIDEO", 0xf008], ["LIST", 0xf00b], ["OK", 0xf00c], ["CLOSE", 0xf00d],
-  ["POWER", 0xf011], ["SETTINGS", 0xf013], ["HOME", 0xf015], ["DOWNLOAD", 0xf019], ["DRIVE", 0xf01c],
-  ["REFRESH", 0xf021], ["MUTE", 0xf026], ["VOLUME_MID", 0xf027], ["VOLUME_MAX", 0xf028],
-  ["IMAGE", 0xf03e], ["TINT", 0xf043], ["PREV", 0xf048], ["PLAY", 0xf04b], ["PAUSE", 0xf04c],
-  ["STOP", 0xf04d], ["NEXT", 0xf051], ["EJECT", 0xf052], ["LEFT", 0xf053], ["RIGHT", 0xf054],
-  ["PLUS", 0xf067], ["MINUS", 0xf068], ["EYE_OPEN", 0xf06e], ["EYE_CLOSE", 0xf070],
-  ["WARNING", 0xf071], ["SHUFFLE", 0xf074], ["UP", 0xf077], ["DOWN", 0xf078], ["LOOP", 0xf079],
-  ["DIRECTORY", 0xf07b], ["UPLOAD", 0xf093], ["CALL", 0xf095], ["CUT", 0xf0c4], ["COPY", 0xf0c5],
-  ["SAVE", 0xf0c7], ["BARS", 0xf0c9], ["ENVELOPE", 0xf0e0], ["CHARGE", 0xf0e7], ["PASTE", 0xf0ea],
-  ["BELL", 0xf0f3], ["KEYBOARD", 0xf11c], ["GPS", 0xf124], ["FILE", 0xf15b], ["WIFI", 0xf1eb],
-  ["BATTERY_FULL", 0xf240], ["BATTERY_3", 0xf241], ["BATTERY_2", 0xf242], ["BATTERY_1", 0xf243],
-  ["BATTERY_EMPTY", 0xf244], ["USB", 0xf287], ["BLUETOOTH", 0xf293], ["TRASH", 0xf2ed],
-  ["EDIT", 0xf304], ["BACKSPACE", 0xf55a], ["SD_CARD", 0xf7c2], ["NEW_LINE", 0xf8a2],
+  ["AUDIO", 0xf001],
+  ["VIDEO", 0xf008],
+  ["LIST", 0xf00b],
+  ["OK", 0xf00c],
+  ["CLOSE", 0xf00d],
+  ["POWER", 0xf011],
+  ["SETTINGS", 0xf013],
+  ["HOME", 0xf015],
+  ["DOWNLOAD", 0xf019],
+  ["DRIVE", 0xf01c],
+  ["REFRESH", 0xf021],
+  ["MUTE", 0xf026],
+  ["VOLUME_MID", 0xf027],
+  ["VOLUME_MAX", 0xf028],
+  ["IMAGE", 0xf03e],
+  ["TINT", 0xf043],
+  ["PREV", 0xf048],
+  ["PLAY", 0xf04b],
+  ["PAUSE", 0xf04c],
+  ["STOP", 0xf04d],
+  ["NEXT", 0xf051],
+  ["EJECT", 0xf052],
+  ["LEFT", 0xf053],
+  ["RIGHT", 0xf054],
+  ["PLUS", 0xf067],
+  ["MINUS", 0xf068],
+  ["EYE_OPEN", 0xf06e],
+  ["EYE_CLOSE", 0xf070],
+  ["WARNING", 0xf071],
+  ["SHUFFLE", 0xf074],
+  ["UP", 0xf077],
+  ["DOWN", 0xf078],
+  ["LOOP", 0xf079],
+  ["DIRECTORY", 0xf07b],
+  ["UPLOAD", 0xf093],
+  ["CALL", 0xf095],
+  ["CUT", 0xf0c4],
+  ["COPY", 0xf0c5],
+  ["SAVE", 0xf0c7],
+  ["BARS", 0xf0c9],
+  ["ENVELOPE", 0xf0e0],
+  ["CHARGE", 0xf0e7],
+  ["PASTE", 0xf0ea],
+  ["BELL", 0xf0f3],
+  ["KEYBOARD", 0xf11c],
+  ["GPS", 0xf124],
+  ["FILE", 0xf15b],
+  ["WIFI", 0xf1eb],
+  ["BATTERY_FULL", 0xf240],
+  ["BATTERY_3", 0xf241],
+  ["BATTERY_2", 0xf242],
+  ["BATTERY_1", 0xf243],
+  ["BATTERY_EMPTY", 0xf244],
+  ["USB", 0xf287],
+  ["BLUETOOTH", 0xf293],
+  ["TRASH", 0xf2ed],
+  ["EDIT", 0xf304],
+  ["BACKSPACE", 0xf55a],
+  ["SD_CARD", 0xf7c2],
+  ["NEW_LINE", 0xf8a2],
 ].map(([name, cp]) => ({ name: `LV_SYMBOL_${name}`, cp: cp as number }))

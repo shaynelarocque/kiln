@@ -17,11 +17,27 @@ export function Canvas() {
       ref={vm.viewport}
       className={`${s.viewport} ${vm.spaceDown ? s.panning : ""}`}
       onPointerDown={vm.onViewportPointerDown}
-      style={{ "--z": vm.zoom, backgroundPosition: `${vm.pan.x}px ${vm.pan.y}px`, backgroundSize: `${16 * vm.zoom}px ${16 * vm.zoom}px` } as React.CSSProperties}
+      style={
+        {
+          "--z": vm.zoom,
+          "backgroundPosition": `${vm.pan.x}px ${vm.pan.y}px`,
+          "backgroundSize": `${16 * vm.zoom}px ${16 * vm.zoom}px`,
+        } as React.CSSProperties
+      }
     >
-      <div className={s.world} style={{ transform: `translate(${vm.pan.x}px, ${vm.pan.y}px) scale(${vm.zoom})` }}>
+      <div
+        className={s.world}
+        style={{ transform: `translate(${vm.pan.x}px, ${vm.pan.y}px) scale(${vm.zoom})` }}
+      >
         {vm.project.screens.map(screen => (
-          <Artboard key={screen.id} vm={vm} screen={screen} width={width} height={height} round={round && !screen.library} />
+          <Artboard
+            key={screen.id}
+            vm={vm}
+            screen={screen}
+            width={width}
+            height={height}
+            round={round && !screen.library}
+          />
         ))}
       </div>
       <div className={s.zoom}>
@@ -42,18 +58,39 @@ export function Canvas() {
   )
 }
 
-function Artboard({ vm, screen, width, height, round }: { vm: CanvasViewModel; screen: Screen; width: number; height: number; round: boolean }) {
+function Artboard({
+  vm,
+  screen,
+  width,
+  height,
+  round,
+}: {
+  vm: CanvasViewModel
+  screen: Screen
+  width: number
+  height: number
+  round: boolean
+}) {
   const rects = vm.rects.get(screen.id)
   const selected = vm.selection.includes(screen.id)
   const nodes = vm.selection.filter(id => id !== screen.id && rects?.has(id))
   const single = nodes.length === 1 ? findNode(vm.project, nodes[0]) : undefined
   const singleRect = single && rects?.get(single.id)
-  const hover = vm.hover && vm.hover !== screen.id && !vm.selection.includes(vm.hover) ? rects?.get(vm.hover) : undefined
+  const hover =
+    vm.hover && vm.hover !== screen.id && !vm.selection.includes(vm.hover)
+      ? rects?.get(vm.hover)
+      : undefined
   const drag = vm.dragState?.screen === screen.id ? vm.dragState : null
 
   return (
-    <div className={s.artboard} style={{ left: screen.frame.x, top: screen.frame.y, width, height }}>
-      <div className={`${s.title} ${selected ? s.titleOn : ""}`} onPointerDown={e => vm.onTitlePointerDown(screen, e)}>
+    <div
+      className={s.artboard}
+      style={{ left: screen.frame.x, top: screen.frame.y, width, height }}
+    >
+      <div
+        className={`${s.title} ${selected ? s.titleOn : ""}`}
+        onPointerDown={e => vm.onTitlePointerDown(screen, e)}
+      >
         {screen.name}
       </div>
       <div
@@ -63,7 +100,12 @@ function Artboard({ vm, screen, width, height, round }: { vm: CanvasViewModel; s
         onPointerLeave={vm.onArtboardPointerLeave}
         onDoubleClick={e => vm.onArtboardDoubleClick(screen, e)}
       >
-        <canvas ref={el => vm.attach(screen.id, el)} width={width} height={height} className={s.pixels} />
+        <canvas
+          ref={el => vm.attach(screen.id, el)}
+          width={width}
+          height={height}
+          className={s.pixels}
+        />
       </div>
       <div className={s.overlay}>
         {hover && <Box rect={hover} className={s.hover} />}
@@ -77,28 +119,51 @@ function Artboard({ vm, screen, width, height, round }: { vm: CanvasViewModel; s
               <span
                 key={h}
                 className={`${s.handle} ${s[h]}`}
-                style={{ left: singleRect.x + (h.includes("e") ? singleRect.w : h.includes("w") ? 0 : singleRect.w / 2), top: singleRect.y + (h.includes("s") ? singleRect.h : h.includes("n") ? 0 : singleRect.h / 2) }}
+                style={{
+                  left:
+                    singleRect.x +
+                    (h.includes("e") ? singleRect.w : h.includes("w") ? 0 : singleRect.w / 2),
+                  top:
+                    singleRect.y +
+                    (h.includes("s") ? singleRect.h : h.includes("n") ? 0 : singleRect.h / 2),
+                }}
                 onPointerDown={e => vm.onHandlePointerDown(screen, single.id, h, e)}
               />
             ))}
-            <span className={s.badge} style={{ left: singleRect.x + singleRect.w / 2, top: singleRect.y + singleRect.h }}>
+            <span
+              className={s.badge}
+              style={{ left: singleRect.x + singleRect.w / 2, top: singleRect.y + singleRect.h }}
+            >
               {singleRect.w} × {singleRect.h}
             </span>
           </>
         )}
         {drag?.guides.map((g, i) => (
-          <span key={i} className={s.guide} style={g.axis === "x" ? { left: g.at, top: 0, height } : { top: g.at, left: 0, width }} data-axis={g.axis} />
+          <span
+            key={i}
+            className={s.guide}
+            style={g.axis === "x" ? { left: g.at, top: 0, height } : { top: g.at, left: 0, width }}
+            data-axis={g.axis}
+          />
         ))}
         {drag?.drop && <Box rect={drag.drop} className={s.drop} />}
         {drag?.marquee && <Box rect={drag.marquee} className={s.marquee} />}
-        {vm.editing?.screen === screen.id && rects?.get(vm.editing.id) && <TextEditor vm={vm} rect={rects.get(vm.editing.id)!} />}
+        {vm.editing?.screen === screen.id && rects?.get(vm.editing.id) && (
+          <TextEditor vm={vm} rect={rects.get(vm.editing.id)!} />
+        )}
       </div>
     </div>
   )
 }
 
 /** In-place text editing over a label, sized to its font. */
-function TextEditor({ vm, rect }: { vm: CanvasViewModel; rect: { x: number; y: number; w: number; h: number } }) {
+function TextEditor({
+  vm,
+  rect,
+}: {
+  vm: CanvasViewModel
+  rect: { x: number; y: number; w: number; h: number }
+}) {
   const node = findNode(vm.project, vm.editing!.id)!
   const font = String(node.style["main:default"]?.text_font ?? "lv_font_montserrat_14")
   const size = Number(/(\d+)$/.exec(font)?.[1] ?? 14)
@@ -109,19 +174,38 @@ function TextEditor({ vm, rect }: { vm: CanvasViewModel; rect: { x: number; y: n
       className={s.textEdit}
       autoFocus
       defaultValue={String(node.props.text)}
-      style={{ left: rect.x - 2, top: rect.y - 2, minWidth: rect.w + 24, minHeight: rect.h + 4, fontSize: size, fontFamily: file ? `${fontFamily(file.id, file.data)}, Montserrat` : undefined }}
+      style={{
+        left: rect.x - 2,
+        top: rect.y - 2,
+        minWidth: rect.w + 24,
+        minHeight: rect.h + 4,
+        fontSize: size,
+        fontFamily: file ? `${fontFamily(file.id, file.data)}, Montserrat` : undefined,
+      }}
       onFocus={e => e.target.select()}
       onBlur={e => vm.finishEditing(e.target.value)}
       onKeyDown={e => {
         e.stopPropagation()
         if (e.key === "Escape") vm.finishEditing(null)
-        if (e.key === "Enter" && !e.shiftKey) (e.preventDefault(), (e.target as HTMLTextAreaElement).blur())
+        if (e.key === "Enter" && !e.shiftKey)
+          (e.preventDefault(), (e.target as HTMLTextAreaElement).blur())
       }}
       onPointerDown={e => e.stopPropagation()}
     />
   )
 }
 
-function Box({ rect, className }: { rect: { x: number; y: number; w: number; h: number }; className: string }) {
-  return <span className={className} style={{ left: rect.x, top: rect.y, width: rect.w, height: rect.h }} />
+function Box({
+  rect,
+  className,
+}: {
+  rect: { x: number; y: number; w: number; h: number }
+  className: string
+}) {
+  return (
+    <span
+      className={className}
+      style={{ left: rect.x, top: rect.y, width: rect.w, height: rect.h }}
+    />
+  )
 }

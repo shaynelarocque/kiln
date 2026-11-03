@@ -63,7 +63,9 @@ export class LvglRuntime {
   const(name: string) {
     return this.lookup(this.consts, name, p => {
       if (!this.x.kiln_const(p, this.scratch))
-        throw new Error(`${name} isn't in the preview runtime's constant table (rebuild it: pnpm run runtime)`)
+        throw new Error(
+          `${name} isn't in the preview runtime's constant table (rebuild it: pnpm run runtime)`,
+        )
       return new Int32Array(this.memory, this.scratch, 1)[0]
     })
   }
@@ -99,7 +101,13 @@ export class LvglRuntime {
   canReadFont(data: Uint8Array) {
     const p = this.x.lv_malloc(data.length)
     new Uint8Array(this.memory, p, data.length).set(data)
-    const font = this.x.lv_tiny_ttf_create_data_ex(p, data.length, 16, this.const("LV_FONT_KERNING_NORMAL"), 1)
+    const font = this.x.lv_tiny_ttf_create_data_ex(
+      p,
+      data.length,
+      16,
+      this.const("LV_FONT_KERNING_NORMAL"),
+      1,
+    )
     if (font) this.x.lv_tiny_ttf_destroy(font)
     this.x.lv_free(p)
     return Boolean(font)
@@ -186,7 +194,8 @@ export class Display {
   }
 }
 
-type Kind = "obj" | "subject" | "style" | "transition" | "image" | "ttf" | "tiny_ttf" | "timeline" | "series"
+type Kind =
+  "obj" | "subject" | "style" | "transition" | "image" | "ttf" | "tiny_ttf" | "timeline" | "series"
 
 /**
  * Executes ops on the runtime and owns what they create. A screen scene points at the
@@ -260,7 +269,11 @@ export class Scene {
       case "call":
         return this.call(op.fn, op.args, op.ret)
       case "subject": {
-        const type = { int: "LV_SUBJECT_TYPE_INT", string: "LV_SUBJECT_TYPE_STRING", color: "LV_SUBJECT_TYPE_COLOR" }[op.type]
+        const type = {
+          int: "LV_SUBJECT_TYPE_INT",
+          string: "LV_SUBJECT_TYPE_STRING",
+          color: "LV_SUBJECT_TYPE_COLOR",
+        }[op.type]
         const h = x.lv_subject_create(this.rt.const(type))
         if (op.type === "string") {
           // the generated code uses two static 64-byte buffers; these stand in for them
@@ -287,8 +300,16 @@ export class Scene {
       }
       case "transition": {
         const props = x.lv_malloc(op.props.length * 4)
-        new Int32Array(this.rt.memory, props, op.props.length).set(op.props.map(n => this.rt.const(n)))
-        const h = x.kiln_transition_new(props, op.props.length, this.rt.fn(op.path), op.time, op.delay)
+        new Int32Array(this.rt.memory, props, op.props.length).set(
+          op.props.map(n => this.rt.const(n)),
+        )
+        const h = x.kiln_transition_new(
+          props,
+          op.props.length,
+          this.rt.fn(op.path),
+          op.time,
+          op.delay,
+        )
         x.lv_free(props)
         this.blocks.push(h)
         return this.set("transition", op.id, h)
@@ -296,7 +317,14 @@ export class Scene {
       case "image": {
         const data = x.lv_malloc(op.data.length)
         new Uint8Array(this.rt.memory, data, op.data.length).set(op.data)
-        const h = x.kiln_image_new(this.rt.const(op.cf), op.w, op.h, op.stride, data, op.data.length)
+        const h = x.kiln_image_new(
+          this.rt.const(op.cf),
+          op.w,
+          op.h,
+          op.stride,
+          data,
+          op.data.length,
+        )
         this.images.push(h)
         return this.set("image", op.id, h)
       }
@@ -310,9 +338,16 @@ export class Scene {
       }
       case "tiny_ttf": {
         const fallback = op.fallback ? this.rt.font(op.fallback) : 0
-        const h = x.kiln_tiny_ttf(this.need("ttf", op.ttf), this.ttfBytes.get(op.ttf) ?? 0, op.size, op.cache, fallback)
+        const h = x.kiln_tiny_ttf(
+          this.need("ttf", op.ttf),
+          this.ttfBytes.get(op.ttf) ?? 0,
+          op.size,
+          op.cache,
+          fallback,
+        )
         // the helper hands back LVGL's default font when TinyTTF can't: the UI stays up in it
-        if (h === this.rt.font(DEFAULT_FONT)) console.warn(`Kiln: TinyTTF couldn't read font ${op.ttf}; using ${DEFAULT_FONT}`)
+        if (h === this.rt.font(DEFAULT_FONT))
+          console.warn(`Kiln: TinyTTF couldn't read font ${op.ttf}; using ${DEFAULT_FONT}`)
         else this.fonts.push(h)
         return this.set("tiny_ttf", op.id, h)
       }
@@ -328,7 +363,12 @@ export class Scene {
     if (local || shared) {
       const prop = this.rt.const(stylePropConst((local ?? shared)![1]))
       const value = args[1]
-      const kind = value.k === "color" ? "color" : ["font", "tiny_ttf", "image", "transition", "str"].includes(value.k) ? "ptr" : "num"
+      const kind =
+        value.k === "color"
+          ? "color"
+          : ["font", "tiny_ttf", "image", "transition", "str"].includes(value.k)
+            ? "ptr"
+            : "num"
       const target = this.arg(args[0])
       if (local) x[`kiln_obj_style_${kind}`](target, prop, this.arg(value), this.arg(args[2]))
       else x[`kiln_style_${kind}`](target, prop, this.arg(value))
@@ -364,7 +404,9 @@ export class Scene {
         return a.names.reduce((acc, n) => acc | this.rt.const(n), 0)
       case "coord":
         if (typeof a.v === "number") return Math.round(a.v)
-        return a.v === "content" ? this.rt.const("LV_SIZE_CONTENT") : x.lv_pct(Math.round(parseFloat(a.v)))
+        return a.v === "content"
+          ? this.rt.const("LV_SIZE_CONTENT")
+          : x.lv_pct(Math.round(parseFloat(a.v)))
       case "str": {
         // Kept until dispose: lv_label_bind_text and friends hold on to the pointer.
         const p = this.rt.cstr(a.v)
@@ -399,7 +441,14 @@ export class Scene {
     for (const b of this.blocks) x.lv_free(b)
     if (this.anim) x.lv_free(this.anim)
     this.handles.clear()
-    this.screens = this.timelines = this.styles = this.subjects = this.images = this.fonts = this.blocks = []
+    this.screens =
+      this.timelines =
+      this.styles =
+      this.subjects =
+      this.images =
+      this.fonts =
+      this.blocks =
+        []
     this.ttfBytes.clear()
     this.anim = 0
   }

@@ -1,5 +1,14 @@
 import { useMemo, useState } from "react"
-import { allNodes, cNames, edit, newId, useProjectStore, type Node, type Phase, type Project } from "@/entities/project"
+import {
+  allNodes,
+  cNames,
+  edit,
+  newId,
+  useProjectStore,
+  type Node,
+  type Phase,
+  type Project,
+} from "@/entities/project"
 
 type Value = string | number | boolean
 
@@ -30,18 +39,29 @@ export function useStyles() {
     names,
     toggle: (id: string) => setOpen(o => (o === id ? null : id)),
     usesOf: (styleId: string) => nodes.filter(n => n.classes.some(c => c.style === styleId)).length,
-    setTheme: (key: "primary" | "secondary", v: string, phase?: Phase) => edit(d => void (d.theme[key] = v), phase),
+    setTheme: (key: "primary" | "secondary", v: string, phase?: Phase) =>
+      edit(d => void (d.theme[key] = v), phase),
     setDark: (dark: boolean) => edit(d => void (d.theme.dark = dark)),
-    addToken: () => edit(d => void d.tokens.push({ id: newId(), name: `color_${d.tokens.length + 1}`, value: "#73d0ff" })),
+    addToken: () =>
+      edit(
+        d =>
+          void d.tokens.push({
+            id: newId(),
+            name: `color_${d.tokens.length + 1}`,
+            value: "#73d0ff",
+          }),
+      ),
     renameToken: (id: string, name: string) => token(id, t => void (t.name = name)),
-    setTokenValue: (id: string, value: string, phase?: Phase) => token(id, t => void (t.value = value), phase),
+    setTokenValue: (id: string, value: string, phase?: Phase) =>
+      token(id, t => void (t.value = value), phase),
     removeToken: (id: string) => edit(d => void (d.tokens = d.tokens.filter(t => t.id !== id))),
     addStyle: () => {
       const id = newId()
       edit(d => void d.styles.push({ id, name: `style_${d.styles.length + 1}`, props: {} }))
       setOpen(id)
     },
-    renameStyle: (id: string, name: string) => edit(d => void (d.styles.find(x => x.id === id)!.name = name)),
+    renameStyle: (id: string, name: string) =>
+      edit(d => void (d.styles.find(x => x.id === id)!.name = name)),
     removeStyle: (id: string) =>
       edit(d => {
         d.styles = d.styles.filter(x => x.id !== id)

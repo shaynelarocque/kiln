@@ -19,6 +19,8 @@ jobs:
       # LVGL's headers let the tests compile every exported C file against the real API
       - run: git clone --depth 1 --branch v9.6.0 https://github.com/lvgl/lvgl.git runtime/lvgl
       - run: pnpm check
+      # the house style is Prettier with the repo's config (pnpm format fixes it)
+      - run: pnpm exec prettier --check .
       - run: pnpm build
 
   tauri:

@@ -1,5 +1,12 @@
 import { checkPins, findBoard, pinMap, useBoards } from "@/entities/board"
-import { allNodes, createVariable, edit, useProjectStore, type Phase, type Variable } from "@/entities/project"
+import {
+  allNodes,
+  createVariable,
+  edit,
+  useProjectStore,
+  type Phase,
+  type Variable,
+} from "@/entities/project"
 import { pinClaims } from "@/features/export-firmware"
 
 /** View-model for the data panel: variables, their simulations and their pins. */
@@ -28,7 +35,8 @@ export function useData() {
       const pins = [v.source && "pin" in v.source ? v.source.pin : -1, v.sink?.pin ?? -1]
       return problems.filter(p => pins.includes(p.pin))
     },
-    uses: (id: string) => nodes.filter(n => n.bindings.some(b => b.variable === id)).map(n => n.name),
+    uses: (id: string) =>
+      nodes.filter(n => n.bindings.some(b => b.variable === id)).map(n => n.name),
     add: () =>
       edit(d => {
         const taken = new Set(d.variables.map(v => v.name))

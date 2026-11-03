@@ -13,7 +13,11 @@ export function ComponentMenu() {
   return (
     <label className={s.menu} title='Insert a component'>
       <Component />
-      <select value='' aria-label='Insert a component' onChange={e => e.target.value && insertInstance(e.target.value)}>
+      <select
+        value=''
+        aria-label='Insert a component'
+        onChange={e => e.target.value && insertInstance(e.target.value)}
+      >
         <option value='' disabled>
           Insert component
         </option>

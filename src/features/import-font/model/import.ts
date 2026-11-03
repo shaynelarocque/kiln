@@ -9,12 +9,20 @@ export async function importFonts(files: FileList | File[]) {
   for (const file of Array.from(files)) {
     try {
       const bytes = new Uint8Array(await file.arrayBuffer())
-      const problem = fontFileProblem(bytes) ?? ((await getRuntime()).canReadFont(bytes) ? null : "LVGL's TinyTTF can't read it.")
+      const problem =
+        fontFileProblem(bytes) ??
+        ((await getRuntime()).canReadFont(bytes) ? null : "LVGL's TinyTTF can't read it.")
       if (problem) throw new Error(problem)
-      const font: FontAsset = { id: newId(), name: file.name.replace(/\.\w+$/, ""), data: toBase64(bytes) }
+      const font: FontAsset = {
+        id: newId(),
+        name: file.name.replace(/\.\w+$/, ""),
+        data: toBase64(bytes),
+      }
       edit(d => void d.fonts.push(font))
     } catch (e) {
-      editorApi.getState().set({ error: `Couldn't import ${file.name}: ${e instanceof Error ? e.message : e}` })
+      editorApi
+        .getState()
+        .set({ error: `Couldn't import ${file.name}: ${e instanceof Error ? e.message : e}` })
     }
   }
 }

@@ -17,10 +17,12 @@ const walkNodes = (node: Node, fn: (n: Node) => void) => {
 }
 
 /** id of the expanded copy of main-component node `id` inside an instance */
-export const instanceChildId = (instanceId: string, mainNodeId: string) => `${instanceId}/${mainNodeId}`
+export const instanceChildId = (instanceId: string, mainNodeId: string) =>
+  `${instanceId}/${mainNodeId}`
 
 export function findMain(project: Project, id: string): Node | undefined {
-  for (const screen of project.screens.filter(isLibrary)) for (const c of screen.children) if (c.id === id) return c
+  for (const screen of project.screens.filter(isLibrary))
+    for (const c of screen.children) if (c.id === id) return c
 }
 
 /** An instance as plain nodes: the main's tree with fresh ids, the instance's placement and overrides. */
@@ -42,7 +44,8 @@ export function expandInstance(project: Project, instance: Node, depth = 0): Nod
   }
   const root = copy(main)
   const style = { ...root.style }
-  for (const [sel, props] of Object.entries(instance.style)) style[sel] = { ...style[sel], ...props }
+  for (const [sel, props] of Object.entries(instance.style))
+    style[sel] = { ...style[sel], ...props }
   return {
     ...root,
     id: instance.id,
@@ -69,7 +72,8 @@ export function resolveScreens(project: Project, keepLibrary: boolean): Screen[]
   })
   const screens = keepLibrary ? project.screens : project.screens.filter(s => !isLibrary(s))
   if (!hasInstances) return screens
-  const resolve = (n: Node): Node => (n.component ? expandInstance(project, n) : { ...n, children: n.children.map(resolve) })
+  const resolve = (n: Node): Node =>
+    n.component ? expandInstance(project, n) : { ...n, children: n.children.map(resolve) }
   return screens.map(s => ({ ...s, children: s.children.map(resolve) }))
 }
 
@@ -77,15 +81,29 @@ export function resolveScreens(project: Project, keepLibrary: boolean): Screen[]
 export function makeComponent(project: Project, nodeId: string): string | null {
   const hit = locate(project, nodeId)
   if (!hit?.parent || hit.node.component) return null
-  const inLibrary = project.screens.filter(isLibrary).some(s => locate({ ...project, screens: [s] }, nodeId))
+  const inLibrary = project.screens
+    .filter(isLibrary)
+    .some(s => locate({ ...project, screens: [s] }, nodeId))
   if (inLibrary) return null
   let library = project.screens.find(isLibrary)
   if (!library) {
     const { width } = project.target.display
     const x = Math.max(...project.screens.map(s => s.frame.x)) + width + 160
     library = { ...createScreen("Components", project.target.display, { x, y: 0 }), library: true }
-    library.layout.flex = { flow: "LV_FLEX_FLOW_COLUMN", main: "LV_FLEX_ALIGN_START", cross: "LV_FLEX_ALIGN_CENTER", track: "LV_FLEX_ALIGN_CENTER" }
-    library.style = { "main:default": { ...project.screens[0].style["main:default"], pad_top: 12, pad_bottom: 12, pad_row: 12 } }
+    library.layout.flex = {
+      flow: "LV_FLEX_FLOW_COLUMN",
+      main: "LV_FLEX_ALIGN_START",
+      cross: "LV_FLEX_ALIGN_CENTER",
+      track: "LV_FLEX_ALIGN_CENTER",
+    }
+    library.style = {
+      "main:default": {
+        ...project.screens[0].style["main:default"],
+        pad_top: 12,
+        pad_bottom: 12,
+        pad_row: 12,
+      },
+    }
     library.scrollable = true
     project.screens.push(library)
   }
@@ -113,7 +131,19 @@ export function makeComponent(project: Project, nodeId: string): string | null {
 export function createInstance(project: Project, mainId: string, name: string): Node | null {
   const main = findMain(project, mainId)
   if (!main) return null
-  return { id: newId(), name, widget: main.widget, props: {}, layout: { ...main.layout }, style: {}, classes: [], bindings: [], events: [], children: [], component: main.id }
+  return {
+    id: newId(),
+    name,
+    widget: main.widget,
+    props: {},
+    layout: { ...main.layout },
+    style: {},
+    classes: [],
+    bindings: [],
+    events: [],
+    children: [],
+    component: main.id,
+  }
 }
 
 /** Replaces an instance with an independent copy of what it shows. */
@@ -121,7 +151,12 @@ export function detachInstance(project: Project, instanceId: string) {
   const hit = locate(project, instanceId)
   if (!hit?.parent || !hit.node.component) return
   const expanded = expandInstance(project, hit.node)
-  const fresh = (n: Node): Node => ({ ...n, id: n.id === instanceId ? n.id : newId(), events: n.events.map(e => ({ ...e, id: newId() })), children: n.children.map(fresh) })
+  const fresh = (n: Node): Node => ({
+    ...n,
+    id: n.id === instanceId ? n.id : newId(),
+    events: n.events.map(e => ({ ...e, id: newId() })),
+    children: n.children.map(fresh),
+  })
   hit.parent.children.splice(hit.index, 1, fresh(expanded))
 }
 

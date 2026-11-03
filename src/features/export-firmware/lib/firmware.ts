@@ -1,8 +1,34 @@
 import helpersC from "../../../../runtime/kiln_helpers.c?raw"
 import helpersH from "../../../../runtime/kiln_helpers.h?raw"
-import { DISPLAY_DRIVERS, appPartition, estimateBudget, transformLayerBytes, type Board } from "@/entities/board"
-import { allNodes, compile, resolveScreens, transformedNodes, ttfFallbacks, ttfUses, type Project, type Source, type Variable } from "@/entities/project"
-import { DEFAULT_FONT, LVGL_VERSION, cColor, cComment, declarations, fontConfName, opToC, usesAnim, type Op } from "@/shared/lvgl"
+import {
+  DISPLAY_DRIVERS,
+  appPartition,
+  estimateBudget,
+  transformLayerBytes,
+  type Board,
+} from "@/entities/board"
+import {
+  allNodes,
+  compile,
+  resolveScreens,
+  transformedNodes,
+  ttfFallbacks,
+  ttfUses,
+  type Project,
+  type Source,
+  type Variable,
+} from "@/entities/project"
+import {
+  DEFAULT_FONT,
+  LVGL_VERSION,
+  cColor,
+  cComment,
+  declarations,
+  fontConfName,
+  opToC,
+  usesAnim,
+  type Op,
+} from "@/shared/lvgl"
 
 export type FirmwareFile = {
   path: string
@@ -42,10 +68,12 @@ function statements(ops: Op[], names: Record<string, string>) {
 export function usedFonts(project: Project) {
   const fonts = new Set([DEFAULT_FONT])
   const add = (v: unknown) => typeof v === "string" && v.startsWith("lv_font_") && fonts.add(v)
-  for (const n of allNodes(project)) for (const props of Object.values(n.style)) add(props.text_font)
+  for (const n of allNodes(project))
+    for (const props of Object.values(n.style)) add(props.text_font)
   for (const s of project.styles) add(s.props.text_font)
   // worked out on the screens as the export builds them, like compile does
-  for (const f of ttfFallbacks({ ...project, screens: resolveScreens(project, false) }).values()) fonts.add(f)
+  for (const f of ttfFallbacks({ ...project, screens: resolveScreens(project, false) }).values())
+    fonts.add(f)
   return [...fonts].sort()
 }
 
@@ -53,7 +81,10 @@ export function usedFonts(project: Project) {
 function ttfBudget(project: Project) {
   const uses = ttfUses(project)
   const files = project.fonts.filter(f => uses.some(u => u.id === f.id))
-  return { ttfBytes: files.reduce((sum, f) => sum + Math.ceil((f.data.length * 3) / 4), 0), ttfSizes: uses.map(u => u.size) }
+  return {
+    ttfBytes: files.reduce((sum, f) => sum + Math.ceil((f.data.length * 3) / 4), 0),
+    ttfSizes: uses.map(u => u.size),
+  }
 }
 
 /** Laid-out widget sizes by node id, as the editor's preview measured them. */
@@ -68,7 +99,10 @@ export function largestLayer(project: Project, boxes?: Boxes) {
   let best: { name: string; bytes: number } | null = null
   for (const [id, t] of transformedNodes(project)) {
     const { w, h } = t.node.layout
-    const box = boxes?.get(id) ?? { w: typeof w === "number" ? w : width, h: typeof h === "number" ? h : height }
+    const box = boxes?.get(id) ?? {
+      w: typeof w === "number" ? w : width,
+      h: typeof h === "number" ? h : height,
+    }
     const bytes = transformLayerBytes(box.w, box.h, t, num(bufferRows))
     if (!best || bytes > best.bytes) best = { name: t.node.name, bytes }
   }
@@ -78,7 +112,14 @@ export function largestLayer(project: Project, boxes?: Boxes) {
 export function budgetFor(project: Project, board: Board | undefined, boxes?: Boxes) {
   const layer = largestLayer(project, boxes)
   const nodes = allNodes(project)
-  const strings = nodes.reduce((sum, n) => sum + Object.values(n.props).filter(v => typeof v === "string").join("").length, 0)
+  const strings = nodes.reduce(
+    (sum, n) =>
+      sum +
+      Object.values(n.props)
+        .filter(v => typeof v === "string")
+        .join("").length,
+    0,
+  )
   const budget = estimateBudget({
     ram: board?.ram ?? 320 * 1024,
     rom: appPartition(board?.platform ?? "espressif32", board?.rom ?? 4 * 1024 * 1024),
@@ -86,7 +127,10 @@ export function budgetFor(project: Project, board: Board | undefined, boxes?: Bo
     height: project.target.display.height,
     bufferRows: project.target.display.bufferRows,
     objects: nodes.length,
-    styleProps: nodes.reduce((sum, n) => sum + Object.values(n.style).reduce((s, p) => s + Object.keys(p).length, 0), 0),
+    styleProps: nodes.reduce(
+      (sum, n) => sum + Object.values(n.style).reduce((s, p) => s + Object.keys(p).length, 0),
+      0,
+    ),
     stringBytes: strings + project.variables.filter(v => v.type === "string").length * 128,
     fonts: usedFonts(project),
     ...ttfBudget(project),
@@ -99,7 +143,8 @@ export function budgetFor(project: Project, board: Board | undefined, boxes?: Bo
 
 function uiFiles(project: Project): FirmwareFile[] {
   const program = compile(project, "export")
-  if (!program.screens.length) throw new Error("There's no screen to export (the Components screen doesn't count)")
+  if (!program.screens.length)
+    throw new Error("There's no screen to export (the Components screen doesn't count)")
   const { names } = program
   const head = HEADER(project)
   const screenNames = program.screens.map(s => names[s.id])
@@ -109,9 +154,13 @@ function uiFiles(project: Project): FirmwareFile[] {
   const theme = project.theme
 
   const externs = (kind: string, type: string) =>
-    [...setupDecls, ...wiringDecls, ...screenDecls.flat()].filter(d => d.kind === kind).map(d => `extern ${type} ${d.name};`)
+    [...setupDecls, ...wiringDecls, ...screenDecls.flat()]
+      .filter(d => d.kind === kind)
+      .map(d => `extern ${type} ${d.name};`)
 
-  const tokenLines = project.tokens.filter(t => HEX.test(t.value)).map(t => `#define ${names[t.id]} 0x${t.value.slice(1).toUpperCase()}`)
+  const tokenLines = project.tokens
+    .filter(t => HEX.test(t.value))
+    .map(t => `#define ${names[t.id]} 0x${t.value.slice(1).toUpperCase()}`)
   const variableDocs = project.variables.map(v => {
     const range = v.type === "int" ? ` (${num(v.min)}..${num(v.max)})` : ""
     return `extern lv_subject_t * ${names[v.id]}; /* ${cComment(v.name)}: ${v.type === "int" ? "int" : "string"}${range} */`
@@ -130,7 +179,12 @@ function uiFiles(project: Project): FirmwareFile[] {
     "",
     ...(tokenLines.length ? ["/* Colour tokens */", ...tokenLines, ""] : []),
     ...(variableDocs.length
-      ? ["/* Variables. Read with lv_subject_get_int(ui_var_x), set with lv_subject_set_int(ui_var_x, v):", " * every bound widget follows. */", ...variableDocs, ""]
+      ? [
+          "/* Variables. Read with lv_subject_get_int(ui_var_x), set with lv_subject_set_int(ui_var_x, v):",
+          " * every bound widget follows. */",
+          ...variableDocs,
+          "",
+        ]
       : []),
     "/* Screens and widgets */",
     ...externs("obj", "lv_obj_t *"),
@@ -143,7 +197,9 @@ function uiFiles(project: Project): FirmwareFile[] {
       ...externs("image", "const lv_image_dsc_t"),
       ...externs("font", "const lv_font_t *"),
       // sized, so ui.c can take sizeof() for TinyTTF
-      ...program.setup.flatMap(op => (op.op === "ttf" ? [`extern const uint8_t ${names[op.id]}[${op.data.length}];`] : [])),
+      ...program.setup.flatMap(op =>
+        op.op === "ttf" ? [`extern const uint8_t ${names[op.id]}[${op.data.length}];`] : [],
+      ),
     ],
     "",
     "/** Builds every screen and loads the first. Call once, after the display is set up. */",
@@ -218,8 +274,24 @@ function uiFiles(project: Project): FirmwareFile[] {
     { path: "src/ui/ui.h", content: uiH, overwrite: true },
     { path: "src/ui/ui.c", content: uiC, overwrite: true },
     ...screens,
-    ...(images.length ? [{ path: "src/ui/ui_images.c", overwrite: true, content: [head, '#include "ui.h"', "", ...images.map(d => d.c + "\n")].join("\n") }] : []),
-    ...(ttfs.length ? [{ path: "src/ui/ui_fonts.c", overwrite: true, content: [head, '#include "ui.h"', "", ...ttfs.map(d => d.c + "\n")].join("\n") }] : []),
+    ...(images.length
+      ? [
+          {
+            path: "src/ui/ui_images.c",
+            overwrite: true,
+            content: [head, '#include "ui.h"', "", ...images.map(d => d.c + "\n")].join("\n"),
+          },
+        ]
+      : []),
+    ...(ttfs.length
+      ? [
+          {
+            path: "src/ui/ui_fonts.c",
+            overwrite: true,
+            content: [head, '#include "ui.h"', "", ...ttfs.map(d => d.c + "\n")].join("\n"),
+          },
+        ]
+      : []),
     { path: "src/ui/kiln_helpers.h", content: helpersH, overwrite: true },
     { path: "src/ui/kiln_helpers.c", content: helpersC, overwrite: true },
   ]
@@ -250,7 +322,13 @@ function lvConf(project: Project, board: Board | undefined, boxes?: Boxes) {
     "",
     "/* Fonts this UI uses */",
     ...fonts.map(f => `#define ${fontConfName(f)} 1`),
-    ...(ttfUses(project).length ? ["/* Imported fonts, drawn at any size from the TTF in flash */", "#define LV_USE_TINY_TTF 1", "#define LV_TINY_TTF_FILE_SUPPORT 0"] : []),
+    ...(ttfUses(project).length
+      ? [
+          "/* Imported fonts, drawn at any size from the TTF in flash */",
+          "#define LV_USE_TINY_TTF 1",
+          "#define LV_TINY_TTF_FILE_SUPPORT 0",
+        ]
+      : []),
     "",
     "#endif /*LV_CONF_H*/",
     "",
@@ -348,17 +426,24 @@ function hardware(project: Project): FirmwareFile[] {
   const init: string[] = []
   for (const v of sources) {
     const s = v.source!
-    if (s.kind === "digital") init.push(`pinMode(${pin(s.pin)}, ${s.pull === "up" ? "INPUT_PULLUP" : s.pull === "down" ? "INPUT_PULLDOWN" : "INPUT"});`)
+    if (s.kind === "digital")
+      init.push(
+        `pinMode(${pin(s.pin)}, ${s.pull === "up" ? "INPUT_PULLUP" : s.pull === "down" ? "INPUT_PULLDOWN" : "INPUT"});`,
+      )
   }
   const bl = pin(display.pins.bl)
-  if (bl >= 0 && !backlightDriven) init.push(`pinMode(${bl}, OUTPUT);`, `digitalWrite(${bl}, HIGH); /* backlight */`)
+  if (bl >= 0 && !backlightDriven)
+    init.push(`pinMode(${bl}, OUTPUT);`, `digitalWrite(${bl}, HIGH); /* backlight */`)
   for (const v of sinks) {
     const s = v.sink!
     const n = names[v.id]
     const p = pin(s.pin)
     init.push(`pinMode(${p}, OUTPUT);`)
     if (s.kind === "digital")
-      init.push(`/* ${cComment(v.name)} → GPIO${p} */`, `lv_subject_add_observer(${n}, [](lv_observer_t *, lv_subject_t * s) { digitalWrite(${p}, ${s.invert ? "!" : ""}lv_subject_get_int(s) ? HIGH : LOW); }, NULL);`)
+      init.push(
+        `/* ${cComment(v.name)} → GPIO${p} */`,
+        `lv_subject_add_observer(${n}, [](lv_observer_t *, lv_subject_t * s) { digitalWrite(${p}, ${s.invert ? "!" : ""}lv_subject_get_int(s) ? HIGH : LOW); }, NULL);`,
+      )
     else
       init.push(
         `/* ${cComment(v.name)} (${num(v.min)}..${num(v.max)}) → PWM on GPIO${p} */`,
@@ -388,7 +473,13 @@ function hardware(project: Project): FirmwareFile[] {
     '#include "kiln_hw.h"',
     "",
     ...(sources.length
-      ? ["static void set_if_changed(lv_subject_t * subject, int32_t value)", "{", "    if (lv_subject_get_int(subject) != value) lv_subject_set_int(subject, value);", "}", ""]
+      ? [
+          "static void set_if_changed(lv_subject_t * subject, int32_t value)",
+          "{",
+          "    if (lv_subject_get_int(subject) != value) lv_subject_set_int(subject, value);",
+          "}",
+          "",
+        ]
       : []),
     "uint32_t kiln_free_heap(void)",
     "{",
@@ -419,7 +510,9 @@ function hardware(project: Project): FirmwareFile[] {
     "",
     "void kiln_hw_poll(void)",
     "{",
-    ...(poll.length ? ["    uint32_t now = millis();", ...indent(poll)] : ["    /* nothing to poll */"]),
+    ...(poll.length
+      ? ["    uint32_t now = millis();", ...indent(poll)]
+      : ["    /* nothing to poll */"]),
     "}",
     "",
   ].join("\n")
@@ -555,7 +648,11 @@ function platformioIni(project: Project, board: Board | undefined) {
 
 /** The whole PlatformIO project for the current target. */
 /** The PlatformIO project for a UI. `boxes` (the preview's layout) sizes LVGL's heap for transform layers. */
-export function generateFirmware(project: Project, board: Board | undefined, boxes?: Boxes): FirmwareFile[] {
+export function generateFirmware(
+  project: Project,
+  board: Board | undefined,
+  boxes?: Boxes,
+): FirmwareFile[] {
   return [
     { path: "platformio.ini", content: platformioIni(project, board), overwrite: true },
     { path: "include/lv_conf.h", content: lvConf(project, board, boxes), overwrite: true },
@@ -567,4 +664,3 @@ export function generateFirmware(project: Project, board: Board | undefined, box
     { path: ".gitignore", content: ".pio\n", overwrite: false },
   ]
 }
-

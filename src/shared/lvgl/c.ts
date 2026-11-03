@@ -46,7 +46,8 @@ export function cString(text: string): string {
 export const cColor = (color: string) => `lv_color_hex(0x${color.slice(1).toUpperCase()})`
 
 /** User text made safe inside a C block comment: no way to close it early, no control characters. */
-export const cComment = (text: string) => text.replace(/\*\//g, "* /").replace(/[\x00-\x1f\x7f]/g, " ")
+export const cComment = (text: string) =>
+  text.replace(/\*\//g, "* /").replace(/[\x00-\x1f\x7f]/g, " ")
 
 const name = (names: Record<string, string>, id: string) => {
   const n = names[id]
@@ -110,7 +111,11 @@ export function opToC(op: Op, names: Record<string, string>): string[] {
           `lv_subject_set_string_buffer_static(${n}, ${n}_buf, ${n}_prev, sizeof(${n}_buf));`,
           `lv_subject_set_string(${n}, ${cString(String(op.init))});`,
         ]
-      if (op.type === "color") return [`${n} = lv_subject_create(LV_SUBJECT_TYPE_COLOR);`, `lv_subject_set_color(${n}, ${cColor(String(op.init))});`]
+      if (op.type === "color")
+        return [
+          `${n} = lv_subject_create(LV_SUBJECT_TYPE_COLOR);`,
+          `lv_subject_set_color(${n}, ${cColor(String(op.init))});`,
+        ]
       return [
         `${n} = lv_subject_create(LV_SUBJECT_TYPE_INT);`,
         ...(op.min !== undefined ? [`lv_subject_set_min_value_int(${n}, ${op.min});`] : []),
@@ -122,20 +127,25 @@ export function opToC(op: Op, names: Record<string, string>): string[] {
       return [`lv_style_init(&${name(names, op.id)});`]
     case "transition": {
       const n = name(names, op.id)
-      return [`lv_style_transition_dsc_init(&${n}, ${n}_props, ${op.path}, ${op.time}, ${op.delay}, NULL);`]
+      return [
+        `lv_style_transition_dsc_init(&${n}, ${n}_props, ${op.path}, ${op.time}, ${op.delay}, NULL);`,
+      ]
     }
     case "image":
     case "ttf":
       return []
     case "tiny_ttf": {
       const ttf = name(names, op.ttf)
-      return [`${name(names, op.id)} = kiln_tiny_ttf(${ttf}, sizeof(${ttf}), ${op.size}, ${op.cache}, ${op.fallback ? `&${op.fallback}` : "NULL"});`]
+      return [
+        `${name(names, op.id)} = kiln_tiny_ttf(${ttf}, sizeof(${ttf}), ${op.size}, ${op.cache}, ${op.fallback ? `&${op.fallback}` : "NULL"});`,
+      ]
     }
   }
 }
 
 export type Declaration = {
-  kind: "obj" | "subject" | "style" | "transition" | "timeline" | "series" | "image" | "ttf" | "font"
+  kind:
+    "obj" | "subject" | "style" | "transition" | "timeline" | "series" | "image" | "ttf" | "font"
   c: string
   name: string
 }
@@ -170,7 +180,15 @@ export function declarations(ops: Op[], names: Record<string, string>): Declarat
       out.push({ kind: "image", name: n, c: imageToC(op, n) })
     } else if (op.op === "ttf") {
       const n = name(names, op.id)
-      out.push({ kind: "ttf", name: n, c: [`LV_ATTRIBUTE_LARGE_CONST const uint8_t ${n}[${op.data.length}] = {`, ...hexRows(op.data), "};"].join("\n") })
+      out.push({
+        kind: "ttf",
+        name: n,
+        c: [
+          `LV_ATTRIBUTE_LARGE_CONST const uint8_t ${n}[${op.data.length}] = {`,
+          ...hexRows(op.data),
+          "};",
+        ].join("\n"),
+      })
     } else if (op.op === "tiny_ttf") {
       const n = name(names, op.id)
       out.push({ kind: "font", name: n, c: `const lv_font_t * ${n};` })
@@ -182,7 +200,13 @@ export function declarations(ops: Op[], names: Record<string, string>): Declarat
 function hexRows(data: Uint8Array) {
   const rows: string[] = []
   for (let i = 0; i < data.length; i += 24)
-    rows.push("    " + Array.from(data.subarray(i, i + 24), b => `0x${b.toString(16).padStart(2, "0")}`).join(", ") + ",")
+    rows.push(
+      "    " +
+        Array.from(data.subarray(i, i + 24), b => `0x${b.toString(16).padStart(2, "0")}`).join(
+          ", ",
+        ) +
+        ",",
+    )
   return rows
 }
 
@@ -207,4 +231,5 @@ function imageToC(op: Extract<Op, { op: "image" }>, n: string) {
 }
 
 /** Whether a block of ops configures the scratch lv_anim_t (so the C function needs `lv_anim_t a;`). */
-export const usesAnim = (ops: Op[]) => ops.some(op => op.op === "call" && op.args.some(a => a.k === "anim"))
+export const usesAnim = (ops: Op[]) =>
+  ops.some(op => op.op === "call" && op.args.some(a => a.k === "anim"))

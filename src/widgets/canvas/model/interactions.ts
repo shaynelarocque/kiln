@@ -5,7 +5,8 @@ export type Rects = Map<string, Rect>
 export type Handle = "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw"
 export type Guide = { axis: "x" | "y"; at: number }
 
-const inside = (r: Rect, x: number, y: number) => x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h
+const inside = (r: Rect, x: number, y: number) =>
+  x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h
 
 /** The nodes under a point, from the screen down to the deepest one drawn on top. */
 export function hitChain(screen: Node, rects: Rects, x: number, y: number): Node[] {
@@ -29,7 +30,15 @@ export function marqueeHits(screen: Node, rects: Rects, box: Rect): string[] {
   return screen.children
     .filter(c => {
       const r = rects.get(c.id)
-      return r && !c.hidden && !c.locked && r.x < box.x + box.w && box.x < r.x + r.w && r.y < box.y + box.h && box.y < r.y + r.h
+      return (
+        r &&
+        !c.hidden &&
+        !c.locked &&
+        r.x < box.x + box.w &&
+        box.x < r.x + r.w &&
+        r.y < box.y + box.h &&
+        box.y < r.y + r.h
+      )
     })
     .map(c => c.id)
 }
@@ -70,7 +79,8 @@ export function snapMove(box: Rect, targets: Rect[], dx: number, dy: number, thr
       for (const line of [tp, tp + ts / 2, tp + ts])
         for (const e of edges) {
           const delta = line - e
-          if (Math.abs(delta) <= threshold && (!best || Math.abs(delta) < Math.abs(best.delta))) best = { delta, at: line }
+          if (Math.abs(delta) <= threshold && (!best || Math.abs(delta) < Math.abs(best.delta)))
+            best = { delta, at: line }
         }
     }
     if (!best) return d
@@ -84,7 +94,14 @@ export function snapMove(box: Rect, targets: Rect[], dx: number, dy: number, thr
  * New x/y/w/h after dragging a handle, keeping the opposite edge still whatever the
  * alignment (a centred box has to move half the distance it grows).
  */
-export function resizeLayout(start: { x: number; y: number; w: number; h: number }, align: string, handle: Handle, dx: number, dy: number, keepRatio = false) {
+export function resizeLayout(
+  start: { x: number; y: number; w: number; h: number },
+  align: string,
+  handle: Handle,
+  dx: number,
+  dy: number,
+  keepRatio = false,
+) {
   const [ax, ay] = alignFactors(align)
   let { x, y, w, h } = start
   if (handle.includes("e")) {
@@ -138,7 +155,9 @@ export function flexDrop(parent: Node, rects: Rects, dragged: string, x: number,
   const after = past !== reverse
   const index = parent.children.findIndex(c => c.id === nearest!.id) + (after ? 1 : 0)
   // the line sits on the side of the nearest sibling the pointer is on
-  const line: Rect = column ? { x: r.x, y: past ? r.y + r.h + 1 : r.y - 1, w: r.w, h: 0 } : { x: past ? r.x + r.w + 1 : r.x - 1, y: r.y, w: 0, h: r.h }
+  const line: Rect = column
+    ? { x: r.x, y: past ? r.y + r.h + 1 : r.y - 1, w: r.w, h: 0 }
+    : { x: past ? r.x + r.w + 1 : r.x - 1, y: r.y, w: 0, h: r.h }
   return { index, line }
 }
 

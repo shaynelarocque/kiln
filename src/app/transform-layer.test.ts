@@ -1,7 +1,14 @@
 import { readFileSync } from "node:fs"
 import { describe, expect, it } from "vitest"
 import { transformLayerBytes } from "@/entities/board"
-import { compile, createEmptyProject, createNode, transformedNodes, type Project, type StyleProps } from "@/entities/project"
+import {
+  compile,
+  createEmptyProject,
+  createNode,
+  transformedNodes,
+  type Project,
+  type StyleProps,
+} from "@/entities/project"
 import { LvglRuntime, Scene } from "@/shared/lvgl"
 
 const wasm = readFileSync(new URL("../shared/lvgl/runtime/kiln-rt.wasm", import.meta.url))
@@ -9,7 +16,13 @@ const wasm = readFileSync(new URL("../shared/lvgl/runtime/kiln-rt.wasm", import.
 /** A 200×120 card in the middle of the screen, styled with `style`. */
 function card(style: StyleProps): Project {
   const p = createEmptyProject()
-  p.screens[0].children = [createNode("container", { name: "card", layout: { x: 0, y: 0, w: 200, h: 120, align: "LV_ALIGN_CENTER" }, style: { "main:default": style } })]
+  p.screens[0].children = [
+    createNode("container", {
+      name: "card",
+      layout: { x: 0, y: 0, w: 200, h: 120, align: "LV_ALIGN_CENTER" },
+      style: { "main:default": style },
+    }),
+  ]
   return p
 }
 
@@ -45,13 +58,40 @@ describe("transform layers", () => {
 
   it("know which widgets get one: rotated or scaled in any state, by a class, or by an animation", () => {
     const p = createEmptyProject()
-    const pressed = createNode("button", { name: "pressed", style: { "main:pressed": { transform_scale_x: 240 } } })
-    const classed = createNode("button", { name: "classed", classes: [{ style: "pop", selector: "main:default" }] })
+    const pressed = createNode("button", {
+      name: "pressed",
+      style: { "main:pressed": { transform_scale_x: 240 } },
+    })
+    const classed = createNode("button", {
+      name: "classed",
+      classes: [{ style: "pop", selector: "main:default" }],
+    })
     const spun = createNode("label", { name: "spun" })
-    const still = createNode("label", { name: "still", style: { "main:default": { shadow_width: 8 } } })
+    const still = createNode("label", {
+      name: "still",
+      style: { "main:default": { shadow_width: 8 } },
+    })
     p.screens[0].children = [pressed, classed, spun, still]
     p.styles.push({ id: "pop", name: "pop", props: { transform_scale_y: 300 } })
-    p.animations.push({ id: "a", name: "spin", tracks: [{ id: "t", node: spun.id, prop: "rotation", keyframes: [{ t: 0, value: 0, easing: "linear" }, { t: 500, value: 3600, easing: "linear" }] }], repeat: -1, alternate: false, delay: 0, autoplay: true })
+    p.animations.push({
+      id: "a",
+      name: "spin",
+      tracks: [
+        {
+          id: "t",
+          node: spun.id,
+          prop: "rotation",
+          keyframes: [
+            { t: 0, value: 0, easing: "linear" },
+            { t: 500, value: 3600, easing: "linear" },
+          ],
+        },
+      ],
+      repeat: -1,
+      alternate: false,
+      delay: 0,
+      autoplay: true,
+    })
     const t = transformedNodes(p)
     expect([...t.keys()]).toEqual([pressed.id, classed.id, spun.id])
     expect(t.get(pressed.id)).toMatchObject({ rotates: false, minScale: 240 })

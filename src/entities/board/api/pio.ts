@@ -10,7 +10,17 @@ export async function loadBoards(): Promise<{ boards: Board[]; source: "platform
     const raw = await invoke<string>("pio_boards")
     const boards = (JSON.parse(raw) as PioBoard[])
       .filter(b => b.frameworks.includes("arduino") && b.ram >= 64 * 1024)
-      .map(({ id, name, mcu, fcpu, ram, rom, vendor, url, platform }) => ({ id, name, mcu, fcpu, ram, rom, vendor, url, platform }))
+      .map(({ id, name, mcu, fcpu, ram, rom, vendor, url, platform }) => ({
+        id,
+        name,
+        mcu,
+        fcpu,
+        ram,
+        rom,
+        vendor,
+        url,
+        platform,
+      }))
       .sort((a, b) => a.name.localeCompare(b.name))
     return { boards, source: "platformio" }
   } catch {

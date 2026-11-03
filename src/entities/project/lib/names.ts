@@ -44,7 +44,9 @@ export function cNames(project: Project): Record<string, string> {
   for (const a of project.assets) names[a.id] = unique(`ui_img_${slug(a.name)}`)
   for (const f of project.fonts) names[f.id] = unique(`ui_ttf_${slug(f.name)}`)
   for (const { id, size } of ttfUses(project))
-    names[`${id}@${size}`] = unique(`ui_font_${slug(project.fonts.find(f => f.id === id)!.name)}_${size}`)
+    names[`${id}@${size}`] = unique(
+      `ui_font_${slug(project.fonts.find(f => f.id === id)!.name)}_${size}`,
+    )
   for (const t of project.tokens) names[t.id] = unique(`UI_COLOR_${slug(t.name).toUpperCase()}`)
   return names
 }

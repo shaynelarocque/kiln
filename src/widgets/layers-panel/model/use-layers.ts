@@ -1,9 +1,25 @@
 import { useState } from "react"
 import { editorApi, useEditorStore } from "@/entities/editor"
-import { canContain, createScreen, edit, locate, moveNode, removeNodes, screenOf, useProjectStore, type Node } from "@/entities/project"
+import {
+  canContain,
+  createScreen,
+  edit,
+  locate,
+  moveNode,
+  removeNodes,
+  screenOf,
+  useProjectStore,
+  type Node,
+} from "@/entities/project"
 import { updateNode } from "@/features/node-actions"
 
-export type Row = { node: Node; depth: number; container: boolean; collapsed: boolean; hiddenByParent: boolean }
+export type Row = {
+  node: Node
+  depth: number
+  container: boolean
+  collapsed: boolean
+  hiddenByParent: boolean
+}
 export type Drop = { id: string; where: "before" | "after" | "inside" }
 
 /** View-model for the layers panel: screens, the active screen's tree, and its edits. */
@@ -20,7 +36,13 @@ export function useLayers() {
     // top of the list draws on top, like Figma: children are listed in reverse
     for (const node of [...nodes].reverse()) {
       const isCollapsed = collapsed.has(node.id)
-      rows.push({ node, depth, container: canContain(node) && node.children.length > 0, collapsed: isCollapsed, hiddenByParent })
+      rows.push({
+        node,
+        depth,
+        container: canContain(node) && node.children.length > 0,
+        collapsed: isCollapsed,
+        hiddenByParent,
+      })
       if (!isCollapsed) add(node.children, depth + 1, hiddenByParent || Boolean(node.hidden))
     }
   }
@@ -28,13 +50,22 @@ export function useLayers() {
 
   const select = (id: string, additive: boolean) => {
     const { selection, select } = editorApi.getState()
-    select(additive ? (selection.includes(id) ? selection.filter(x => x !== id) : [...selection, id]) : [id])
+    select(
+      additive
+        ? selection.includes(id)
+          ? selection.filter(x => x !== id)
+          : [...selection, id]
+        : [id],
+    )
   }
 
   const addScreen = () => {
     const { width } = project.target.display
     const x = Math.max(...project.screens.map(s => s.frame.x)) + width + 80
-    const screen = createScreen(`Screen ${project.screens.length + 1}`, project.target.display, { x, y: project.screens[0].frame.y })
+    const screen = createScreen(`Screen ${project.screens.length + 1}`, project.target.display, {
+      x,
+      y: project.screens[0].frame.y,
+    })
     screen.style = structuredClone(project.screens[0].style)
     edit(d => void d.screens.push(screen))
     editorApi.getState().select([screen.id])
@@ -58,7 +89,8 @@ export function useLayers() {
   const dropAt = (row: Row, e: React.DragEvent) => {
     const box = (e.currentTarget as HTMLElement).getBoundingClientRect()
     const f = (e.clientY - box.top) / box.height
-    const where: Drop["where"] = canContain(row.node) && f > 0.25 && f < 0.75 ? "inside" : f < 0.5 ? "before" : "after"
+    const where: Drop["where"] =
+      canContain(row.node) && f > 0.25 && f < 0.75 ? "inside" : f < 0.5 ? "before" : "after"
     setDrop({ id: row.node.id, where })
   }
 
@@ -67,8 +99,17 @@ export function useLayers() {
     const target = locate(project, drop.id)
     if (target?.parent) {
       // the list is reversed, so "before" in the list is after in the children array
-      if (drop.where === "inside") edit(d => moveNode(d, dragged, drop.id, locate(d, drop.id)!.node.children.length))
-      else edit(d => moveNode(d, dragged, target.parent!.id, drop.where === "before" ? target.index + 1 : target.index))
+      if (drop.where === "inside")
+        edit(d => moveNode(d, dragged, drop.id, locate(d, drop.id)!.node.children.length))
+      else
+        edit(d =>
+          moveNode(
+            d,
+            dragged,
+            target.parent!.id,
+            drop.where === "before" ? target.index + 1 : target.index,
+          ),
+        )
     }
     setDrop(null)
   }
@@ -94,7 +135,8 @@ export function useLayers() {
     addScreen,
     deleteScreen,
     makeStart,
-    canDelete: (id: string) => Boolean(project.screens.find(sc => sc.id === id)?.library) || realScreens > 1,
+    canDelete: (id: string) =>
+      Boolean(project.screens.find(sc => sc.id === id)?.library) || realScreens > 1,
     startId: project.screens.find(sc => !sc.library)?.id,
     dropAt,
     finishDrop,

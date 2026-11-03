@@ -7,9 +7,19 @@ import { alignSelection, distributeSelection } from "./actions"
 function setup() {
   const p = createEmptyProject()
   const screen = p.screens[0]
-  screen.children = [10, 50, 100].map((x, i) => createNode("button", { name: `b${i}`, layout: { x, y: i * 10, w: 20, h: 10, align: "LV_ALIGN_TOP_LEFT" } }))
+  screen.children = [10, 50, 100].map((x, i) =>
+    createNode("button", {
+      name: `b${i}`,
+      layout: { x, y: i * 10, w: 20, h: 10, align: "LV_ALIGN_TOP_LEFT" },
+    }),
+  )
   projectApi.getState().replace(p)
-  const boxes = new Map(screen.children.map(n => [n.id, { x: n.layout.x as number, y: n.layout.y as number, w: 20, h: 10 }]))
+  const boxes = new Map(
+    screen.children.map(n => [
+      n.id,
+      { x: n.layout.x as number, y: n.layout.y as number, w: 20, h: 10 },
+    ]),
+  )
   editorApi.getState().set({ rects: new Map([[screen.id, boxes]]) })
   const ids = screen.children.map(n => n.id)
   const layout = () => ids.map(id => findNode(projectApi.getState().project, id)!.layout)

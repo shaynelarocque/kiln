@@ -14,12 +14,20 @@ const FORMATS = [
 export function AssetsPanel() {
   const vm = useAssets()
   return (
-    <div className={`${s.panel} ${vm.over ? s.over : ""}`} onDragOver={vm.dragOver} onDragLeave={vm.dragLeave} onDrop={vm.drop}>
+    <div
+      className={`${s.panel} ${vm.over ? s.over : ""}`}
+      onDragOver={vm.dragOver}
+      onDragLeave={vm.dragLeave}
+      onDrop={vm.drop}
+    >
       <Section title='Images' collapsible={false}>
         <Button icon={<ImagePlus />} onClick={vm.pick}>
           Import images…
         </Button>
-        <Hint>Or drop them here. They're scaled to fit the display and converted to LVGL's pixel formats, ready to compile into flash.</Hint>
+        <Hint>
+          Or drop them here. They're scaled to fit the display and converted to LVGL's pixel
+          formats, ready to compile into flash.
+        </Hint>
       </Section>
       {vm.assets.map(a => (
         <section key={a.id} className={s.card}>
@@ -37,14 +45,22 @@ export function AssetsPanel() {
           </IconButton>
           <div className={s.controls}>
             <Field label='Format'>
-              <Select value={a.format} options={FORMATS} onChange={f => vm.setFormat(a.id, f as ImageFormat)} />
+              <Select
+                value={a.format}
+                options={FORMATS}
+                onChange={f => vm.setFormat(a.id, f as ImageFormat)}
+              />
             </Field>
             {a.format !== "ARGB8888" && (
               <Field label='Bayer dither'>
                 <Toggle checked={a.dither} onChange={d => vm.setDither(a.id, d)} />
               </Field>
             )}
-            {vm.imageTarget && <Button onClick={() => vm.useIn(a.id, vm.imageTarget!.id)}>Use in {vm.imageTarget.name}</Button>}
+            {vm.imageTarget && (
+              <Button onClick={() => vm.useIn(a.id, vm.imageTarget!.id)}>
+                Use in {vm.imageTarget.name}
+              </Button>
+            )}
           </div>
         </section>
       ))}
@@ -52,7 +68,10 @@ export function AssetsPanel() {
         <Button icon={<Type />} onClick={vm.pickFonts}>
           Import fonts…
         </Button>
-        <Hint>TTF or OTF, also by dropping them here. LVGL's TinyTTF draws them at any size, on the canvas and on the board alike; each size in use keeps a small glyph cache in RAM.</Hint>
+        <Hint>
+          TTF or OTF, also by dropping them here. LVGL's TinyTTF draws them at any size, on the
+          canvas and on the board alike; each size in use keeps a small glyph cache in RAM.
+        </Hint>
       </Section>
       {vm.fonts.map(f => {
         const sizes = vm.fontSizes(f)
@@ -64,7 +83,8 @@ export function AssetsPanel() {
             <div className={s.meta}>
               <code>{f.name}</code>
               <small>
-                {formatBytes(vm.fontBytes(f))} flash · {sizes.length ? `used at ${sizes.join(", ")} px` : "not used yet"}
+                {formatBytes(vm.fontBytes(f))} flash ·{" "}
+                {sizes.length ? `used at ${sizes.join(", ")} px` : "not used yet"}
               </small>
             </div>
             <IconButton label='Delete font' onClick={() => vm.removeFont(f.id)}>
@@ -72,7 +92,9 @@ export function AssetsPanel() {
             </IconButton>
             {vm.textTarget && (
               <div className={s.controls}>
-                <Button onClick={() => vm.useFont(f.id, vm.textTarget!.id)}>Use on {vm.textTarget.name}</Button>
+                <Button onClick={() => vm.useFont(f.id, vm.textTarget!.id)}>
+                  Use on {vm.textTarget.name}
+                </Button>
               </div>
             )}
           </section>

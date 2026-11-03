@@ -32,12 +32,20 @@ export function removeNodes(project: Project, ids: string[]) {
     if (!hit) continue
     if (hit.parent) hit.parent.children.splice(hit.index, 1)
     // keep at least one real screen; the Components screen can always go
-    else if ((hit.node as Screen).library || project.screens.filter(s => !s.library).length > 1) project.screens.splice(hit.index, 1)
+    else if ((hit.node as Screen).library || project.screens.filter(s => !s.library).length > 1)
+      project.screens.splice(hit.index, 1)
   }
   const alive = new Set<string>()
   for (const s of project.screens) collect(s, alive)
   for (const anim of project.animations) anim.tracks = anim.tracks.filter(t => alive.has(t.node))
-  for (const s of project.screens) visitAll(s, n => (n.events = n.events.filter(e => e.action.type !== "navigate" || alive.has(e.action.screen))))
+  for (const s of project.screens)
+    visitAll(
+      s,
+      n =>
+        (n.events = n.events.filter(
+          e => e.action.type !== "navigate" || alive.has(e.action.screen),
+        )),
+    )
 }
 
 function collect(node: Node, out: Set<string>) {

@@ -1,7 +1,20 @@
 import { useMemo } from "react"
 import { transformLayerBytes } from "@/entities/board"
 import { editorApi, nodeBoxes, useEditorStore } from "@/entities/editor"
-import { cNames, edit, findMain, findNode, findParent, instancesOf, isLibrary, transformedNodes, useProjectStore, type Layout, type Node, type Phase } from "@/entities/project"
+import {
+  cNames,
+  edit,
+  findMain,
+  findNode,
+  findParent,
+  instancesOf,
+  isLibrary,
+  transformedNodes,
+  useProjectStore,
+  type Layout,
+  type Node,
+  type Phase,
+} from "@/entities/project"
 import { updateNode } from "@/features/node-actions"
 import { MAIN_DEFAULT, STATES, WIDGETS } from "@/shared/lvgl"
 
@@ -23,9 +36,14 @@ export function useInspector() {
   const [part, stateKey = "default"] = selector.split(":")
   const states = stateKey.split("+")
 
-  const set = (recipe: (n: Node) => void, phase?: Phase) => node && updateNode(node.id, recipe, phase)
+  const set = (recipe: (n: Node) => void, phase?: Phase) =>
+    node && updateNode(node.id, recipe, phase)
   const main = node?.component ? findMain(project, node.component) : undefined
-  const isMain = Boolean(node && parent && project.screens.some(sc => isLibrary(sc) && sc.children.some(c => c.id === node.id)))
+  const isMain = Boolean(
+    node &&
+    parent &&
+    project.screens.some(sc => isLibrary(sc) && sc.children.some(c => c.id === node.id)),
+  )
 
   /** The selector key for a part and a set of states, in LVGL's state order. */
   const selectorFor = (p: string, st: string[]) => {
@@ -48,19 +66,30 @@ export function useInspector() {
     transformLayer: (() => {
       const t = node && transforms.get(node.id)
       const box = node && nodeBoxes(rects).get(node.id)
-      return t && box ? { ...box, rotates: t.rotates, bytes: transformLayerBytes(box.w, box.h, t, project.target.display.bufferRows) } : null
+      return t && box
+        ? {
+            ...box,
+            rotates: t.rotates,
+            bytes: transformLayerBytes(box.w, box.h, t, project.target.display.bufferRows),
+          }
+        : null
     })(),
     tokens: project.tokens,
     assets: project.assets,
     fonts: project.fonts,
     setTab: (rightTab: "design" | "bind" | "interact") => editorApi.getState().set({ rightTab }),
-    setSelector: (p: string, st: string[]) => editorApi.getState().set({ selector: selectorFor(p, st) }),
+    setSelector: (p: string, st: string[]) =>
+      editorApi.getState().set({ selector: selectorFor(p, st) }),
     resetSelector: () => editorApi.getState().set({ selector: MAIN_DEFAULT }),
     /** selectors on this node that have local styles, for the dots on parts/states */
-    styled: new Set(node ? Object.keys(node.style).filter(k => Object.keys(node.style[k]).length) : []),
+    styled: new Set(
+      node ? Object.keys(node.style).filter(k => Object.keys(node.style[k]).length) : [],
+    ),
     set,
-    setLayout: <K extends keyof Layout>(key: K, value: Layout[K], phase?: Phase) => set(n => void (n.layout[key] = value), phase),
-    setProp: (key: string, value: Value | null, phase?: Phase) => set(n => void (n.props[key] = value), phase),
+    setLayout: <K extends keyof Layout>(key: K, value: Layout[K], phase?: Phase) =>
+      set(n => void (n.layout[key] = value), phase),
+    setProp: (key: string, value: Value | null, phase?: Phase) =>
+      set(n => void (n.props[key] = value), phase),
     setStyle: (name: string, value: Value | undefined, phase?: Phase) =>
       set(n => {
         const map = (n.style[selector] ??= {})

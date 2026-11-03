@@ -11,14 +11,19 @@ const AUTOSAVE = "kiln:autosave"
  */
 export function parseProject(text: string): Project {
   const data = JSON.parse(text)
-  if (data?.kiln !== 1 || !Array.isArray(data.screens) || !data.screens.length) throw new Error("Not a Kiln project file")
-  if (typeof data.target?.board !== "string" || !/^[\w.-]+$/.test(data.target.board)) throw new Error("The file names an invalid board")
-  data.name = String(data.name ?? "Untitled").replace(/[\x00-\x1f\x7f]/g, " ").slice(0, 120)
+  if (data?.kiln !== 1 || !Array.isArray(data.screens) || !data.screens.length)
+    throw new Error("Not a Kiln project file")
+  if (typeof data.target?.board !== "string" || !/^[\w.-]+$/.test(data.target.board))
+    throw new Error("The file names an invalid board")
+  data.name = String(data.name ?? "Untitled")
+    .replace(/[\x00-\x1f\x7f]/g, " ")
+    .slice(0, 120)
   // files from before imported fonts
   if (!Array.isArray(data.fonts)) data.fonts = []
   // before subjects became pointers (LVGL 9.6's lv_subject_create), custom code wrote &ui_var_x
   for (const v of data.variables ?? [])
-    if (v.source?.kind === "custom") v.source.expr = String(v.source.expr).replace(/&\s*(ui_var_\w+)/g, "$1")
+    if (v.source?.kind === "custom")
+      v.source.expr = String(v.source.expr).replace(/&\s*(ui_var_\w+)/g, "$1")
   return data as Project
 }
 
@@ -113,7 +118,10 @@ export function startAutosave() {
     clearTimeout(timer)
     const s = projectApi.getState()
     try {
-      localStorage.setItem(AUTOSAVE, JSON.stringify({ project: s.project, path: s.path, dirty: s.project !== s.saved }))
+      localStorage.setItem(
+        AUTOSAVE,
+        JSON.stringify({ project: s.project, path: s.path, dirty: s.project !== s.saved }),
+      )
     } catch {
       // over quota (big images): the file on disk is still the source of truth
     }
@@ -130,7 +138,11 @@ export function startAutosave() {
     import("@tauri-apps/api/window").then(async ({ getCurrentWindow }) => {
       unlisten = await getCurrentWindow().onCloseRequested(async e => {
         write()
-        if (isDirty() && !(await confirmAction("Quit without saving? Your changes stay in Kiln's autosave."))) e.preventDefault()
+        if (
+          isDirty() &&
+          !(await confirmAction("Quit without saving? Your changes stay in Kiln's autosave."))
+        )
+          e.preventDefault()
       })
     })
   return () => {

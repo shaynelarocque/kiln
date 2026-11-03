@@ -4,7 +4,11 @@ import { BUNDLED_BOARDS, type Board } from "./board"
 
 type BoardsState = { boards: Board[]; source: "platformio" | "bundled"; loaded: boolean }
 
-const store = create<BoardsState>()(() => ({ boards: BUNDLED_BOARDS, source: "bundled", loaded: false }))
+const store = create<BoardsState>()(() => ({
+  boards: BUNDLED_BOARDS,
+  source: "bundled",
+  loaded: false,
+}))
 
 let started = false
 

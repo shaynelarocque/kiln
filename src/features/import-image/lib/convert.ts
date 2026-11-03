@@ -9,7 +9,13 @@ export const bytesPerPixel: Record<ImageFormat, number> = { RGB565: 2, RGB565A8:
  * RGBA pixels → LVGL 9 image data. RGB565 is little-endian; RGB565A8 is the RGB565 plane
  * followed by an alpha plane; ARGB8888 is stored B, G, R, A. `stride` is the colour plane's row size.
  */
-export function convert(rgba: Uint8Array | Uint8ClampedArray, w: number, h: number, format: ImageFormat, dither: boolean) {
+export function convert(
+  rgba: Uint8Array | Uint8ClampedArray,
+  w: number,
+  h: number,
+  format: ImageFormat,
+  dither: boolean,
+) {
   if (format === "ARGB8888") {
     const data = new Uint8Array(w * h * 4)
     for (let i = 0; i < w * h; i++) {
@@ -42,5 +48,5 @@ export function convert(rgba: Uint8Array | Uint8ClampedArray, w: number, h: numb
   return { data, stride: w * 2 }
 }
 
-export const hasAlpha = (rgba: Uint8Array | Uint8ClampedArray) => rgba.some((v, i) => i % 4 === 3 && v < 255)
-
+export const hasAlpha = (rgba: Uint8Array | Uint8ClampedArray) =>
+  rgba.some((v, i) => i % 4 === 3 && v < 255)

@@ -15,7 +15,8 @@ export function ComponentSection({ vm }: { vm: InspectorViewModel }) {
     return (
       <Section title='Main component'>
         <Hint>
-          {vm.instanceCount} {vm.instanceCount === 1 ? "instance follows" : "instances follow"} this. Edit it here and they all change.
+          {vm.instanceCount} {vm.instanceCount === 1 ? "instance follows" : "instances follow"}{" "}
+          this. Edit it here and they all change.
         </Hint>
       </Section>
     )
@@ -23,7 +24,10 @@ export function ComponentSection({ vm }: { vm: InspectorViewModel }) {
   if (!node.component)
     return (
       <Section title='Component' defaultOpen={false}>
-        <Hint>Reuse this as a component: it moves to the Components screen and an instance takes its place.</Hint>
+        <Hint>
+          Reuse this as a component: it moves to the Components screen and an instance takes its
+          place.
+        </Hint>
         <Button icon={<Component />} onClick={componentFromSelection}>
           Make component
         </Button>
@@ -40,7 +44,13 @@ export function ComponentSection({ vm }: { vm: InspectorViewModel }) {
   const texts = descendants(vm.main).filter(n => typeof n.props.text === "string")
   const bound = descendants(vm.main).filter(n => n.bindings.length)
   return (
-    <Section title={<span className={s.instanceTitle}><Component /> Instance of {vm.main.name}</span>}>
+    <Section
+      title={
+        <span className={s.instanceTitle}>
+          <Component /> Instance of {vm.main.name}
+        </span>
+      }
+    >
       <div className={s.actions}>
         <Button onClick={() => goToMain(node.id)}>Edit main</Button>
         <Button icon={<Unlink />} onClick={() => detach(node.id)}>

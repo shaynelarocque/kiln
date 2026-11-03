@@ -22,8 +22,7 @@
   width: 48px;
   height: 48px;
   border-radius: 6px;
-  background:
-    repeating-conic-gradient(#2a3040 0% 25%, #1f2430 0% 50%) 0 0 / 10px 10px;
+  background: repeating-conic-gradient(#2a3040 0% 25%, #1f2430 0% 50%) 0 0 / 10px 10px;
   overflow: hidden;
 }
 .thumb {

@@ -50,7 +50,11 @@ export function usePlayer() {
         last = now
         if (now - lastRead > 100) {
           lastRead = now
-          setValues(Object.fromEntries(project.variables.filter(v => v.type === "int").map(v => [v.id, p.get(v.id)])))
+          setValues(
+            Object.fromEntries(
+              project.variables.filter(v => v.type === "int").map(v => [v.id, p.get(v.id)]),
+            ),
+          )
           setScreen(p.activeScreen())
         }
         raf = requestAnimationFrame(loop)
@@ -90,7 +94,10 @@ export function usePlayer() {
   /** Pointer position in display pixels; the canvas is scaled up on screen. */
   const point = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const box = e.currentTarget.getBoundingClientRect()
-    return [((e.clientX - box.left) / box.width) * e.currentTarget.width, ((e.clientY - box.top) / box.height) * e.currentTarget.height] as const
+    return [
+      ((e.clientX - box.left) / box.width) * e.currentTarget.width,
+      ((e.clientY - box.top) / box.height) * e.currentTarget.height,
+    ] as const
   }
 
   return {

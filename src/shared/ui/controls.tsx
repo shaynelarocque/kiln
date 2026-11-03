@@ -9,7 +9,10 @@ export function Button({
   icon,
   variant = "default",
   ...rest
-}: React.ButtonHTMLAttributes<HTMLButtonElement> & { icon?: ReactNode; variant?: "default" | "primary" | "ghost" | "danger" }) {
+}: React.ButtonHTMLAttributes<HTMLButtonElement> & {
+  icon?: ReactNode
+  variant?: "default" | "primary" | "ghost" | "danger"
+}) {
   return (
     <button {...rest} className={`${s.button} ${s[variant]} ${rest.className ?? ""}`}>
       {icon}
@@ -25,13 +28,26 @@ export function IconButton({
   ...rest
 }: React.ButtonHTMLAttributes<HTMLButtonElement> & { label: string; active?: boolean }) {
   return (
-    <button {...rest} aria-label={label} title={label} className={`${s.icon} ${active ? s.active : ""} ${rest.className ?? ""}`}>
+    <button
+      {...rest}
+      aria-label={label}
+      title={label}
+      className={`${s.icon} ${active ? s.active : ""} ${rest.className ?? ""}`}
+    >
       {children}
     </button>
   )
 }
 
-export function Field({ label, children, wide }: { label: ReactNode; children: ReactNode; wide?: boolean }) {
+export function Field({
+  label,
+  children,
+  wide,
+}: {
+  label: ReactNode
+  children: ReactNode
+  wide?: boolean
+}) {
   return (
     <label className={`${s.field} ${wide ? s.wide : ""}`}>
       <span className={s.fieldLabel}>{label}</span>
@@ -59,7 +75,19 @@ type NumberProps = {
 
 const clamp = (v: number, min = -Infinity, max = Infinity) => Math.min(max, Math.max(min, v))
 
-export function NumberInput({ value, onChange, min, max, step = 1, unit, prefix, scale = 1, placeholder, disabled, title }: NumberProps) {
+export function NumberInput({
+  value,
+  onChange,
+  min,
+  max,
+  step = 1,
+  unit,
+  prefix,
+  scale = 1,
+  placeholder,
+  disabled,
+  title,
+}: NumberProps) {
   const shown = value === null ? "" : String(Math.round((value / scale) * 100) / 100)
   const [draft, setDraft] = useState(shown)
   useEffect(() => setDraft(shown), [shown])
@@ -143,7 +171,8 @@ export function TextInput({
     value: draft,
     placeholder,
     className: `${s.text} ${mono ? s.mono : ""}`,
-    onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setDraft(e.target.value),
+    onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+      setDraft(e.target.value),
     onBlur: () => draft !== value && onChange(draft),
     spellCheck: false,
   }
@@ -162,7 +191,17 @@ export function TextInput({
 
 export type Option = { value: string; label: string }
 
-export function Select({ value, options, onChange, placeholder }: { value: string; options: Option[]; onChange: (v: string) => void; placeholder?: string }) {
+export function Select({
+  value,
+  options,
+  onChange,
+  placeholder,
+}: {
+  value: string
+  options: Option[]
+  onChange: (v: string) => void
+  placeholder?: string
+}) {
   return (
     <select className={s.select} value={value} onChange={e => onChange(e.target.value)}>
       {placeholder !== undefined && <option value=''>{placeholder}</option>}
@@ -175,9 +214,24 @@ export function Select({ value, options, onChange, placeholder }: { value: strin
   )
 }
 
-export function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label?: string }) {
+export function Toggle({
+  checked,
+  onChange,
+  label,
+}: {
+  checked: boolean
+  onChange: (v: boolean) => void
+  label?: string
+}) {
   return (
-    <button type='button' role='switch' aria-checked={checked} aria-label={label} className={`${s.toggle} ${checked ? s.on : ""}`} onClick={() => onChange(!checked)}>
+    <button
+      type='button'
+      role='switch'
+      aria-checked={checked}
+      aria-label={label}
+      className={`${s.toggle} ${checked ? s.on : ""}`}
+      onClick={() => onChange(!checked)}
+    >
       <span />
     </button>
   )
@@ -186,7 +240,15 @@ export function Toggle({ checked, onChange, label }: { checked: boolean; onChang
 export type Token = { id: string; name: string; value: string }
 
 /** "#rrggbb", or "$<token id>" to follow a colour token. */
-export function ColorInput({ value, onChange, tokens = [] }: { value: string; onChange: (v: string, phase?: Phase) => void; tokens?: Token[] }) {
+export function ColorInput({
+  value,
+  onChange,
+  tokens = [],
+}: {
+  value: string
+  onChange: (v: string, phase?: Phase) => void
+  tokens?: Token[]
+}) {
   const token = value.startsWith("$") ? tokens.find(t => t.id === value.slice(1)) : undefined
   const hex = token?.value ?? (value.startsWith("#") ? value : "#000000")
   const picking = useRef(false)
@@ -220,10 +282,21 @@ export function ColorInput({ value, onChange, tokens = [] }: { value: string; on
       {token ? (
         <span className={s.tokenName}>{token.name}</span>
       ) : (
-        <TextInput value={hex.toUpperCase()} onChange={v => /^#?[0-9a-f]{6}$/i.test(v) && onChange(`#${v.replace("#", "").toLowerCase()}`)} mono />
+        <TextInput
+          value={hex.toUpperCase()}
+          onChange={v =>
+            /^#?[0-9a-f]{6}$/i.test(v) && onChange(`#${v.replace("#", "").toLowerCase()}`)
+          }
+          mono
+        />
       )}
       {tokens.length > 0 && (
-        <select className={s.tokenPick} value={token ? value : ""} title='Use a colour token' onChange={e => onChange(e.target.value || hex)}>
+        <select
+          className={s.tokenPick}
+          value={token ? value : ""}
+          title='Use a colour token'
+          onChange={e => onChange(e.target.value || hex)}
+        >
           <option value=''>Custom</option>
           {tokens.map(t => (
             <option key={t.id} value={`$${t.id}`}>
@@ -253,7 +326,12 @@ export function Section({
   return (
     <section className={s.section}>
       <header>
-        <button type='button' className={s.sectionTitle} onClick={() => collapsible && setOpen(!open)} aria-expanded={open}>
+        <button
+          type='button'
+          className={s.sectionTitle}
+          onClick={() => collapsible && setOpen(!open)}
+          aria-expanded={open}
+        >
           {title}
         </button>
         <span className={s.sectionActions}>{actions}</span>
@@ -263,11 +341,25 @@ export function Section({
   )
 }
 
-export function Tabs<T extends string>({ value, tabs, onChange }: { value: T; tabs: { value: T; label: string }[]; onChange: (v: T) => void }) {
+export function Tabs<T extends string>({
+  value,
+  tabs,
+  onChange,
+}: {
+  value: T
+  tabs: { value: T; label: string }[]
+  onChange: (v: T) => void
+}) {
   return (
     <div className={s.tabs} role='tablist'>
       {tabs.map(t => (
-        <button key={t.value} role='tab' aria-selected={t.value === value} className={t.value === value ? s.tabOn : ""} onClick={() => onChange(t.value)}>
+        <button
+          key={t.value}
+          role='tab'
+          aria-selected={t.value === value}
+          className={t.value === value ? s.tabOn : ""}
+          onClick={() => onChange(t.value)}
+        >
           {t.label}
         </button>
       ))}
@@ -275,7 +367,19 @@ export function Tabs<T extends string>({ value, tabs, onChange }: { value: T; ta
   )
 }
 
-export function Dialog({ title, onClose, children, footer, wide }: { title: string; onClose: () => void; children: ReactNode; footer?: ReactNode; wide?: boolean }) {
+export function Dialog({
+  title,
+  onClose,
+  children,
+  footer,
+  wide,
+}: {
+  title: string
+  onClose: () => void
+  children: ReactNode
+  footer?: ReactNode
+  wide?: boolean
+}) {
   useEffect(() => {
     const key = (e: KeyboardEvent) => e.key === "Escape" && onClose()
     window.addEventListener("keydown", key)

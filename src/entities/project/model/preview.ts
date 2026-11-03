@@ -143,7 +143,10 @@ export class ProjectPlayer {
     this.scene = new Scene(rt, this.setup)
     for (const s of program.screens) this.scene.run(s.ops)
     this.scene.run(program.wiring)
-    const index = Math.max(0, program.screens.findIndex(s => s.id === startScreen))
+    const index = Math.max(
+      0,
+      program.screens.findIndex(s => s.id === startScreen),
+    )
     rt.x.lv_screen_load(this.scene.screen(index))
   }
 
@@ -165,7 +168,8 @@ export class ProjectPlayer {
     if (this.time - this.lastSim >= 50) {
       this.lastSim = this.time
       for (const v of this.project.variables)
-        if (v.type === "int" && v.sim.kind !== "none") this.set(v.id, simulate(v, this.time, this.get(v.id)))
+        if (v.type === "int" && v.sim.kind !== "none")
+          this.set(v.id, simulate(v, this.time, this.get(v.id)))
     }
     this.rt.tick(ms)
     this.display.blit(ctx)
@@ -178,7 +182,8 @@ export class ProjectPlayer {
 
   set(variableId: string, value: number) {
     const h = this.setup.get("subject", variableId)
-    if (h && this.rt.x.lv_subject_get_int(h) !== value) this.rt.x.lv_subject_set_int(h, Math.round(value))
+    if (h && this.rt.x.lv_subject_get_int(h) !== value)
+      this.rt.x.lv_subject_set_int(h, Math.round(value))
   }
 
   /** Starts an animation from the top, e.g. to preview it from the timeline. */

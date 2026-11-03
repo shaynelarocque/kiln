@@ -11,7 +11,9 @@ function crc32(data: Uint8Array) {
 }
 
 /** A store-only (uncompressed) .zip: enough to hand over an exported project from the browser. */
-export function zip(files: { path: string; content: string | Uint8Array }[]): Uint8Array<ArrayBuffer> {
+export function zip(
+  files: { path: string; content: string | Uint8Array }[],
+): Uint8Array<ArrayBuffer> {
   const enc = new TextEncoder()
   const parts: Uint8Array[] = []
   const central: Uint8Array[] = []

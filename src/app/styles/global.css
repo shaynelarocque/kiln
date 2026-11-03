@@ -21,7 +21,8 @@
   --purple: #dfbfff;
   --cyan: #95e6cb;
 
-  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", system-ui, sans-serif;
+  --font:
+    -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", system-ui, sans-serif;
   --mono: "SF Mono", "JetBrains Mono", ui-monospace, Menlo, monospace;
   --radius: 6px;
   --row: 26px;

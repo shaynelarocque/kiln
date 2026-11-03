@@ -1,7 +1,16 @@
 import { describe, expect, it } from "vitest"
 import { createNode } from "@/entities/project"
 import { alignFactors, alignName } from "@/shared/lvgl"
-import { flexDrop, hitChain, marqueeHits, pickDeeper, pickTarget, resizeLayout, snapMove, type Rects } from "./interactions"
+import {
+  flexDrop,
+  hitChain,
+  marqueeHits,
+  pickDeeper,
+  pickTarget,
+  resizeLayout,
+  snapMove,
+  type Rects,
+} from "./interactions"
 
 function tree() {
   const screen = createNode("screen", { name: "s" })
@@ -63,11 +72,31 @@ describe("geometry", () => {
 
   it("keeps the opposite edge put when resizing", () => {
     const start = { x: 0, y: 0, w: 100, h: 50 }
-    expect(resizeLayout(start, "LV_ALIGN_TOP_LEFT", "e", 20, 0)).toEqual({ x: 0, y: 0, w: 120, h: 50 })
-    expect(resizeLayout(start, "LV_ALIGN_TOP_LEFT", "w", 20, 0)).toEqual({ x: 20, y: 0, w: 80, h: 50 })
+    expect(resizeLayout(start, "LV_ALIGN_TOP_LEFT", "e", 20, 0)).toEqual({
+      x: 0,
+      y: 0,
+      w: 120,
+      h: 50,
+    })
+    expect(resizeLayout(start, "LV_ALIGN_TOP_LEFT", "w", 20, 0)).toEqual({
+      x: 20,
+      y: 0,
+      w: 80,
+      h: 50,
+    })
     // centred: growing 20 to the right means the centre moves 10
-    expect(resizeLayout(start, "LV_ALIGN_CENTER", "e", 20, 0)).toEqual({ x: 10, y: 0, w: 120, h: 50 })
-    expect(resizeLayout(start, "LV_ALIGN_BOTTOM_RIGHT", "n", 0, -10)).toEqual({ x: 0, y: 0, w: 100, h: 60 })
+    expect(resizeLayout(start, "LV_ALIGN_CENTER", "e", 20, 0)).toEqual({
+      x: 10,
+      y: 0,
+      w: 120,
+      h: 50,
+    })
+    expect(resizeLayout(start, "LV_ALIGN_BOTTOM_RIGHT", "n", 0, -10)).toEqual({
+      x: 0,
+      y: 0,
+      w: 100,
+      h: 60,
+    })
     expect(resizeLayout(start, "LV_ALIGN_TOP_LEFT", "w", 500, 0).w).toBe(1)
   })
 
@@ -80,7 +109,16 @@ describe("geometry", () => {
   })
 
   it("finds the insertion point in a flex row, and draws the line where it lands", () => {
-    const parent = createNode("container", { layout: { x: 0, y: 0, w: 300, h: 40, align: "LV_ALIGN_TOP_LEFT", flex: { flow: "LV_FLEX_FLOW_ROW", main: "", cross: "", track: "" } } })
+    const parent = createNode("container", {
+      layout: {
+        x: 0,
+        y: 0,
+        w: 300,
+        h: 40,
+        align: "LV_ALIGN_TOP_LEFT",
+        flex: { flow: "LV_FLEX_FLOW_ROW", main: "", cross: "", track: "" },
+      },
+    })
     const [a, b, c] = ["a", "b", "c"].map(name => createNode("label", { name }))
     parent.children = [a, b, c]
     const rects: Rects = new Map([

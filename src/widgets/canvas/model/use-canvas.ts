@@ -1,8 +1,30 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { editorApi, useEditorStore } from "@/entities/editor"
-import { edit, findNode, findParent, locate, moveNode, projectApi, screenOf, useProjectStore, type Phase, type Screen } from "@/entities/project"
+import {
+  edit,
+  findNode,
+  findParent,
+  locate,
+  moveNode,
+  projectApi,
+  screenOf,
+  useProjectStore,
+  type Phase,
+  type Screen,
+} from "@/entities/project"
 import type { Rect } from "@/shared/lvgl"
-import { flexDrop, hitChain, isNumber, marqueeHits, pickDeeper, pickTarget, resizeLayout, snapMove, type Guide, type Handle } from "./interactions"
+import {
+  flexDrop,
+  hitChain,
+  isNumber,
+  marqueeHits,
+  pickDeeper,
+  pickTarget,
+  resizeLayout,
+  snapMove,
+  type Guide,
+  type Handle,
+} from "./interactions"
 import { usePreview } from "./use-preview"
 
 export type DragState = { screen: string; guides: Guide[]; drop: Rect | null; marquee?: Rect }
@@ -11,7 +33,11 @@ const MIN_ZOOM = 0.1
 const MAX_ZOOM = 16
 
 /** Follows a pointer until release, reporting the offset in canvas pixels and the gesture phase. */
-function drag(e: React.PointerEvent, onMove: (dx: number, dy: number, phase: Phase, ev: PointerEvent) => void, onClick?: () => void) {
+function drag(
+  e: React.PointerEvent,
+  onMove: (dx: number, dy: number, phase: Phase, ev: PointerEvent) => void,
+  onClick?: () => void,
+) {
   const zoom = editorApi.getState().zoom
   const el = e.currentTarget as HTMLElement
   el.setPointerCapture(e.pointerId)
@@ -46,31 +72,57 @@ export function useCanvas() {
 
   const setView = editorApi.getState().setView
 
-  const zoomAt = useCallback((next: number, cx: number, cy: number) => {
-    const { zoom, pan } = editorApi.getState()
-    const z = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, next))
-    setView(z, { x: cx - ((cx - pan.x) * z) / zoom, y: cy - ((cy - pan.y) * z) / zoom })
-  }, [setView])
+  const zoomAt = useCallback(
+    (next: number, cx: number, cy: number) => {
+      const { zoom, pan } = editorApi.getState()
+      const z = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, next))
+      setView(z, { x: cx - ((cx - pan.x) * z) / zoom, y: cy - ((cy - pan.y) * z) / zoom })
+    },
+    [setView],
+  )
 
-  const zoomCenter = useCallback((next: number) => {
-    const el = viewport.current
-    if (el) zoomAt(next, el.clientWidth / 2, el.clientHeight / 2)
-  }, [zoomAt])
+  const zoomCenter = useCallback(
+    (next: number) => {
+      const el = viewport.current
+      if (el) zoomAt(next, el.clientWidth / 2, el.clientHeight / 2)
+    },
+    [zoomAt],
+  )
 
   /** Zooms and pans so a box in canvas space fills the viewport, less a margin. */
-  const fitBox = useCallback((x1: number, y1: number, x2: number, y2: number) => {
-    const el = viewport.current
-    if (!el) return
-    const z = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, Math.min((el.clientWidth - 120) / Math.max(1, x2 - x1), (el.clientHeight - 120) / Math.max(1, y2 - y1))))
-    setView(z, { x: (el.clientWidth - (x2 - x1) * z) / 2 - x1 * z, y: (el.clientHeight - (y2 - y1) * z) / 2 - y1 * z })
-  }, [setView])
+  const fitBox = useCallback(
+    (x1: number, y1: number, x2: number, y2: number) => {
+      const el = viewport.current
+      if (!el) return
+      const z = Math.min(
+        MAX_ZOOM,
+        Math.max(
+          MIN_ZOOM,
+          Math.min(
+            (el.clientWidth - 120) / Math.max(1, x2 - x1),
+            (el.clientHeight - 120) / Math.max(1, y2 - y1),
+          ),
+        ),
+      )
+      setView(z, {
+        x: (el.clientWidth - (x2 - x1) * z) / 2 - x1 * z,
+        y: (el.clientHeight - (y2 - y1) * z) / 2 - y1 * z,
+      })
+    },
+    [setView],
+  )
 
   const fit = useCallback(() => {
     const { screens, target } = projectApi.getState().project
     if (!screens.length) return
     const { width: w, height: h } = target.display
     // 24 px of headroom for the screen names
-    fitBox(Math.min(...screens.map(s => s.frame.x)), Math.min(...screens.map(s => s.frame.y)) - 24, Math.max(...screens.map(s => s.frame.x + w)), Math.max(...screens.map(s => s.frame.y + h)))
+    fitBox(
+      Math.min(...screens.map(s => s.frame.x)),
+      Math.min(...screens.map(s => s.frame.y)) - 24,
+      Math.max(...screens.map(s => s.frame.x + w)),
+      Math.max(...screens.map(s => s.frame.y + h)),
+    )
   }, [fitBox])
 
   /** Fits the selected layers and screens; with nothing selected, everything. */
@@ -80,11 +132,21 @@ export function useCanvas() {
     const { width, height } = project.target.display
     const boxes = selection.flatMap(id => {
       const screen = project.screens.find(s => s.id === id) ?? screenOf(project, id)
-      const r = screen?.id === id ? { x: 0, y: 0, w: width, h: height } : screen && rects.get(screen.id)?.get(id)
-      return screen && r ? [{ x: screen.frame.x + r.x, y: screen.frame.y + r.y, w: r.w, h: r.h }] : []
+      const r =
+        screen?.id === id
+          ? { x: 0, y: 0, w: width, h: height }
+          : screen && rects.get(screen.id)?.get(id)
+      return screen && r
+        ? [{ x: screen.frame.x + r.x, y: screen.frame.y + r.y, w: r.w, h: r.h }]
+        : []
     })
     if (!boxes.length) return fit()
-    fitBox(Math.min(...boxes.map(b => b.x)), Math.min(...boxes.map(b => b.y)), Math.max(...boxes.map(b => b.x + b.w)), Math.max(...boxes.map(b => b.y + b.h)))
+    fitBox(
+      Math.min(...boxes.map(b => b.x)),
+      Math.min(...boxes.map(b => b.y)),
+      Math.max(...boxes.map(b => b.x + b.w)),
+      Math.max(...boxes.map(b => b.y + b.h)),
+    )
   }, [fit, fitBox])
 
   // Wheel must be non-passive to stop the page scrolling: trackpad scroll pans, pinch/ctrl zooms.
@@ -104,7 +166,10 @@ export function useCanvas() {
   }, [zoomAt, setView])
 
   useEffect(() => {
-    const typing = (e: KeyboardEvent) => e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement
+    const typing = (e: KeyboardEvent) =>
+      e.target instanceof HTMLInputElement ||
+      e.target instanceof HTMLTextAreaElement ||
+      e.target instanceof HTMLSelectElement
     const down = (e: KeyboardEvent) => {
       const { dialog, playing, zoom } = editorApi.getState()
       if (typing(e) || dialog || playing) return
@@ -172,7 +237,11 @@ export function useCanvas() {
     const target = pickTarget(chainAt(screen, e), selection, e.metaKey || e.ctrlKey)
     if (target.widget === "screen") return startMarquee(screen, e)
     if (e.shiftKey) {
-      select(selection.includes(target.id) ? selection.filter(id => id !== target.id) : [...selection.filter(id => id !== screen.id), target.id])
+      select(
+        selection.includes(target.id)
+          ? selection.filter(id => id !== target.id)
+          : [...selection.filter(id => id !== screen.id), target.id],
+      )
       return
     }
     const ids = selection.includes(target.id) ? selection : [target.id]
@@ -189,9 +258,21 @@ export function useCanvas() {
     drag(
       e,
       (dx, dy, phase) => {
-        const box = { x: Math.min(x0, x0 + dx), y: Math.min(y0, y0 + dy), w: Math.abs(dx), h: Math.abs(dy) }
-        editorApi.getState().select([...keep, ...marqueeHits(screen, screenRects, box).filter(id => !keep.includes(id))])
-        setDragState(phase === "end" ? null : { screen: screen.id, guides: [], drop: null, marquee: box })
+        const box = {
+          x: Math.min(x0, x0 + dx),
+          y: Math.min(y0, y0 + dy),
+          w: Math.abs(dx),
+          h: Math.abs(dy),
+        }
+        editorApi
+          .getState()
+          .select([
+            ...keep,
+            ...marqueeHits(screen, screenRects, box).filter(id => !keep.includes(id)),
+          ])
+        setDragState(
+          phase === "end" ? null : { screen: screen.id, guides: [], drop: null, marquee: box },
+        )
       },
       () => !e.shiftKey && editorApi.getState().select([screen.id]),
     )
@@ -206,40 +287,58 @@ export function useCanvas() {
     // inside auto layout, dragging reorders instead of moving
     if (parent.layout.flex && ids.length === 1) {
       const [px, py] = local(e, e.currentTarget as HTMLElement)
-      drag(e, (dx, dy, phase) => {
-        const { index, line } = flexDrop(parent, screenRects, ids[0], px + dx, py + dy)
-        setDragState({ screen: screen.id, guides: [], drop: line })
-        if (phase === "end") {
-          setDragState(null)
-          edit(d => moveNode(d, ids[0], parent.id, index))
-        }
-      }, onClick)
+      drag(
+        e,
+        (dx, dy, phase) => {
+          const { index, line } = flexDrop(parent, screenRects, ids[0], px + dx, py + dy)
+          setDragState({ screen: screen.id, guides: [], drop: line })
+          if (phase === "end") {
+            setDragState(null)
+            edit(d => moveNode(d, ids[0], parent.id, index))
+          }
+        },
+        onClick,
+      )
       return
     }
 
-    const moving = ids.map(id => findNode(project, id)!).filter(n => isNumber(n.layout.x) && isNumber(n.layout.y))
+    const moving = ids
+      .map(id => findNode(project, id)!)
+      .filter(n => isNumber(n.layout.x) && isNumber(n.layout.y))
     if (!moving.length) return
     const boxes = moving.map(n => screenRects.get(n.id)).filter(Boolean) as Rect[]
     const box = boxes.reduce((a, b) => {
-      const x = Math.min(a.x, b.x), y = Math.min(a.y, b.y)
+      const x = Math.min(a.x, b.x),
+        y = Math.min(a.y, b.y)
       return { x, y, w: Math.max(a.x + a.w, b.x + b.w) - x, h: Math.max(a.y + a.h, b.y + b.h) - y }
     })
-    const targets = [screenRects.get(parent.id), ...parent.children.filter(c => !ids.includes(c.id)).map(c => screenRects.get(c.id))].filter(Boolean) as Rect[]
+    const targets = [
+      screenRects.get(parent.id),
+      ...parent.children.filter(c => !ids.includes(c.id)).map(c => screenRects.get(c.id)),
+    ].filter(Boolean) as Rect[]
     const starts = moving.map(n => ({ id: n.id, x: n.layout.x as number, y: n.layout.y as number }))
-    drag(e, (dx, dy, phase, ev) => {
-      const zoom = editorApi.getState().zoom
-      const snapped = ev.altKey ? { dx, dy, guides: [] } : snapMove(box, targets, Math.round(dx), Math.round(dy), 5 / zoom)
-      setDragState(phase === "end" ? null : { screen: screen.id, guides: snapped.guides, drop: null })
-      edit(d => {
-        for (const s of starts) {
-          const n = locate(d, s.id)?.node
-          if (n) {
-            n.layout.x = Math.round(s.x + snapped.dx)
-            n.layout.y = Math.round(s.y + snapped.dy)
+    drag(
+      e,
+      (dx, dy, phase, ev) => {
+        const zoom = editorApi.getState().zoom
+        const snapped = ev.altKey
+          ? { dx, dy, guides: [] }
+          : snapMove(box, targets, Math.round(dx), Math.round(dy), 5 / zoom)
+        setDragState(
+          phase === "end" ? null : { screen: screen.id, guides: snapped.guides, drop: null },
+        )
+        edit(d => {
+          for (const s of starts) {
+            const n = locate(d, s.id)?.node
+            if (n) {
+              n.layout.x = Math.round(s.x + snapped.dx)
+              n.layout.y = Math.round(s.y + snapped.dy)
+            }
           }
-        }
-      }, phase)
-    }, onClick)
+        }, phase)
+      },
+      onClick,
+    )
   }
 
   /** Double-click: edit a selected text in place, otherwise select one level deeper. */
@@ -247,7 +346,12 @@ export function useCanvas() {
     const chain = chainAt(screen, e)
     const { selection } = editorApi.getState()
     const selected = chain.find(n => n.id === selection[0])
-    if (selected && typeof selected.props.text === "string" && !selected.component && !selected.bindings.some(b => b.kind === "text"))
+    if (
+      selected &&
+      typeof selected.props.text === "string" &&
+      !selected.component &&
+      !selected.bindings.some(b => b.kind === "text")
+    )
       return setEditing({ screen: screen.id, id: selected.id })
     const next = pickDeeper(chain, selection)
     if (next) editorApi.getState().select([next.id])
@@ -255,11 +359,20 @@ export function useCanvas() {
 
   const onArtboardPointerMove = (screen: Screen, e: React.PointerEvent) => {
     if (e.buttons) return
-    const target = pickTarget(chainAt(screen, e), editorApi.getState().selection, e.metaKey || e.ctrlKey)
+    const target = pickTarget(
+      chainAt(screen, e),
+      editorApi.getState().selection,
+      e.metaKey || e.ctrlKey,
+    )
     if (editorApi.getState().hover !== target.id) editorApi.getState().setHover(target.id)
   }
 
-  const onHandlePointerDown = (screen: Screen, id: string, handle: Handle, e: React.PointerEvent) => {
+  const onHandlePointerDown = (
+    screen: Screen,
+    id: string,
+    handle: Handle,
+    e: React.PointerEvent,
+  ) => {
     e.stopPropagation()
     const node = findNode(projectApi.getState().project, id)
     const r = rects.get(screen.id)?.get(id)
@@ -309,7 +422,8 @@ export function useCanvas() {
     dragState,
     fit,
     zoomCenter,
-    attach: (screenId: string, canvas: HTMLCanvasElement | null) => preview?.attach(screenId, canvas),
+    attach: (screenId: string, canvas: HTMLCanvasElement | null) =>
+      preview?.attach(screenId, canvas),
     onViewportPointerDown,
     onArtboardPointerDown,
     onArtboardPointerMove,

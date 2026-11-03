@@ -1,7 +1,11 @@
 import type { Node, Project, Screen } from "../model/types"
 
 /** Depth-first, parents before children (creation order). */
-export function walk(node: Node, visit: (node: Node, parent: Node | null) => void, parent: Node | null = null) {
+export function walk(
+  node: Node,
+  visit: (node: Node, parent: Node | null) => void,
+  parent: Node | null = null,
+) {
   visit(node, parent)
   for (const child of node.children) walk(child, visit, node)
 }

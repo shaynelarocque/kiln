@@ -40,18 +40,27 @@ export const useProjectStore = create<ProjectState>()(set => {
     commit: recipe =>
       set(s => {
         const next = produce(s.project, recipe)
-        return next === s.project ? s : { project: next, past: [...s.past, s.project].slice(-HISTORY), future: [] }
+        return next === s.project
+          ? s
+          : { project: next, past: [...s.past, s.project].slice(-HISTORY), future: [] }
       }),
     checkpoint: () => set(s => ({ past: [...s.past, s.project].slice(-HISTORY), future: [] })),
     preview: recipe => set(s => ({ project: produce(s.project, recipe) })),
     settle: () => set(s => (s.past.at(-1) === s.project ? { past: s.past.slice(0, -1) } : s)),
     undo: () =>
       set(s =>
-        s.past.length ? { project: s.past.at(-1)!, past: s.past.slice(0, -1), future: [s.project, ...s.future] } : s,
+        s.past.length
+          ? { project: s.past.at(-1)!, past: s.past.slice(0, -1), future: [s.project, ...s.future] }
+          : s,
       ),
     redo: () =>
-      set(s => (s.future.length ? { project: s.future[0], future: s.future.slice(1), past: [...s.past, s.project] } : s)),
-    replace: (project, path = null, dirty = false) => set({ project, path, saved: dirty ? null : project, past: [], future: [] }),
+      set(s =>
+        s.future.length
+          ? { project: s.future[0], future: s.future.slice(1), past: [...s.past, s.project] }
+          : s,
+      ),
+    replace: (project, path = null, dirty = false) =>
+      set({ project, path, saved: dirty ? null : project, past: [], future: [] }),
     markSaved: path => set(s => ({ path, saved: s.project })),
   }
 })

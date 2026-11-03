@@ -22,7 +22,10 @@ export function Player() {
             </IconButton>
           </span>
         </div>
-        <div className={`${s.device} ${round ? s.round : ""}`} style={{ width: width * scale, height: height * scale }}>
+        <div
+          className={`${s.device} ${round ? s.round : ""}`}
+          style={{ width: width * scale, height: height * scale }}
+        >
           <canvas
             ref={vm.canvas}
             width={width}
@@ -35,7 +38,8 @@ export function Player() {
         </div>
         {vm.failure && <Hint tone='error'>{vm.failure}</Hint>}
         <Hint>
-          Pixel-exact: the same LVGL build, RGB565 colour and fonts the board gets. Tap and drag like a touch screen.
+          Pixel-exact: the same LVGL build, RGB565 colour and fonts the board gets. Tap and drag
+          like a touch screen.
         </Hint>
       </div>
       <aside className={s.side}>
@@ -49,7 +53,13 @@ export function Player() {
                 <code>{v.name}</code>
                 <strong>{vm.values[v.id] ?? v.initial}</strong>
               </span>
-              <input type='range' min={Math.min(v.min, v.max)} max={Math.max(v.min, v.max)} value={vm.values[v.id] ?? Number(v.initial)} onChange={e => vm.setValue(v.id, Number(e.target.value))} />
+              <input
+                type='range'
+                min={Math.min(v.min, v.max)}
+                max={Math.max(v.min, v.max)}
+                value={vm.values[v.id] ?? Number(v.initial)}
+                onChange={e => vm.setValue(v.id, Number(e.target.value))}
+              />
               {v.sim.kind !== "none" && <small>simulated: {v.sim.kind}</small>}
             </label>
           ))}

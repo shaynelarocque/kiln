@@ -2,7 +2,17 @@ import { CirclePlay, Minus, Plus, Trash, X } from "lucide-react"
 import { useRef } from "react"
 import type { Track } from "@/entities/project"
 import { ANIM_PROPS, EASINGS, type Easing } from "@/shared/lvgl"
-import { ColorInput, Field, Hint, IconButton, NumberInput, Select, TextInput, Toggle, DISPLAY } from "@/shared/ui"
+import {
+  ColorInput,
+  Field,
+  Hint,
+  IconButton,
+  NumberInput,
+  Select,
+  TextInput,
+  Toggle,
+  DISPLAY,
+} from "@/shared/ui"
 import { useTimeline } from "../model/use-timeline"
 import s from "./timeline.module.css"
 
@@ -41,7 +51,11 @@ export function Timeline() {
       <header className={s.head}>
         <strong>Animation</strong>
         {vm.anim ? (
-          <Select value={vm.anim.id} options={vm.project.animations.map(a => ({ value: a.id, label: a.name }))} onChange={vm.open} />
+          <Select
+            value={vm.anim.id}
+            options={vm.project.animations.map(a => ({ value: a.id, label: a.name }))}
+            onChange={vm.open}
+          />
         ) : (
           <span className={s.dim}>none yet</span>
         )}
@@ -50,23 +64,57 @@ export function Timeline() {
         </IconButton>
         {vm.anim && (
           <>
-            <input key={vm.anim.name} className={s.name} defaultValue={vm.anim.name} aria-label='Animation name' onBlur={e => e.target.value.trim() && vm.update(a => void (a.name = e.target.value.trim()))} />
+            <input
+              key={vm.anim.name}
+              className={s.name}
+              defaultValue={vm.anim.name}
+              aria-label='Animation name'
+              onBlur={e =>
+                e.target.value.trim() && vm.update(a => void (a.name = e.target.value.trim()))
+              }
+            />
             <label className={s.opt}>
-              <Toggle checked={vm.anim.autoplay} onChange={v => vm.update(a => void (a.autoplay = v))} /> on screen load
+              <Toggle
+                checked={vm.anim.autoplay}
+                onChange={v => vm.update(a => void (a.autoplay = v))}
+              />{" "}
+              on screen load
             </label>
             <label className={s.opt}>
-              <Toggle checked={vm.anim.alternate} onChange={v => vm.update(a => void (a.alternate = v))} /> alternate
+              <Toggle
+                checked={vm.anim.alternate}
+                onChange={v => vm.update(a => void (a.alternate = v))}
+              />{" "}
+              alternate
             </label>
             <label className={s.opt}>
-              <Toggle checked={vm.anim.repeat < 0} onChange={v => vm.update(a => void (a.repeat = v ? -1 : 0))} /> loop
+              <Toggle
+                checked={vm.anim.repeat < 0}
+                onChange={v => vm.update(a => void (a.repeat = v ? -1 : 0))}
+              />{" "}
+              loop
             </label>
             {vm.anim.repeat >= 0 && (
               <span className={s.num}>
-                <NumberInput prefix='×' value={vm.anim.repeat + 1} min={1} max={100} onChange={v => vm.update(a => void (a.repeat = v - 1))} title='Plays' />
+                <NumberInput
+                  prefix='×'
+                  value={vm.anim.repeat + 1}
+                  min={1}
+                  max={100}
+                  onChange={v => vm.update(a => void (a.repeat = v - 1))}
+                  title='Plays'
+                />
               </span>
             )}
             <span className={s.num}>
-              <NumberInput prefix='Delay' value={vm.anim.delay} min={0} step={50} unit='ms' onChange={v => vm.update(a => void (a.delay = v))} />
+              <NumberInput
+                prefix='Delay'
+                value={vm.anim.delay}
+                min={0}
+                step={50}
+                unit='ms'
+                onChange={v => vm.update(a => void (a.delay = v))}
+              />
             </span>
             <IconButton label='Preview in Play' onClick={vm.preview}>
               <CirclePlay />
@@ -84,14 +132,24 @@ export function Timeline() {
 
       {!vm.anim ? (
         <div className={s.empty}>
-          <Hint>Keyframe timelines, like CSS @keyframes: pick a widget, add a track, drag keys along the ruler. They export as lv_anim_timeline_t.</Hint>
+          <Hint>
+            Keyframe timelines, like CSS @keyframes: pick a widget, add a track, drag keys along the
+            ruler. They export as lv_anim_timeline_t.
+          </Hint>
         </div>
       ) : (
         <div className={s.body}>
           <div className={s.tracks}>
             <div className={s.trackHead}>
               {vm.target ? (
-                <Select value='' placeholder={`+ Track for ${vm.target.name}`} options={vm.props(vm.target.widget).map(p => ({ value: p.value, label: p.label }))} onChange={v => v && vm.addTrack(v)} />
+                <Select
+                  value=''
+                  placeholder={`+ Track for ${vm.target.name}`}
+                  options={vm
+                    .props(vm.target.widget)
+                    .map(p => ({ value: p.value, label: p.label }))}
+                  onChange={v => v && vm.addTrack(v)}
+                />
               ) : (
                 <span className={s.dim}>Select a widget to animate it</span>
               )}
@@ -99,7 +157,8 @@ export function Timeline() {
             {vm.anim.tracks.map(track => (
               <div key={track.id} className={s.trackName}>
                 <span>
-                  <strong>{vm.nodeName(track.node)}</strong> {ANIM_PROPS.find(p => p.value === track.prop)?.label}
+                  <strong>{vm.nodeName(track.node)}</strong>{" "}
+                  {ANIM_PROPS.find(p => p.value === track.prop)?.label}
                 </span>
                 <IconButton label='Remove track' onClick={() => vm.removeTrack(track.id)}>
                   <Minus />
@@ -110,7 +169,11 @@ export function Timeline() {
           <div className={s.lanes}>
             <div className={s.ruler} ref={ruler}>
               {ticks.map(t => (
-                <span key={t} className={t % 500 === 0 ? s.major : ""} style={{ left: `${(t / vm.duration) * 100}%` }}>
+                <span
+                  key={t}
+                  className={t % 500 === 0 ? s.major : ""}
+                  style={{ left: `${(t / vm.duration) * 100}%` }}
+                >
                   {t % 500 === 0 ? `${t}` : ""}
                 </span>
               ))}
@@ -128,7 +191,15 @@ export function Timeline() {
                   }}
                   title='Double-click to add a keyframe'
                 >
-                  {sorted.length > 1 && <span className={s.span} style={{ left: `${(sorted[0].t / vm.duration) * 100}%`, width: `${((sorted.at(-1)!.t - sorted[0].t) / vm.duration) * 100}%` }} />}
+                  {sorted.length > 1 && (
+                    <span
+                      className={s.span}
+                      style={{
+                        left: `${(sorted[0].t / vm.duration) * 100}%`,
+                        width: `${((sorted.at(-1)!.t - sorted[0].t) / vm.duration) * 100}%`,
+                      }}
+                    />
+                  )}
                   {keys.map((k, i) => (
                     <button
                       key={i}
@@ -147,29 +218,59 @@ export function Timeline() {
             {vm.pickedKey && prop ? (
               <>
                 <Field label='Time'>
-                  <NumberInput value={vm.pickedKey.t} min={0} step={10} unit='ms' onChange={(t, phase) => vm.setKey({ t }, phase)} />
+                  <NumberInput
+                    value={vm.pickedKey.t}
+                    min={0}
+                    step={10}
+                    unit='ms'
+                    onChange={(t, phase) => vm.setKey({ t }, phase)}
+                  />
                 </Field>
                 <Field label={prop.label}>
                   {prop.unit === "color" ? (
-                    <ColorInput value={String(vm.pickedKey.value)} onChange={(value, phase) => vm.setKey({ value }, phase)} />
+                    <ColorInput
+                      value={String(vm.pickedKey.value)}
+                      onChange={(value, phase) => vm.setKey({ value }, phase)}
+                    />
                   ) : (
-                    <NumberInput value={Number(vm.pickedKey.value)} scale={DISPLAY[prop.unit]?.scale ?? 1} unit={DISPLAY[prop.unit]?.unit} onChange={(value, phase) => vm.setKey({ value }, phase)} prefix='' />
+                    <NumberInput
+                      value={Number(vm.pickedKey.value)}
+                      scale={DISPLAY[prop.unit]?.scale ?? 1}
+                      unit={DISPLAY[prop.unit]?.unit}
+                      onChange={(value, phase) => vm.setKey({ value }, phase)}
+                      prefix=''
+                    />
                   )}
                 </Field>
                 <Field label='Easing out'>
                   <Select
                     value={vm.pickedKey.easing.startsWith("cubic") ? "custom" : vm.pickedKey.easing}
                     options={[...EASINGS, { value: "custom", label: "cubic-bezier()" }]}
-                    onChange={v => vm.setKey({ easing: (v === "custom" ? "cubic-bezier(0.34, 1.56, 0.64, 1)" : v) as Easing })}
+                    onChange={v =>
+                      vm.setKey({
+                        easing: (v === "custom"
+                          ? "cubic-bezier(0.34, 1.56, 0.64, 1)"
+                          : v) as Easing,
+                      })
+                    }
                   />
                 </Field>
-                {vm.pickedKey.easing.startsWith("cubic") && <TextInput value={vm.pickedKey.easing} onChange={v => vm.setKey({ easing: v as Easing })} mono />}
+                {vm.pickedKey.easing.startsWith("cubic") && (
+                  <TextInput
+                    value={vm.pickedKey.easing}
+                    onChange={v => vm.setKey({ easing: v as Easing })}
+                    mono
+                  />
+                )}
                 <IconButton label='Delete keyframe' onClick={vm.removeKey}>
                   <Trash />
                 </IconButton>
               </>
             ) : (
-              <Hint>Pick a keyframe to edit its value and the easing to the next one. Double-click a lane to add one.</Hint>
+              <Hint>
+                Pick a keyframe to edit its value and the easing to the next one. Double-click a
+                lane to add one.
+              </Hint>
             )}
           </div>
         </div>
