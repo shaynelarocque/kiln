@@ -31,13 +31,18 @@ What you see is what flashes.
 - **Animate like the web.** A timeline with keyframes you drag along a ruler: `cubic-bezier`
   easing, delays, repeat and alternate, started when a screen loads or when something is tapped.
   Opacity, scale, rotation, translation, size and colour all animate.
+- **Drop in sprites.** A GIF, a strip of square frames or numbered images becomes a frame
+  animation: every frame an LVGL image, packed into a `const void *` frame array for
+  `lv_animimg`, zoomed crisp like pixel art. "Make boot animation" turns one into a first screen
+  that plays once, then opens your home screen.
 - **Bind to the board.** Variables are LVGL subjects. Bind text, values, checked state, visibility,
   states, chart history, or any numeric style property mapped from one range to another. Feed a
   variable from an ADC pin, a digital pin, uptime, free heap, the chip's temperature or any C
   expression; let one drive a GPIO or PWM. Pins are checked against the MCU: ADC capability,
   strapping, flash and USB pins, double use.
 - **Play it.** Play mode runs the whole UI on real LVGL: taps, events, screen transitions,
-  animations, and simulated sensors you can scrub.
+  animations, and simulated sensors you can scrub. With the Interact tab open, every navigation
+  shows on the canvas as a prototype noodle, and dragging one from a widget to a screen makes it.
 - **Export it.** `ui.h`, `ui.c` and one file per screen in readable LVGL C, an `lv_conf.h` with only
   the fonts you used, a LovyanGFX panel config, the hardware glue, and a `platformio.ini`. Your code
   goes in `src/app.cpp`, which Kiln writes once and never touches again. The output uses LVGL 9.6's
