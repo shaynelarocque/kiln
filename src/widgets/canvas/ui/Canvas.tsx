@@ -25,13 +25,13 @@ export function Canvas() {
         ))}
       </div>
       <div className={s.zoom}>
-        <IconButton label='Zoom out' onClick={() => vm.zoomAt(vm.zoom / 1.25, vm.viewport.current!.clientWidth / 2, vm.viewport.current!.clientHeight / 2)}>
+        <IconButton label='Zoom out (−)' onClick={() => vm.zoomCenter(vm.zoom / 1.25)}>
           <Minus />
         </IconButton>
-        <button className={s.zoomValue} onClick={() => vm.zoomAt(1, vm.viewport.current!.clientWidth / 2, vm.viewport.current!.clientHeight / 2)} title='Zoom to 100%'>
+        <button className={s.zoomValue} onClick={() => vm.zoomCenter(1)} title='Zoom to 100% (⇧0)'>
           {Math.round(vm.zoom * 100)}%
         </button>
-        <IconButton label='Zoom in' onClick={() => vm.zoomAt(vm.zoom * 1.25, vm.viewport.current!.clientWidth / 2, vm.viewport.current!.clientHeight / 2)}>
+        <IconButton label='Zoom in (+)' onClick={() => vm.zoomCenter(vm.zoom * 1.25)}>
           <Plus />
         </IconButton>
         <IconButton label='Fit screens (⇧1)' onClick={vm.fit}>

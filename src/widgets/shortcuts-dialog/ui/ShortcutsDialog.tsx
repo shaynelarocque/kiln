@@ -3,7 +3,7 @@ import { Dialog } from "@/shared/ui"
 import s from "./shortcuts.module.css"
 
 const GROUPS: [string, [string, string][]][] = [
-  ["Canvas", [["Pan", "Space-drag · scroll"], ["Zoom", "Pinch · ⌘-scroll"], ["Select deeper / edit text", "Double-click"], ["Select deepest", "⌘-click"], ["Add to selection", "⇧-click"], ["Select an area", "Drag on a screen's background"], ["Ignore snapping", "⌥ while dragging"], ["Keep proportions", "⇧ while resizing"]]],
+  ["Canvas", [["Pan", "Space-drag · scroll"], ["Zoom", "Pinch · ⌘-scroll · + / −"], ["Zoom to fit / selection / 100%", "⇧1 / ⇧2 / ⇧0"], ["Select deeper / edit text", "Double-click"], ["Select deepest", "⌘-click"], ["Add to selection", "⇧-click"], ["Select an area", "Drag on a screen's background"], ["Ignore snapping", "⌥ while dragging"], ["Keep proportions", "⇧ while resizing"]]],
   ["Edit", [["Undo / redo", "⌘Z / ⇧⌘Z"], ["Copy / cut / paste", "⌘C / ⌘X / ⌘V"], ["Duplicate", "⌘D"], ["Group in a container", "⌘G"], ["Select siblings", "⌘A"], ["Delete", "⌫"], ["Nudge (×10)", "Arrows (⇧)"], ["Bring forward / back", "] / ["], ["Select parent", "Esc"]]],
   ["Arrange", [["Align left / right", "⌥A / ⌥D"], ["Align top / bottom", "⌥W / ⌥S"], ["Align centres", "⌥H / ⌥V"], ["Distribute spacing", "⌃⌥H / ⌃⌥V"]]],
   ["Project", [["Save / save as", "⌘S / ⇧⌘S"], ["Open", "⌘O"], ["Play", "⌘↵"], ["Leave Play", "Esc"], ["This sheet", "?"]]],

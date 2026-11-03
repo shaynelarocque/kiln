@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { editorApi, useEditorStore } from "@/entities/editor"
-import { edit, findNode, findParent, locate, moveNode, projectApi, useProjectStore, type Phase, type Screen } from "@/entities/project"
+import { edit, findNode, findParent, locate, moveNode, projectApi, screenOf, useProjectStore, type Phase, type Screen } from "@/entities/project"
 import type { Rect } from "@/shared/lvgl"
 import { flexDrop, hitChain, isNumber, marqueeHits, pickDeeper, pickTarget, resizeLayout, snapMove, type Guide, type Handle } from "./interactions"
 import { usePreview } from "./use-preview"
@@ -52,16 +52,40 @@ export function useCanvas() {
     setView(z, { x: cx - ((cx - pan.x) * z) / zoom, y: cy - ((cy - pan.y) * z) / zoom })
   }, [setView])
 
-  const fit = useCallback(() => {
+  const zoomCenter = useCallback((next: number) => {
     const el = viewport.current
-    const { screens, target } = projectApi.getState().project
-    if (!el || !screens.length) return
-    const { width: w, height: h } = target.display
-    const x1 = Math.min(...screens.map(s => s.frame.x)), y1 = Math.min(...screens.map(s => s.frame.y)) - 24
-    const x2 = Math.max(...screens.map(s => s.frame.x + w)), y2 = Math.max(...screens.map(s => s.frame.y + h))
-    const z = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, Math.min((el.clientWidth - 120) / (x2 - x1), (el.clientHeight - 120) / (y2 - y1))))
+    if (el) zoomAt(next, el.clientWidth / 2, el.clientHeight / 2)
+  }, [zoomAt])
+
+  /** Zooms and pans so a box in canvas space fills the viewport, less a margin. */
+  const fitBox = useCallback((x1: number, y1: number, x2: number, y2: number) => {
+    const el = viewport.current
+    if (!el) return
+    const z = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, Math.min((el.clientWidth - 120) / Math.max(1, x2 - x1), (el.clientHeight - 120) / Math.max(1, y2 - y1))))
     setView(z, { x: (el.clientWidth - (x2 - x1) * z) / 2 - x1 * z, y: (el.clientHeight - (y2 - y1) * z) / 2 - y1 * z })
   }, [setView])
+
+  const fit = useCallback(() => {
+    const { screens, target } = projectApi.getState().project
+    if (!screens.length) return
+    const { width: w, height: h } = target.display
+    // 24 px of headroom for the screen names
+    fitBox(Math.min(...screens.map(s => s.frame.x)), Math.min(...screens.map(s => s.frame.y)) - 24, Math.max(...screens.map(s => s.frame.x + w)), Math.max(...screens.map(s => s.frame.y + h)))
+  }, [fitBox])
+
+  /** Fits the selected layers and screens; with nothing selected, everything. */
+  const fitSelection = useCallback(() => {
+    const { project } = projectApi.getState()
+    const { selection, rects } = editorApi.getState()
+    const { width, height } = project.target.display
+    const boxes = selection.flatMap(id => {
+      const screen = project.screens.find(s => s.id === id) ?? screenOf(project, id)
+      const r = screen?.id === id ? { x: 0, y: 0, w: width, h: height } : screen && rects.get(screen.id)?.get(id)
+      return screen && r ? [{ x: screen.frame.x + r.x, y: screen.frame.y + r.y, w: r.w, h: r.h }] : []
+    })
+    if (!boxes.length) return fit()
+    fitBox(Math.min(...boxes.map(b => b.x)), Math.min(...boxes.map(b => b.y)), Math.max(...boxes.map(b => b.x + b.w)), Math.max(...boxes.map(b => b.y + b.h)))
+  }, [fit, fitBox])
 
   // Wheel must be non-passive to stop the page scrolling: trackpad scroll pans, pinch/ctrl zooms.
   useEffect(() => {
@@ -82,10 +106,17 @@ export function useCanvas() {
   useEffect(() => {
     const typing = (e: KeyboardEvent) => e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement
     const down = (e: KeyboardEvent) => {
-      if (e.code === "Space" && !typing(e)) {
-        e.preventDefault()
-        setSpaceDown(true)
-      }
+      const { dialog, playing, zoom } = editorApi.getState()
+      if (typing(e) || dialog || playing) return
+      const run = (fn: () => void) => (e.preventDefault(), fn())
+      if (e.code === "Space") return run(() => setSpaceDown(true))
+      // Figma's view keys; ⌘ too, so the webview's own page zoom never kicks in
+      if (e.key === "=" || e.key === "+") return run(() => zoomCenter(zoom * 1.25))
+      if (e.key === "-" || e.key === "_") return run(() => zoomCenter(zoom / 1.25))
+      if (!e.shiftKey || e.metaKey || e.ctrlKey || e.altKey) return
+      if (e.code === "Digit1") return run(fit)
+      if (e.code === "Digit2") return run(fitSelection)
+      if (e.code === "Digit0") return run(() => zoomCenter(1))
     }
     const up = (e: KeyboardEvent) => e.code === "Space" && setSpaceDown(false)
     window.addEventListener("keydown", down)
@@ -94,7 +125,7 @@ export function useCanvas() {
       window.removeEventListener("keydown", down)
       window.removeEventListener("keyup", up)
     }
-  }, [])
+  }, [fit, fitSelection, zoomCenter])
 
   // fit the screens to the window the first time it has a real size
   useEffect(() => {
@@ -277,7 +308,7 @@ export function useCanvas() {
     spaceDown,
     dragState,
     fit,
-    zoomAt,
+    zoomCenter,
     attach: (screenId: string, canvas: HTMLCanvasElement | null) => preview?.attach(screenId, canvas),
     onViewportPointerDown,
     onArtboardPointerDown,
