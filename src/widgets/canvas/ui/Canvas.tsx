@@ -10,6 +10,9 @@ import s from "./canvas.module.css"
 
 const HANDLES: Handle[] = ["nw", "n", "ne", "e", "se", "s", "sw", "w"]
 
+/** Rounds to the nearest device pixel, so layers and outlines don't land between pixels. */
+const snap = (v: number) => Math.round(v * devicePixelRatio) / devicePixelRatio
+
 export function Canvas() {
   const vm = useCanvas()
   const { width, height, round } = vm.project.target.display
@@ -18,17 +21,17 @@ export function Canvas() {
       ref={vm.viewport}
       className={`${s.viewport} ${vm.spaceDown ? s.panning : ""}`}
       onPointerDown={vm.onViewportPointerDown}
-      style={
-        {
-          "--z": vm.zoom,
-          "backgroundPosition": `${vm.pan.x}px ${vm.pan.y}px`,
-          "backgroundSize": `${16 * vm.zoom}px ${16 * vm.zoom}px`,
-        } as React.CSSProperties
-      }
+      style={{
+        backgroundPosition: `${vm.pan.x}px ${vm.pan.y}px`,
+        backgroundSize: `${16 * vm.zoom}px ${16 * vm.zoom}px`,
+      }}
     >
+      {/* The world only ever translates. Everything in it is laid out at screen size (canvas
+          units × zoom), because a CSS scale makes WebKit stretch a 1× bitmap of the layer:
+          blurry text, and smeared pixels on canvases under its 2D acceleration size. */}
       <div
         className={s.world}
-        style={{ transform: `translate(${vm.pan.x}px, ${vm.pan.y}px) scale(${vm.zoom})` }}
+        style={{ transform: `translate(${snap(vm.pan.x)}px, ${snap(vm.pan.y)}px)` }}
       >
         {vm.project.screens.map(screen => (
           <Artboard
@@ -84,11 +87,17 @@ function Artboard({
       ? rects?.get(vm.hover)
       : undefined
   const drag = vm.dragState?.screen === screen.id ? vm.dragState : null
+  const z = vm.zoom
 
   return (
     <div
       className={s.artboard}
-      style={{ left: screen.frame.x, top: screen.frame.y, width, height }}
+      style={{
+        left: snap(screen.frame.x * z),
+        top: snap(screen.frame.y * z),
+        width: width * z,
+        height: height * z,
+      }}
     >
       <div
         className={`${s.title} ${selected ? s.titleOn : ""}`}
@@ -111,16 +120,19 @@ function Artboard({
         />
       </div>
       <div className={s.overlay}>
-        {hover && <Box rect={hover} className={s.hover} />}
+        {hover && <Box rect={hover} z={z} className={s.hover} />}
         {nodes.map(id => {
           const r = rects!.get(id)!
-          return <Box key={id} rect={r} className={s.selected} />
+          return <Box key={id} rect={r} z={z} className={s.selected} />
         })}
         {single && singleRect && vm.showFlows && (
           <span
             className={s.noodleHandle}
             title='Drag onto a screen to open it on click'
-            style={{ left: singleRect.x + singleRect.w, top: singleRect.y + singleRect.h / 2 }}
+            style={{
+              left: (singleRect.x + singleRect.w) * z,
+              top: (singleRect.y + singleRect.h / 2) * z,
+            }}
             onPointerDown={e => vm.onNoodlePointerDown(screen, single.id, e)}
           />
         )}
@@ -132,18 +144,23 @@ function Artboard({
                 className={`${s.handle} ${s[h]}`}
                 style={{
                   left:
-                    singleRect.x +
-                    (h.includes("e") ? singleRect.w : h.includes("w") ? 0 : singleRect.w / 2),
+                    (singleRect.x +
+                      (h.includes("e") ? singleRect.w : h.includes("w") ? 0 : singleRect.w / 2)) *
+                    z,
                   top:
-                    singleRect.y +
-                    (h.includes("s") ? singleRect.h : h.includes("n") ? 0 : singleRect.h / 2),
+                    (singleRect.y +
+                      (h.includes("s") ? singleRect.h : h.includes("n") ? 0 : singleRect.h / 2)) *
+                    z,
                 }}
                 onPointerDown={e => vm.onHandlePointerDown(screen, single.id, h, e)}
               />
             ))}
             <span
               className={s.badge}
-              style={{ left: singleRect.x + singleRect.w / 2, top: singleRect.y + singleRect.h }}
+              style={{
+                left: (singleRect.x + singleRect.w / 2) * z,
+                top: (singleRect.y + singleRect.h) * z,
+              }}
             >
               {singleRect.w} × {singleRect.h}
             </span>
@@ -153,12 +170,16 @@ function Artboard({
           <span
             key={i}
             className={s.guide}
-            style={g.axis === "x" ? { left: g.at, top: 0, height } : { top: g.at, left: 0, width }}
+            style={
+              g.axis === "x"
+                ? { left: snap(g.at * z), top: 0, height: height * z }
+                : { top: snap(g.at * z), left: 0, width: width * z }
+            }
             data-axis={g.axis}
           />
         ))}
-        {drag?.drop && <Box rect={drag.drop} className={s.drop} />}
-        {drag?.marquee && <Box rect={drag.marquee} className={s.marquee} />}
+        {drag?.drop && <Box rect={drag.drop} z={z} className={s.drop} />}
+        {drag?.marquee && <Box rect={drag.marquee} z={z} className={s.marquee} />}
         {vm.editing?.screen === screen.id && rects?.get(vm.editing.id) && (
           <TextEditor vm={vm} rect={rects.get(vm.editing.id)!} />
         )}
@@ -180,17 +201,19 @@ function TextEditor({
   const size = Number(/(\d+)$/.exec(font)?.[1] ?? 14)
   const ttf = parseTtfFont(font)
   const file = ttf && vm.project.fonts.find(f => f.id === ttf.id)
+  const z = vm.zoom
   return (
     <textarea
       className={s.textEdit}
       autoFocus
       defaultValue={String(node.props.text)}
       style={{
-        left: rect.x - 2,
-        top: rect.y - 2,
-        minWidth: rect.w + 24,
-        minHeight: rect.h + 4,
-        fontSize: size,
+        left: (rect.x - 2) * z,
+        top: (rect.y - 2) * z,
+        minWidth: (rect.w + 24) * z,
+        minHeight: (rect.h + 4) * z,
+        padding: 2 * z,
+        fontSize: size * z,
         fontFamily: file ? `${fontFamily(file.id, file.data)}, Montserrat` : undefined,
       }}
       onFocus={e => e.target.select()}
@@ -206,17 +229,26 @@ function TextEditor({
   )
 }
 
+/** An outline around a box in display pixels, drawn on device pixels so it stays a crisp line. */
 function Box({
   rect,
+  z,
   className,
 }: {
   rect: { x: number; y: number; w: number; h: number }
+  z: number
   className: string
 }) {
+  const [x, y] = [snap(rect.x * z), snap(rect.y * z)]
   return (
     <span
       className={className}
-      style={{ left: rect.x, top: rect.y, width: rect.w, height: rect.h }}
+      style={{
+        left: x,
+        top: y,
+        width: snap((rect.x + rect.w) * z) - x,
+        height: snap((rect.y + rect.h) * z) - y,
+      }}
     />
   )
 }
@@ -240,18 +272,21 @@ function Flows({ vm }: { vm: CanvasViewModel }) {
   const all: (Flow & { live?: boolean })[] = [...vm.flows]
   if (vm.noodle)
     all.push({ id: "live", from: vm.noodle.from, to: vm.noodle.to, selected: true, live: true })
+  // an SVG transform, unlike a CSS one, is drawn as vectors at the final size
   return (
     <svg className={s.flows} width='1' height='1' aria-hidden>
-      {all.map(f => (
-        <g
-          key={f.id}
-          className={`${s.flow} ${f.selected ? s.flowOn : ""} ${f.live ? s.flowLive : ""}`}
-        >
-          <circle cx={f.from.x} cy={f.from.y} r={3 / vm.zoom} />
-          <path d={noodlePath(f.from, f.to)} vectorEffect='non-scaling-stroke' />
-          <polygon points={head(f.from, f.to, vm.zoom)} />
-        </g>
-      ))}
+      <g transform={`scale(${vm.zoom})`}>
+        {all.map(f => (
+          <g
+            key={f.id}
+            className={`${s.flow} ${f.selected ? s.flowOn : ""} ${f.live ? s.flowLive : ""}`}
+          >
+            <circle cx={f.from.x} cy={f.from.y} r={3 / vm.zoom} />
+            <path d={noodlePath(f.from, f.to)} vectorEffect='non-scaling-stroke' />
+            <polygon points={head(f.from, f.to, vm.zoom)} />
+          </g>
+        ))}
+      </g>
     </svg>
   )
 }
