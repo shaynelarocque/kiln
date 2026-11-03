@@ -16,11 +16,59 @@ import {
   type Node,
   type Phase,
 } from "@/entities/project"
-import { updateNode } from "@/features/node-actions"
+import { updateNode, updateNodes } from "@/features/node-actions"
 import { resetAtSize } from "@/features/sizes"
 import { MAIN_DEFAULT, STATES, WIDGETS } from "@/shared/lvgl"
 
 type Value = string | number | boolean
+
+/** A value the selected layers share, or `mixed` when they differ (then `value` is the first's). */
+type Shared<T> = { value: T; mixed: boolean }
+
+/**
+ * Several selected layers, edited together like Figma: what they share shows, what differs reads
+ * "Mixed", and an edit sets it on all of them as one undo step. Styles are the main part's.
+ */
+export function multiModel(nodes: Node[]) {
+  const ids = nodes.map(n => n.id)
+  const setAll = (recipe: (n: Node) => void, phase?: Phase) => updateNodes(ids, recipe, phase)
+  const same = <T>(read: (n: Node) => T): Shared<T> => {
+    const value = read(nodes[0])
+    const key = JSON.stringify(value)
+    return { value, mixed: nodes.some(n => JSON.stringify(read(n)) !== key) }
+  }
+  const widget = nodes.every(n => n.widget === nodes[0].widget) ? nodes[0].widget : null
+  const styleOf = (n: Node) => n.style[MAIN_DEFAULT] ?? {}
+  const style: Record<string, Value> = {}
+  const mixedStyle: string[] = []
+  for (const name of new Set(nodes.flatMap(n => Object.keys(styleOf(n))))) {
+    const first = styleOf(nodes[0])[name]
+    if (first !== undefined && nodes.every(n => styleOf(n)[name] === first)) style[name] = first
+    else mixedStyle.push(name)
+  }
+  return {
+    count: nodes.length,
+    /** the widget type, when every selected layer is one */
+    widget,
+    def: widget ? WIDGETS[widget] : undefined,
+    w: same(n => n.layout.w),
+    h: same(n => n.layout.h),
+    prop: (key: string) => same(n => n.props[key]),
+    style,
+    mixedStyle,
+    setLayout: <K extends keyof Layout>(key: K, value: Layout[K], phase?: Phase) =>
+      setAll(n => void (n.layout[key] = value), phase),
+    setProp: (key: string, value: Value | null, phase?: Phase) =>
+      setAll(n => void (n.props[key] = value), phase),
+    setStyle: (name: string, value: Value | undefined, phase?: Phase) =>
+      setAll(n => {
+        const map = (n.style[MAIN_DEFAULT] ??= {})
+        if (value === undefined) delete map[name]
+        else map[name] = value
+        if (!Object.keys(map).length) delete n.style[MAIN_DEFAULT]
+      }, phase),
+  }
+}
 
 /** View-model for the inspector: the selected node plus every edit the panels make to it. */
 export function useInspector() {
@@ -35,6 +83,7 @@ export function useInspector() {
   const transforms = useMemo(() => transformedNodes(project), [project])
 
   const node = selection.length === 1 ? findNode(project, selection[0]) : undefined
+  const many = selection.flatMap(id => findNode(project, id) ?? [])
   const parent = node ? findParent(project, node.id) : undefined
   const def = node ? WIDGETS[node.widget] : undefined
   const [part, stateKey = "default"] = selector.split(":")
@@ -62,6 +111,8 @@ export function useInspector() {
     def,
     tab,
     selection,
+    /** several layers selected: what they share, edited together */
+    multi: many.length > 1 ? multiModel(many) : null,
     selector,
     part,
     states,

@@ -57,7 +57,15 @@ export function DesignTab({ vm }: { vm: InspectorViewModel }) {
       {vm.def!.props.length > 0 && !node.component && (
         <Section title={vm.def!.label}>
           {vm.def!.props.map(p => (
-            <PropField key={p.key} prop={p} vm={vm} />
+            <PropField
+              key={p.key}
+              prop={p}
+              value={node.props[p.key]}
+              bound={p.key === "text" && node.bindings.some(b => b.kind === "text")}
+              setProp={vm.setProp}
+              assets={vm.assets}
+              sprites={vm.sprites}
+            />
           ))}
         </Section>
       )}
@@ -89,7 +97,7 @@ export function DesignTab({ vm }: { vm: InspectorViewModel }) {
 }
 
 /** px, %, or (for sizes) LVGL's size-to-content. */
-function CoordInput({
+export function CoordInput({
   value,
   onChange,
   label,
@@ -279,9 +287,27 @@ function AutoLayoutSection({ vm }: { vm: InspectorViewModel }) {
   )
 }
 
-function PropField({ prop, vm }: { prop: WidgetProp; vm: InspectorViewModel }) {
-  const value = vm.node!.props[prop.key]
-  const bound = prop.key === "text" && vm.node!.bindings.some(b => b.kind === "text")
+type PropValue = string | number | boolean | null | undefined
+
+/** One widget prop's control. `mixed`: the selected layers differ, so it shows as "Mixed". */
+export function PropField({
+  prop,
+  value,
+  mixed,
+  bound,
+  setProp,
+  assets,
+  sprites,
+}: {
+  prop: WidgetProp
+  value: PropValue
+  mixed?: boolean
+  bound?: boolean
+  setProp: InspectorViewModel["setProp"]
+  assets: { id: string; name: string }[]
+  sprites: { id: string; name: string }[]
+}) {
+  const vm = { setProp, assets, sprites }
   let control: React.ReactNode
   switch (prop.type) {
     case "text":
@@ -320,9 +346,10 @@ function PropField({ prop, vm }: { prop: WidgetProp; vm: InspectorViewModel }) {
     case "enum":
       control = (
         <Select
-          value={String(value)}
+          value={mixed ? "" : String(value)}
           options={prop.options!}
-          onChange={v => vm.setProp(prop.key, v)}
+          onChange={v => v && vm.setProp(prop.key, v)}
+          placeholder={mixed ? "Mixed" : undefined}
         />
       )
       break
@@ -335,20 +362,21 @@ function PropField({ prop, vm }: { prop: WidgetProp; vm: InspectorViewModel }) {
     case "sprite":
       control = (
         <Select
-          value={String(value ?? "")}
+          value={mixed ? "" : String(value ?? "")}
           options={(prop.type === "image" ? vm.assets : vm.sprites).map(a => ({
             value: a.id,
             label: a.name,
           }))}
           onChange={v => vm.setProp(prop.key, v || null)}
-          placeholder='None'
+          placeholder={mixed ? "Mixed" : "None"}
         />
       )
       break
     case "scale":
       control = (
         <NumberInput
-          value={value === null || value === undefined ? 256 : Number(value)}
+          value={mixed ? null : value === null || value === undefined ? 256 : Number(value)}
+          placeholder='Mixed'
           min={prop.min}
           max={prop.max}
           scale={2.56}
@@ -361,7 +389,8 @@ function PropField({ prop, vm }: { prop: WidgetProp; vm: InspectorViewModel }) {
     default:
       control = (
         <NumberInput
-          value={Number(value)}
+          value={mixed ? null : Number(value)}
+          placeholder='Mixed'
           min={prop.min}
           max={prop.max}
           onChange={(v, phase) => vm.setProp(prop.key, v, phase)}
@@ -371,7 +400,14 @@ function PropField({ prop, vm }: { prop: WidgetProp; vm: InspectorViewModel }) {
   }
   return (
     <>
-      <Field label={prop.label} wide={prop.type === "lines"}>
+      <Field
+        label={
+          mixed && (prop.type === "bool" || prop.type === "color")
+            ? `${prop.label} · mixed`
+            : prop.label
+        }
+        wide={prop.type === "lines"}
+      >
         {control}
       </Field>
       {bound && <Hint>Bound to a variable: this text shows until the first value arrives.</Hint>}

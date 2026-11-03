@@ -23,6 +23,7 @@ import { useInspector } from "../model/use-inspector"
 import { BindTab } from "./BindTab"
 import { DesignTab } from "./DesignTab"
 import { InteractTab } from "./InteractTab"
+import { MultiDesign } from "./MultiDesign"
 import s from "./inspector.module.css"
 
 const ALIGNS: [AlignEdge, string, React.ReactNode][] = [
@@ -39,38 +40,45 @@ export function Inspector() {
 
   if (vm.selection.length > 1)
     return (
-      <div className={s.empty}>
-        <strong>{vm.selection.length} layers selected</strong>
-        <div className={s.alignBar}>
-          {ALIGNS.map(([edge, label, icon]) => (
-            <IconButton key={edge} label={label} onClick={() => alignSelection(edge)}>
-              {icon}
+      <div className={s.inspector}>
+        <div className={s.empty}>
+          <strong>{vm.selection.length} layers selected</strong>
+          <div className={s.alignBar}>
+            {ALIGNS.map(([edge, label, icon]) => (
+              <IconButton key={edge} label={label} onClick={() => alignSelection(edge)}>
+                {icon}
+              </IconButton>
+            ))}
+            <span className={s.alignGap} />
+            <IconButton
+              label='Distribute horizontal spacing (⌃⌥H)'
+              disabled={vm.selection.length < 3}
+              onClick={() => distributeSelection("x")}
+            >
+              <AlignHorizontalSpaceBetween />
             </IconButton>
-          ))}
-          <span className={s.alignGap} />
-          <IconButton
-            label='Distribute horizontal spacing (⌃⌥H)'
-            disabled={vm.selection.length < 3}
-            onClick={() => distributeSelection("x")}
-          >
-            <AlignHorizontalSpaceBetween />
-          </IconButton>
-          <IconButton
-            label='Distribute vertical spacing (⌃⌥V)'
-            disabled={vm.selection.length < 3}
-            onClick={() => distributeSelection("y")}
-          >
-            <AlignVerticalSpaceBetween />
-          </IconButton>
+            <IconButton
+              label='Distribute vertical spacing (⌃⌥V)'
+              disabled={vm.selection.length < 3}
+              onClick={() => distributeSelection("y")}
+            >
+              <AlignVerticalSpaceBetween />
+            </IconButton>
+          </div>
+          <div className={s.actions}>
+            <Button icon={<Group />} onClick={groupSelection}>
+              Group
+            </Button>
+            <Button icon={<Trash />} variant='danger' onClick={deleteSelection}>
+              Delete
+            </Button>
+          </div>
         </div>
-        <div className={s.actions}>
-          <Button icon={<Group />} onClick={groupSelection}>
-            Group
-          </Button>
-          <Button icon={<Trash />} variant='danger' onClick={deleteSelection}>
-            Delete
-          </Button>
-        </div>
+        {vm.multi && (
+          <div className={s.scroll}>
+            <MultiDesign vm={vm} />
+          </div>
+        )}
       </div>
     )
 

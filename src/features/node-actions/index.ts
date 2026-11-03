@@ -14,4 +14,5 @@ export {
   restack,
   selectAllSiblings,
   updateNode,
+  updateNodes,
 } from "./model/actions"

@@ -139,9 +139,20 @@ export function updateNode(
   recipe: (node: Node) => void,
   phase?: "start" | "move" | "end",
 ) {
+  updateNodes([id], recipe, phase)
+}
+
+/** The same change to several layers, as one undo step. */
+export function updateNodes(
+  ids: string[],
+  recipe: (node: Node) => void,
+  phase?: "start" | "move" | "end",
+) {
   edit(d => {
-    const n = locate(d, id)?.node
-    if (n) recipe(n)
+    for (const id of ids) {
+      const n = locate(d, id)?.node
+      if (n) recipe(n)
+    }
   }, phase)
 }
 
