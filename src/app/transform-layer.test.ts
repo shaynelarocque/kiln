@@ -9,6 +9,7 @@ import {
   type Project,
   type StyleProps,
 } from "@/entities/project"
+import { largestLayer } from "@/features/export-firmware"
 import { LvglRuntime, Scene } from "@/shared/lvgl"
 
 const wasm = readFileSync(new URL("../shared/lvgl/runtime/kiln-rt.wasm", import.meta.url))
@@ -98,5 +99,19 @@ describe("transform layers", () => {
     expect(t.get(spun.id)!.rotates).toBe(true)
     // scaled only: one refresh band's worth of rows (24 rows, at 240/256 scale → 26), not the whole widget
     expect(transformLayerBytes(100, 200, t.get(pressed.id)!, 24)).toBe(110 * (26 + 10) * 4)
+  })
+
+  it("guess a label's box from its text when there's no preview to measure it", () => {
+    const p = createEmptyProject()
+    p.screens[0].children = [
+      createNode("label", {
+        name: "spin",
+        props: { text: "hello", longMode: "LV_LABEL_LONG_MODE_WRAP" },
+        layout: { x: 0, y: 0, w: "content", h: "content", align: "LV_ALIGN_CENTER" },
+        style: { "main:default": { text_font: "lv_font_montserrat_20", transform_rotation: 100 } },
+      }),
+    ]
+    // 5 characters of 20 px type: about 60 × 24, padded 5 px a side, 4 bytes a pixel
+    expect(largestLayer(p)).toEqual({ name: "spin", bytes: (60 + 10) * (24 + 10) * 4 })
   })
 })

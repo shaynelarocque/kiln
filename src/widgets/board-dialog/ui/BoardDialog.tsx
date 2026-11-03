@@ -202,6 +202,8 @@ export function BoardDialog() {
               </>
             )}
             .
+            {vm.budget.heapShort &&
+              " That's as much as this board holds, less than the UI wants: LVGL will skip drawing what doesn't fit (often a big rotated or scaled widget)."}
           </Hint>
         </section>
       </div>

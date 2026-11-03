@@ -62,6 +62,23 @@ function kitchenSink(): Project {
   const nodes = INSERTABLE.map(type => createNode(type, { name: `a_${type}` }))
   const byType = Object.fromEntries(nodes.map(n => [n.widget, n]))
   byType.image.props.src = asset.id
+  byType.image.props.scale = 384
+  // a sprite that plays once, then says so: a boot animation
+  const frame = (shade: number) =>
+    toBase64(convert(new Uint8Array(16 * 4).fill(shade), 4, 4, "RGB565A8", false).data)
+  const sprite = {
+    id: newId(),
+    name: "sparkle",
+    width: 4,
+    height: 4,
+    format: "RGB565A8" as const,
+    dither: false,
+    frameMs: 80,
+    stride: 8,
+    frames: [40, 120, 220].map(shade => ({ png: "", data: frame(shade) })),
+  }
+  p.sprites.push(sprite)
+  Object.assign(byType.sprite.props, { sprite: sprite.id, once: true, scale: 768 })
   byType.container.layout.flex = {
     flow: "LV_FLEX_FLOW_ROW_WRAP",
     main: "LV_FLEX_ALIGN_SPACE_BETWEEN",
@@ -167,6 +184,19 @@ function kitchenSink(): Project {
       id: newId(),
       trigger: "LV_EVENT_VALUE_CHANGED",
       action: { type: "play", animation: anim.id, reverse: true, delay: 5 },
+    },
+  ]
+  byType.sprite.events = [
+    {
+      id: newId(),
+      trigger: "LV_EVENT_READY",
+      action: {
+        type: "navigate",
+        screen: other.id,
+        anim: "LV_SCREEN_LOAD_ANIM_NONE",
+        duration: 0,
+        delay: 0,
+      },
     },
   ]
   home.children = nodes
@@ -285,6 +315,9 @@ describe("a project that uses everything", () => {
     )
     expect(files.find(f => f.path === "include/lv_conf.h")!.content).toContain(
       "#define LV_USE_TINY_TTF 1",
+    )
+    expect(files.find(f => f.path === "src/ui/ui.c")!.content).toContain(
+      "const void * ui_spr_sparkle[] = {",
     )
     const ui = files.find(f => f.path === "src/ui/ui.c")!.content
     expect(ui).toContain(

@@ -28,12 +28,20 @@ export type BudgetInput = {
 export type Budget = {
   ram: { used: number; total: number; parts: { label: string; bytes: number }[] }
   flash: { used: number; total: number; parts: { label: string; bytes: number }[] }
-  /** what LV_MEM_SIZE should be set to */
+  /** what LV_MEM_SIZE should be set to: what the UI needs, or as much as the board can hold */
   lvglHeap: number
+  /** the UI needs more heap than the board can hold (lvglHeap is the most it can) */
+  heapShort: boolean
 }
 
 const KB = 1024
 const ARDUINO_RAM = 48 * KB
+/**
+ * The share of a board's RAM that static data can take: an ESP32-C3's link region held about
+ * 284 KB of PlatformIO's 320 KB. LVGL's own statics are allowed for too.
+ */
+const STATIC_SHARE = 0.85
+const LVGL_STATICS = 16 * KB
 const ARDUINO_FLASH = 360 * KB
 const LVGL_CORE_FLASH = 380 * KB
 /** TinyTTF and the stb_truetype rasteriser inside it: 26 KB on a real ESP32-C3 build */
@@ -93,6 +101,11 @@ export function estimateBudget(i: BudgetInput): Budget {
     i.fonts.reduce((sum, f) => sum + fontBytes(f), 0) +
     i.ttfBytes +
     (i.ttfSizes.length ? TINY_TTF_FLASH : 0)
+  // LV_MEM_SIZE is a static array: bigger than the board holds and the build won't link, so it's
+  // capped, and the meter still shows what the UI wanted
+  const room =
+    Math.floor((i.ram * STATIC_SHARE - drawBuffers - ARDUINO_RAM - LVGL_STATICS) / KB) * KB
+  const lvglHeap = Math.max(32 * KB, Math.min(heap, room))
   const ram = [
     { label: "Draw buffers", bytes: drawBuffers },
     { label: "LVGL heap", bytes: heap },
@@ -109,7 +122,8 @@ export function estimateBudget(i: BudgetInput): Budget {
   return {
     ram: { used: sum(ram), total: i.ram, parts: ram },
     flash: { used: sum(flash), total: i.rom, parts: flash },
-    lvglHeap: heap,
+    lvglHeap,
+    heapShort: heap > lvglHeap,
   }
 }
 

@@ -14,6 +14,7 @@ import {
   transformedNodes,
   ttfFallbacks,
   ttfUses,
+  type Node,
   type Project,
   type Source,
   type Variable,
@@ -96,12 +97,28 @@ export type Boxes = Map<string, { w: number; h: number }>
  */
 export function largestLayer(project: Project, boxes?: Boxes) {
   const { width, height, bufferRows } = project.target.display
+  /** A content-sized node's box without the preview: a label from its text, an image from its source. */
+  const guess = (n: Node) => {
+    const zoom = num(n.props.scale) || 256
+    const source =
+      n.widget === "image"
+        ? project.assets.find(a => a.id === n.props.src)
+        : project.sprites.find(s => s.id === n.props.sprite)
+    if (source) return { w: (num(source.width) * zoom) / 256, h: (num(source.height) * zoom) / 256 }
+    if (n.widget === "label") {
+      const font = String(n.style["main:default"]?.text_font ?? DEFAULT_FONT)
+      const px = Number(/(\d+)$/.exec(font)?.[1] ?? 14)
+      const lines = String(n.props.text ?? "").split("\n")
+      return { w: Math.max(...lines.map(l => l.length)) * px * 0.6, h: lines.length * px * 1.2 }
+    }
+    return { w: width, h: height }
+  }
   let best: { name: string; bytes: number } | null = null
   for (const [id, t] of transformedNodes(project)) {
     const { w, h } = t.node.layout
     const box = boxes?.get(id) ?? {
-      w: typeof w === "number" ? w : width,
-      h: typeof h === "number" ? h : height,
+      w: typeof w === "number" ? w : Math.min(width, Math.ceil(guess(t.node).w)),
+      h: typeof h === "number" ? h : Math.min(height, Math.ceil(guess(t.node).h)),
     }
     const bytes = transformLayerBytes(box.w, box.h, t, num(bufferRows))
     if (!best || bytes > best.bytes) best = { name: t.node.name, bytes }
