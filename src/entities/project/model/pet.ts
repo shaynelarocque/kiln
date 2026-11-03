@@ -548,6 +548,7 @@ export function createPetProject(): Project {
     animations: [idle, blink, spin, boop],
     assets: [],
     fonts: [],
+    sprites: [],
     sizes: [small],
   }
 }

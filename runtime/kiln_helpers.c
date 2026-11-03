@@ -206,3 +206,19 @@ const lv_font_t * kiln_tiny_ttf(const void * data, size_t size, int32_t px, size
     return LV_FONT_DEFAULT;
 #endif
 }
+
+#if LV_USE_ANIMIMG
+static void animimg_done(lv_anim_t * a)
+{
+    lv_obj_send_event((lv_obj_t *)a->var, LV_EVENT_READY, NULL);
+}
+#endif
+
+void kiln_animimg_notify_done(lv_obj_t * obj)
+{
+#if LV_USE_ANIMIMG
+    lv_animimg_set_completed_cb(obj, animimg_done);
+#else
+    LV_UNUSED(obj);
+#endif
+}

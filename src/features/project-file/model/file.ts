@@ -29,6 +29,8 @@ export function parseProject(text: string): Project {
     .slice(0, 120)
   // files from before imported fonts
   if (!Array.isArray(data.fonts)) data.fonts = []
+  // files from before sprites
+  if (!Array.isArray(data.sprites)) data.sprites = []
   // before subjects became pointers (LVGL 9.6's lv_subject_create), custom code wrote &ui_var_x
   for (const v of data.variables ?? [])
     if (v.source?.kind === "custom")

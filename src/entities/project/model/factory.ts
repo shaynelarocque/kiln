@@ -85,6 +85,7 @@ export function createEmptyProject(name = "Untitled"): Project {
     animations: [],
     assets: [],
     fonts: [],
+    sprites: [],
     sizes: [],
   }
 }
@@ -399,6 +400,7 @@ export function createSampleProject(): Project {
     animations: [intro, pulse],
     assets: [],
     fonts: [],
+    sprites: [],
     sizes: [],
   }
 }

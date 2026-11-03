@@ -16,6 +16,8 @@ export type Project = {
   animations: Animation[]
   assets: Asset[]
   fonts: FontAsset[]
+  /** frame animations: a GIF, a strip or numbered images, one LVGL image per frame */
+  sprites: Sprite[]
   /** other displays the same UI is built for, like CSS breakpoints (see atSize) */
   sizes: Size[]
 }
@@ -211,6 +213,21 @@ export type FontAsset = {
   name: string
   /** the font file, base64 */
   data: string
+}
+
+/** A frame animation: one LVGL image per frame, all the same size and format. */
+export type Sprite = {
+  id: string
+  name: string
+  width: number
+  height: number
+  format: ImageFormat
+  dither: boolean
+  /** how long each frame shows, in ms (from the GIF, or set by hand) */
+  frameMs: number
+  stride: number
+  /** each frame's source as a data: URL (to re-convert) and its LVGL pixel data, base64 */
+  frames: { png: string; data: string }[]
 }
 
 export type DisplayDriver = "st7789" | "ili9341" | "st7735" | "st7796" | "gc9a01"

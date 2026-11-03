@@ -196,7 +196,16 @@ export class Display {
 }
 
 type Kind =
-  "obj" | "subject" | "style" | "transition" | "image" | "ttf" | "tiny_ttf" | "timeline" | "series"
+  | "obj"
+  | "subject"
+  | "style"
+  | "transition"
+  | "image"
+  | "frames"
+  | "ttf"
+  | "tiny_ttf"
+  | "timeline"
+  | "series"
 
 /**
  * Executes ops on the runtime and owns what they create. A screen scene points at the
@@ -329,6 +338,15 @@ export class Scene {
         this.images.push(h)
         return this.set("image", op.id, h)
       }
+      case "frames": {
+        // a C array of image descriptor pointers, 4 bytes each in wasm32
+        const p = x.lv_malloc(op.images.length * 4)
+        new Uint32Array(this.rt.memory, p, op.images.length).set(
+          op.images.map(id => this.need("image", id)),
+        )
+        this.blocks.push(p)
+        return this.set("frames", op.id, p)
+      }
       case "ttf": {
         // TinyTTF reads glyphs from these bytes for as long as its fonts live
         const data = x.lv_malloc(op.data.length)
@@ -393,6 +411,7 @@ export class Scene {
       case "style":
       case "transition":
       case "image":
+      case "frames":
       case "tiny_ttf":
       case "timeline":
       case "series":

@@ -9,13 +9,24 @@ import {
   type Asset,
   type FontAsset,
   type ImageFormat,
+  type Phase,
+  type Sprite,
 } from "@/entities/project"
 import { importFonts } from "@/features/import-font"
-import { bytesPerPixel, importImages, reconvert } from "@/features/import-image"
+import {
+  bytesPerPixel,
+  importAnimation,
+  importImages,
+  reconvert,
+  reconvertSprite,
+} from "@/features/import-image"
+import { insertWidget } from "@/features/insert-widget"
 import { fontFamily } from "@/shared/lib/font-faces"
 import { DEFAULT_FONT, parseTtfFont, ttfFont } from "@/shared/lvgl"
 
 const isFont = (f: File) => /\.(ttf|otf|ttc)$/i.test(f.name)
+const isGif = (f: File) => f.type === "image/gif" || /\.gif$/i.test(f.name)
+const bytes = (base64: string) => Math.ceil((base64.length * 3) / 4)
 
 /** Opens the file picker for `accept` and hands over what was chosen. */
 function pickFiles(accept: string, then: (files: FileList) => unknown) {
@@ -46,6 +57,29 @@ export function useAssets() {
         n => n.props.src === a.id || Object.values(n.style).some(p => p.bg_image_src === a.id),
       ).length,
     pick: () => pickFiles("image/png,image/jpeg,image/gif,image/webp,image/svg+xml", importImages),
+    sprites: project.sprites,
+    spriteBytes: (s: Sprite) => s.frames.reduce((sum, f) => sum + bytes(f.data), 0),
+    spriteUses: (s: Sprite) =>
+      nodes.filter(n => n.widget === "sprite" && n.props.sprite === s.id).length,
+    /** the selected Sprite widget, which "Use in" points at this animation */
+    spriteTarget: selected?.widget === "sprite" ? selected : undefined,
+    pickAnimation: () => pickFiles("image/gif,image/png,image/webp,image/jpeg", importAnimation),
+    removeSprite: (id: string) => edit(d => void (d.sprites = d.sprites.filter(s => s.id !== id))),
+    setSpriteFormat: (id: string, format: ImageFormat) => reconvertSprite(id, { format }),
+    setSpriteDither: (id: string, dither: boolean) => reconvertSprite(id, { dither }),
+    setFrameMs: (id: string, ms: number, phase?: Phase) =>
+      edit(d => {
+        const s = d.sprites.find(x => x.id === id)
+        if (s) s.frameMs = Math.max(10, ms)
+      }, phase),
+    useSprite: (spriteId: string, nodeId: string) => {
+      edit(d => {
+        const n = allNodes(d).find(x => x.id === nodeId)
+        if (n) n.props.sprite = spriteId
+      })
+      editorApi.getState().set({ rightTab: "design" })
+    },
+    placeSprite: (spriteId: string) => insertWidget("sprite", { sprite: spriteId }),
     fonts: project.fonts,
     /** the selected layer, which "Use on" sets the font of */
     textTarget: selected && selected.widget !== "screen" ? selected : undefined,
@@ -79,7 +113,9 @@ export function useAssets() {
       setOver(false)
       const files = Array.from(e.dataTransfer.files)
       importFonts(files.filter(isFont))
-      importImages(files.filter(f => !isFont(f)))
+      // a GIF is an animation; each one becomes a sprite
+      for (const gif of files.filter(isGif)) importAnimation([gif])
+      importImages(files.filter(f => !isFont(f) && !isGif(f)))
     },
     remove: (id: string) => edit(d => void (d.assets = d.assets.filter(a => a.id !== id))),
     setFormat: (id: string, format: ImageFormat) => reconvert(id, { format }),

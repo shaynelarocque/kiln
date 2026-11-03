@@ -47,6 +47,9 @@ void kiln_obj_add_play_event(lv_obj_t * obj, lv_event_code_t trigger, lv_anim_ti
  */
 const lv_font_t * kiln_tiny_ttf(const void * data, size_t size, int32_t px, size_t cache, const lv_font_t * fallback);
 
+/** Sends LV_EVENT_READY to an lv_animimg when it finishes, so "Animation done" interactions fire. */
+void kiln_animimg_notify_done(lv_obj_t * obj);
+
 /** Append each new subject value to a chart series, so the chart shows its history. */
 lv_observer_t * kiln_chart_bind_series(lv_obj_t * chart, lv_chart_series_t * series, lv_subject_t * subject);
 

@@ -88,6 +88,7 @@ export function useInspector() {
     })(),
     tokens: project.tokens,
     assets: project.assets,
+    sprites: project.sprites,
     fonts: project.fonts,
     setTab: (rightTab: "design" | "bind" | "interact") => editorApi.getState().set({ rightTab }),
     setSelector: (p: string, st: string[]) =>

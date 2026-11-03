@@ -126,6 +126,16 @@ export function compile(source: Project, mode: CompileMode): Program {
     if (data?.length) ttfData.set(f.id, data)
   }
   const ttfFonts = ttfUses(project).filter(u => ttfData.has(u.id))
+  // sprites a widget plays, whose frames all decode; a widget naming anything else plays nothing
+  const spriteFrames = new Map<string, Uint8Array[]>()
+  const played = new Set<unknown>()
+  for (const screen of project.screens)
+    walk(screen, n => void (n.widget === "sprite" && played.add(n.props.sprite)))
+  for (const s of project.sprites) {
+    if (!played.has(s.id) || !(s.format in IMAGE_CF) || !s.frames.length) continue
+    const frames = s.frames.map(f => fromBase64(f.data))
+    if (frames.every(f => f?.length)) spriteFrames.set(s.id, frames as Uint8Array[])
+  }
 
   const styleArg = (prop: string, value: StyleValue): Arg | null => {
     const def = styleProp(prop)
@@ -170,6 +180,8 @@ export function compile(source: Project, mode: CompileMode): Program {
         return HEX.test(String(value)) ? { k: "color", v: String(value) } : null
       case "image":
         return project.assets.some(a => a.id === value) ? { k: "image", id: String(value) } : null
+      case "sprite":
+        return spriteFrames.has(String(value)) ? { k: "frames", id: String(value) } : null
       default:
         return int(finite(value))
     }
@@ -228,7 +240,21 @@ export function compile(source: Project, mode: CompileMode): Program {
     ops.push({ op: "create", id: node.id, fn: def.create, parent })
 
     if (parent) {
-      const { x, y, w, h } = node.layout
+      const { x, y } = node.layout
+      let { w, h } = node.layout
+      // LVGL sizes an image to its source whatever the zoom: a zoomed one gets its zoomed size,
+      // so its box (and the canvas's selection) is what you see
+      const source =
+        node.widget === "image"
+          ? project.assets.find(a => a.id === node.props.src)
+          : node.widget === "sprite" && spriteFrames.has(String(node.props.sprite))
+            ? project.sprites.find(s => s.id === node.props.sprite)
+            : undefined
+      const zoom = finite(node.props.scale) || 256
+      if (source && zoom !== 256) {
+        if (w === "content") w = Math.round((finite(source.width) * zoom) / 256)
+        if (h === "content") h = Math.round((finite(source.height) * zoom) / 256)
+      }
       const align = ALIGNS.has(node.layout.align) ? node.layout.align : "LV_ALIGN_TOP_LEFT"
       if (align !== "LV_ALIGN_TOP_LEFT")
         ops.push(call("lv_obj_align", o, c(align), coord(x), coord(y)))
@@ -254,6 +280,22 @@ export function compile(source: Project, mode: CompileMode): Program {
     for (const wc of def.calls) {
       const args = wc.args.map(a => (typeof a === "string" ? propArg(def, a, props[a]) : a))
       if (args.every(a => a !== null)) ops.push(call(wc.fn, o, ...(args as Arg[])))
+    }
+    if (node.widget === "sprite" && spriteFrames.has(String(props.sprite))) {
+      const sprite = project.sprites.find(s => s.id === props.sprite)!
+      const count = sprite.frames.length
+      const speed = Math.min(400, Math.max(10, finite(props.speed) || 100))
+      ops.push(
+        call("lv_animimg_set_src", o, { k: "frames", id: sprite.id }, int(count)),
+        call(
+          "lv_animimg_set_duration",
+          o,
+          int(Math.max(1, (count * finite(sprite.frameMs) * 100) / speed)),
+        ),
+        call("lv_animimg_set_repeat_count", o, props.once ? int(1) : c("LV_ANIM_REPEAT_INFINITE")),
+        call("kiln_animimg_notify_done", o),
+        call("lv_animimg_start", o),
+      )
     }
     if (node.widget === "chart") {
       const series: Arg = { k: "series", id: `${node.id}.series` }
@@ -340,6 +382,22 @@ export function compile(source: Project, mode: CompileMode): Program {
   }
 
   const setup: Op[] = []
+  for (const [id, frames] of spriteFrames) {
+    const s = project.sprites.find(x => x.id === id)!
+    const cf = IMAGE_CF[s.format as keyof typeof IMAGE_CF]
+    frames.forEach((data, i) =>
+      setup.push({
+        op: "image",
+        id: `${id}#${i}`,
+        cf,
+        w: finite(s.width),
+        h: finite(s.height),
+        stride: finite(s.stride),
+        data,
+      }),
+    )
+    setup.push({ op: "frames", id, images: frames.map((_, i) => `${id}#${i}`) })
+  }
   for (const id of new Set(ttfFonts.map(u => u.id)))
     setup.push({ op: "ttf", id, data: ttfData.get(id)! })
   const fallbacks = ttfFallbacks(project)

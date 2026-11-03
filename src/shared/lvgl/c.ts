@@ -84,6 +84,7 @@ export function argToC(a: Arg, names: Record<string, string>): string {
     case "font":
       return `&${a.name}`
     case "tiny_ttf":
+    case "frames":
       return name(names, a.id)
     case "anim":
       return "&a"
@@ -133,6 +134,7 @@ export function opToC(op: Op, names: Record<string, string>): string[] {
     }
     case "image":
     case "ttf":
+    case "frames":
       return []
     case "tiny_ttf": {
       const ttf = name(names, op.ttf)
@@ -145,7 +147,16 @@ export function opToC(op: Op, names: Record<string, string>): string[] {
 
 export type Declaration = {
   kind:
-    "obj" | "subject" | "style" | "transition" | "timeline" | "series" | "image" | "ttf" | "font"
+    | "obj"
+    | "subject"
+    | "style"
+    | "transition"
+    | "timeline"
+    | "series"
+    | "image"
+    | "ttf"
+    | "font"
+    | "frames"
   c: string
   name: string
 }
@@ -189,6 +200,10 @@ export function declarations(ops: Op[], names: Record<string, string>): Declarat
           "};",
         ].join("\n"),
       })
+    } else if (op.op === "frames") {
+      const n = name(names, op.id)
+      const frames = op.images.map(id => `&${name(names, id)}`).join(", ")
+      out.push({ kind: "frames", name: n, c: `const void * ${n}[] = { ${frames} };` })
     } else if (op.op === "tiny_ttf") {
       const n = name(names, op.id)
       out.push({ kind: "font", name: n, c: `const lv_font_t * ${n};` })

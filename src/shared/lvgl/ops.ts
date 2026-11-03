@@ -24,6 +24,8 @@ export type Arg =
   /** a font a `tiny_ttf` op made */
   | { k: "tiny_ttf"; id: string }
   | { k: "image"; id: string }
+  /** a `frames` op's image array, as lv_animimg_set_src takes it */
+  | { k: "frames"; id: string }
   | { k: "subject"; id: string }
   | { k: "style"; id: string }
   | { k: "transition"; id: string }
@@ -54,6 +56,8 @@ export type Op =
   | { op: "transition"; id: string; props: string[]; path: string; time: number; delay: number }
   /** A const lv_image_dsc_t. `cf` is an LV_COLOR_FORMAT_* name. */
   | { op: "image"; id: string; cf: string; w: number; h: number; stride: number; data: Uint8Array }
+  /** An array of pointers to `image` ops' descriptors: a sprite's frames. */
+  | { op: "frames"; id: string; images: string[] }
   /** A TTF/OTF file's bytes, which the fonts made from it keep reading. */
   | { op: "ttf"; id: string; data: Uint8Array }
   /**

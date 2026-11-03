@@ -332,12 +332,29 @@ function PropField({ prop, vm }: { prop: WidgetProp; vm: InspectorViewModel }) {
       )
       break
     case "image":
+    case "sprite":
       control = (
         <Select
           value={String(value ?? "")}
-          options={vm.assets.map(a => ({ value: a.id, label: a.name }))}
+          options={(prop.type === "image" ? vm.assets : vm.sprites).map(a => ({
+            value: a.id,
+            label: a.name,
+          }))}
           onChange={v => vm.setProp(prop.key, v || null)}
           placeholder='None'
+        />
+      )
+      break
+    case "scale":
+      control = (
+        <NumberInput
+          value={value === null || value === undefined ? 256 : Number(value)}
+          min={prop.min}
+          max={prop.max}
+          scale={2.56}
+          unit='%'
+          prefix=''
+          onChange={(v, phase) => vm.setProp(prop.key, v, phase)}
         />
       )
       break

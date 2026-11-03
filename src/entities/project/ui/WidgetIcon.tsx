@@ -2,6 +2,7 @@ import {
   ChartLine,
   ChevronsUpDown,
   CircleGauge,
+  Film,
   Frame,
   Gauge,
   Image,
@@ -36,6 +37,7 @@ const ICONS: Record<WidgetType, React.ComponentType<LucideProps>> = {
   roller: List,
   scale: CircleGauge,
   chart: ChartLine,
+  sprite: Film,
 }
 
 export function WidgetIcon({ type, ...props }: { type: WidgetType } & LucideProps) {

@@ -1,7 +1,8 @@
-import { ImagePlus, Minus, Type } from "lucide-react"
+import { Film, ImagePlus, Minus, Type } from "lucide-react"
+import { useEffect, useState } from "react"
 import { formatBytes } from "@/entities/board"
-import type { ImageFormat } from "@/entities/project"
-import { Button, Field, Hint, IconButton, Section, Select, Toggle } from "@/shared/ui"
+import type { ImageFormat, Sprite } from "@/entities/project"
+import { Button, Field, Hint, IconButton, NumberInput, Section, Select, Toggle } from "@/shared/ui"
 import { useAssets } from "../model/use-assets"
 import s from "./assets-panel.module.css"
 
@@ -10,6 +11,8 @@ const FORMATS = [
   { value: "RGB565A8", label: "RGB565 + alpha (3 B/px)" },
   { value: "ARGB8888", label: "ARGB8888 (4 B/px)" },
 ]
+
+const uses = (n: number) => `${n} ${n === 1 ? "use" : "uses"}`
 
 export function AssetsPanel() {
   const vm = useAssets()
@@ -37,7 +40,7 @@ export function AssetsPanel() {
           <div className={s.meta}>
             <code>{a.name}</code>
             <small>
-              {a.width}×{a.height} · {formatBytes(vm.flashBytes(a))} flash · {vm.usesOf(a)} uses
+              {a.width}×{a.height} · {formatBytes(vm.flashBytes(a))} flash · {uses(vm.usesOf(a))}
             </small>
           </div>
           <IconButton label='Delete image' onClick={() => vm.remove(a.id)}>
@@ -60,6 +63,64 @@ export function AssetsPanel() {
               <Button onClick={() => vm.useIn(a.id, vm.imageTarget!.id)}>
                 Use in {vm.imageTarget.name}
               </Button>
+            )}
+          </div>
+        </section>
+      ))}
+      <Section title='Sprites' collapsible={false}>
+        <Button icon={<Film />} onClick={vm.pickAnimation}>
+          Import animation…
+        </Button>
+        <Hint>
+          A GIF, a strip of square frames, or several numbered images. Every frame becomes an LVGL
+          image, and the export packs them into a frame array for lv_animimg. Drop GIFs here too.
+        </Hint>
+      </Section>
+      {vm.sprites.map(sp => (
+        <section key={sp.id} className={s.card}>
+          <div className={s.thumb}>
+            <SpritePreview sprite={sp} />
+          </div>
+          <div className={s.meta}>
+            <code>{sp.name}</code>
+            <small>
+              {sp.frames.length} frames · {sp.width}×{sp.height} · {formatBytes(vm.spriteBytes(sp))}{" "}
+              flash · {uses(vm.spriteUses(sp))}
+            </small>
+          </div>
+          <IconButton label='Delete sprite' onClick={() => vm.removeSprite(sp.id)}>
+            <Minus />
+          </IconButton>
+          <div className={s.controls}>
+            <Field label='Each frame'>
+              <NumberInput
+                value={sp.frameMs}
+                min={10}
+                max={5000}
+                step={10}
+                unit='ms'
+                prefix=''
+                onChange={(v, phase) => vm.setFrameMs(sp.id, v, phase)}
+              />
+            </Field>
+            <Field label='Format'>
+              <Select
+                value={sp.format}
+                options={FORMATS}
+                onChange={f => vm.setSpriteFormat(sp.id, f as ImageFormat)}
+              />
+            </Field>
+            {sp.format !== "ARGB8888" && (
+              <Field label='Bayer dither'>
+                <Toggle checked={sp.dither} onChange={d => vm.setSpriteDither(sp.id, d)} />
+              </Field>
+            )}
+            {vm.spriteTarget ? (
+              <Button onClick={() => vm.useSprite(sp.id, vm.spriteTarget!.id)}>
+                Use in {vm.spriteTarget.name}
+              </Button>
+            ) : (
+              <Button onClick={() => vm.placeSprite(sp.id)}>Add to screen</Button>
             )}
           </div>
         </section>
@@ -102,4 +163,15 @@ export function AssetsPanel() {
       })}
     </div>
   )
+}
+
+/** Plays a sprite's frames at its own frame time, like the board will. */
+function SpritePreview({ sprite }: { sprite: Sprite }) {
+  const [frame, setFrame] = useState(0)
+  const count = sprite.frames.length
+  useEffect(() => {
+    const timer = setInterval(() => setFrame(n => (n + 1) % count), Math.max(20, sprite.frameMs))
+    return () => clearInterval(timer)
+  }, [count, sprite.frameMs])
+  return <img src={sprite.frames[frame % count]?.png} alt='' />
 }

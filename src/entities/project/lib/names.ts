@@ -43,6 +43,12 @@ export function cNames(project: Project): Record<string, string> {
   for (const a of project.animations) names[a.id] = unique(`ui_anim_${slug(a.name)}`)
   for (const a of project.assets) names[a.id] = unique(`ui_img_${slug(a.name)}`)
   for (const f of project.fonts) names[f.id] = unique(`ui_ttf_${slug(f.name)}`)
+  // a sprite is its frame array, ui_spr_<name>; each frame an image, ui_spr_<name>_<i>
+  for (const s of project.sprites) {
+    const n = unique(`ui_spr_${slug(s.name)}`)
+    names[s.id] = n
+    s.frames.forEach((_, i) => (names[`${s.id}#${i}`] = unique(`${n}_${i}`)))
+  }
   for (const { id, size } of ttfUses(project))
     names[`${id}@${size}`] = unique(
       `ui_font_${slug(project.fonts.find(f => f.id === id)!.name)}_${size}`,

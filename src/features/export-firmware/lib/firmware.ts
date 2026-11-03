@@ -134,7 +134,15 @@ export function budgetFor(project: Project, board: Board | undefined, boxes?: Bo
     stringBytes: strings + project.variables.filter(v => v.type === "string").length * 128,
     fonts: usedFonts(project),
     ...ttfBudget(project),
-    imageBytes: project.assets.reduce((sum, a) => sum + Math.ceil((a.data.length * 3) / 4), 0),
+    imageBytes:
+      project.assets.reduce((sum, a) => sum + Math.ceil((a.data.length * 3) / 4), 0) +
+      // only sprites a widget plays are compiled in
+      project.sprites
+        .filter(s => nodes.some(n => n.widget === "sprite" && n.props.sprite === s.id))
+        .reduce(
+          (sum, s) => sum + s.frames.reduce((f, fr) => f + Math.ceil((fr.data.length * 3) / 4), 0),
+          0,
+        ),
     widgetTypes: new Set(nodes.map(n => n.widget)).size,
     layerBytes: layer?.bytes ?? 0,
   })
@@ -197,6 +205,9 @@ function uiFiles(project: Project): FirmwareFile[] {
       ...externs("image", "const lv_image_dsc_t"),
       ...externs("font", "const lv_font_t *"),
       // sized, so ui.c can take sizeof() for TinyTTF
+      ...program.setup.flatMap(op =>
+        op.op === "frames" ? [`extern const void * ${names[op.id]}[${op.images.length}];`] : [],
+      ),
       ...program.setup.flatMap(op =>
         op.op === "ttf" ? [`extern const uint8_t ${names[op.id]}[${op.data.length}];`] : [],
       ),

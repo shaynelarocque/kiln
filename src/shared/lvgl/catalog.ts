@@ -149,6 +149,8 @@ export const EVENTS: Option[] = [
   { value: "LV_EVENT_LONG_PRESSED", label: "Long press" },
   { value: "LV_EVENT_VALUE_CHANGED", label: "Value change" },
   { value: "LV_EVENT_SCREEN_LOADED", label: "Screen loaded" },
+  // sent by Kiln's helper when a sprite finishes: a boot animation can then open the home screen
+  { value: "LV_EVENT_READY", label: "Animation done" },
 ]
 
 export const BIND_FLAGS: Option[] = [
@@ -428,8 +430,10 @@ export type WidgetType =
   | "roller"
   | "scale"
   | "chart"
+  | "sprite"
 
-export type WidgetPropType = "text" | "lines" | "int" | "bool" | "enum" | "color" | "image"
+export type WidgetPropType =
+  "text" | "lines" | "int" | "bool" | "enum" | "color" | "image" | "sprite" | "scale"
 export type WidgetProp = {
   key: string
   label: string
@@ -533,8 +537,17 @@ export const WIDGETS: Record<WidgetType, WidgetDef> = {
     create: "lv_image_create",
     parts: ["main"],
     size: ["content", "content"],
-    props: [{ key: "src", label: "Image", type: "image", default: null }],
-    calls: [{ fn: "lv_image_set_src", args: ["src"] }],
+    props: [
+      { key: "src", label: "Image", type: "image", default: null },
+      // null leaves LVGL's default: 100%, smoothed
+      { key: "scale", label: "Zoom", type: "scale", default: null, min: 32, max: 2048 },
+      { key: "antialias", label: "Smooth zoom", type: "bool", default: null },
+    ],
+    calls: [
+      { fn: "lv_image_set_src", args: ["src"] },
+      { fn: "lv_image_set_scale", args: ["scale"] },
+      { fn: "lv_image_set_antialias", args: ["antialias"] },
+    ],
     bind: [],
   },
   arc: {
@@ -772,6 +785,27 @@ export const WIDGETS: Record<WidgetType, WidgetDef> = {
     ],
     bind: ["series"],
   },
+  sprite: {
+    type: "sprite",
+    label: "Sprite",
+    create: "lv_animimg_create",
+    parts: ["main"],
+    size: ["content", "content"],
+    // the frames, speed and loop are set by compile (they need the sprite's frame count)
+    props: [
+      { key: "sprite", label: "Animation", type: "sprite", default: null },
+      { key: "speed", label: "Speed %", type: "int", default: 100, min: 10, max: 400 },
+      { key: "once", label: "Play once", type: "bool", default: false },
+      { key: "scale", label: "Zoom", type: "scale", default: 256, min: 32, max: 2048 },
+      // off: pixel art stays crisp when zoomed
+      { key: "antialias", label: "Smooth zoom", type: "bool", default: false },
+    ],
+    calls: [
+      { fn: "lv_image_set_scale", args: ["scale"] },
+      { fn: "lv_image_set_antialias", args: ["antialias"] },
+    ],
+    bind: [],
+  },
 }
 
 /** Widgets offered in the insert menu, in order. */
@@ -791,6 +825,7 @@ export const INSERTABLE: WidgetType[] = [
   "roller",
   "scale",
   "chart",
+  "sprite",
 ]
 
 /*---------- LVGL's built-in icon glyphs (in every Montserrat font) ----------*/
