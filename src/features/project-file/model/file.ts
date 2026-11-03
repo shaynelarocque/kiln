@@ -1,5 +1,11 @@
 import { editorApi } from "@/entities/editor"
-import { createEmptyProject, projectApi, type Project } from "@/entities/project"
+import {
+  createEmptyProject,
+  createPetProject,
+  createSampleProject,
+  projectApi,
+  type Project,
+} from "@/entities/project"
 import { confirmAction, inTauri, invoke } from "@/shared/lib/tauri"
 
 const FILTERS = [{ name: "Kiln project", extensions: ["kiln"] }]
@@ -37,9 +43,17 @@ const isDirty = () => {
 
 const confirmDiscard = async () => !isDirty() || confirmAction("Discard unsaved changes?")
 
-export async function newProject() {
-  if (!(await confirmDiscard())) return
-  projectApi.getState().replace(createEmptyProject())
+/** What New can start from: a blank screen or one of the samples. */
+export const TEMPLATES = [
+  { value: "blank", label: "Blank project", create: () => createEmptyProject() },
+  { value: "thermostat", label: "Sample: round thermostat", create: createSampleProject },
+  { value: "pet", label: "Sample: breathalyzer pet", create: createPetProject },
+]
+
+export async function newProject(template = "blank") {
+  const t = TEMPLATES.find(x => x.value === template)
+  if (!t || !(await confirmDiscard())) return
+  projectApi.getState().replace(t.create())
   editorApi.getState().select([])
 }
 

@@ -12,6 +12,7 @@ export {
   newId,
 } from "./model/factory"
 export { ProjectPreview, ProjectPlayer, simulate } from "./model/preview"
+export { createPetProject } from "./model/pet"
 export { compile, safeFormat, type CompileMode } from "./lib/compile"
 export { cNames, slug } from "./lib/names"
 export { ttfFallbacks, ttfUses } from "./lib/fonts"

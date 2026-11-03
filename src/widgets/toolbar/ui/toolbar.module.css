@@ -127,3 +127,26 @@
 .bar > .group:last-child {
   gap: 6px;
 }
+.menu {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius);
+  color: var(--text-dim);
+}
+.menu:hover {
+  background: var(--bg-hover);
+  color: var(--text-strong);
+}
+.menu svg {
+  width: 16px;
+  height: 16px;
+}
+.menu select {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}

@@ -5,4 +5,5 @@ export {
   parseProject,
   saveProject,
   startAutosave,
+  TEMPLATES,
 } from "./model/file"
