@@ -54,6 +54,13 @@ const VALUE_BINDERS: Partial<Record<string, string>> = {
   dropdown: "lv_dropdown_bind_value",
 }
 
+const POINTER_EVENTS = new Set([
+  "LV_EVENT_CLICKED",
+  "LV_EVENT_PRESSED",
+  "LV_EVENT_RELEASED",
+  "LV_EVENT_LONG_PRESSED",
+])
+
 const COMPARE: Record<string, string> = {
   eq: "KILN_EQ",
   not_eq: "KILN_NOT_EQ",
@@ -284,8 +291,10 @@ export function compile(source: Project, mode: CompileMode): Program {
     if ((node.widget === "container" || node.widget === "screen") && !node.scrollable)
       ops.push(call("lv_obj_set_scrollable", o, bool(false)))
     if (node.checkable) ops.push(call("lv_obj_set_checkable", o, bool(true)))
-    if (node.clickable !== undefined)
-      ops.push(call("lv_obj_set_clickable", o, bool(node.clickable)))
+    // like an element with an onclick: a widget that reacts to the pointer takes clicks, even a label
+    const touched = node.events.some(ev => POINTER_EVENTS.has(ev.trigger))
+    if (node.clickable !== undefined || touched)
+      ops.push(call("lv_obj_set_clickable", o, bool(node.clickable ?? true)))
     if (node.checked) ops.push(call("lv_obj_set_checked", o, bool(true)))
     if (node.disabled) ops.push(call("lv_obj_set_disabled", o, bool(true)))
 

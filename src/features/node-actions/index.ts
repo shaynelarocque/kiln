@@ -7,6 +7,7 @@ export {
   distributeSelection,
   duplicateSelection,
   groupSelection,
+  navigateOnClick,
   nudge,
   paste,
   restack,

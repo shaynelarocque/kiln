@@ -5,7 +5,7 @@ import { fontFamily } from "@/shared/lib/font-faces"
 import { parseTtfFont } from "@/shared/lvgl"
 import { IconButton } from "@/shared/ui"
 import type { Handle } from "../model/interactions"
-import { useCanvas, type CanvasViewModel } from "../model/use-canvas"
+import { useCanvas, type CanvasViewModel, type Flow } from "../model/use-canvas"
 import s from "./canvas.module.css"
 
 const HANDLES: Handle[] = ["nw", "n", "ne", "e", "se", "s", "sw", "w"]
@@ -40,6 +40,7 @@ export function Canvas() {
             round={round && !screen.library}
           />
         ))}
+        {vm.showFlows && <Flows vm={vm} />}
       </div>
       <SizeBar />
       <div className={s.zoom}>
@@ -96,7 +97,7 @@ function Artboard({
         {screen.name}
       </div>
       <div
-        className={`${s.frame} ${round ? s.round : ""} ${selected ? s.frameOn : ""}`}
+        className={`${s.frame} ${round ? s.round : ""} ${selected ? s.frameOn : ""} ${vm.noodle?.target === screen.id ? s.noodleTarget : ""}`}
         onPointerDown={e => vm.onArtboardPointerDown(screen, e)}
         onPointerMove={e => vm.onArtboardPointerMove(screen, e)}
         onPointerLeave={vm.onArtboardPointerLeave}
@@ -115,7 +116,15 @@ function Artboard({
           const r = rects!.get(id)!
           return <Box key={id} rect={r} className={s.selected} />
         })}
-        {single && singleRect && (
+        {single && singleRect && vm.showFlows && (
+          <span
+            className={s.noodleHandle}
+            title='Drag onto a screen to open it on click'
+            style={{ left: singleRect.x + singleRect.w, top: singleRect.y + singleRect.h / 2 }}
+            onPointerDown={e => vm.onNoodlePointerDown(screen, single.id, e)}
+          />
+        )}
+        {single && singleRect && !vm.showFlows && (
           <>
             {HANDLES.map(h => (
               <span
@@ -209,5 +218,40 @@ function Box({
       className={className}
       style={{ left: rect.x, top: rect.y, width: rect.w, height: rect.h }}
     />
+  )
+}
+
+/** One noodle: leaves the widget rightwards and enters the screen from the side facing it. */
+function noodlePath(from: { x: number; y: number }, to: { x: number; y: number }) {
+  const ahead = to.x >= from.x
+  const reach = Math.max(40, Math.abs(to.x - from.x) / 2)
+  return `M ${from.x} ${from.y} C ${from.x + reach} ${from.y}, ${ahead ? to.x - reach : to.x + reach} ${to.y}, ${to.x} ${to.y}`
+}
+
+/** An arrowhead at `to`, sized for the screen rather than the canvas. */
+function head(from: { x: number; y: number }, to: { x: number; y: number }, zoom: number) {
+  const dir = to.x >= from.x ? 1 : -1
+  const size = 8 / zoom
+  return `${to.x},${to.y} ${to.x - dir * size},${to.y - size * 0.6} ${to.x - dir * size},${to.y + size * 0.6}`
+}
+
+/** Prototype noodles over the canvas: every navigation, plus the one being dragged out. */
+function Flows({ vm }: { vm: CanvasViewModel }) {
+  const all: (Flow & { live?: boolean })[] = [...vm.flows]
+  if (vm.noodle)
+    all.push({ id: "live", from: vm.noodle.from, to: vm.noodle.to, selected: true, live: true })
+  return (
+    <svg className={s.flows} width='1' height='1' aria-hidden>
+      {all.map(f => (
+        <g
+          key={f.id}
+          className={`${s.flow} ${f.selected ? s.flowOn : ""} ${f.live ? s.flowLive : ""}`}
+        >
+          <circle cx={f.from.x} cy={f.from.y} r={3 / vm.zoom} />
+          <path d={noodlePath(f.from, f.to)} vectorEffect='non-scaling-stroke' />
+          <polygon points={head(f.from, f.to, vm.zoom)} />
+        </g>
+      ))}
+    </svg>
   )
 }

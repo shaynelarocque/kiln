@@ -151,3 +151,48 @@
   pointer-events: auto;
   field-sizing: content;
 }
+
+/* prototype noodles, shown while the Interact tab is open */
+.flows {
+  position: absolute;
+  left: 0;
+  top: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+.flow {
+  opacity: 0.5;
+}
+.flow path {
+  fill: none;
+  stroke: var(--select);
+  stroke-width: 2;
+}
+.flow circle,
+.flow polygon {
+  fill: var(--select);
+}
+.flowOn {
+  opacity: 1;
+}
+.flowLive path {
+  stroke: var(--accent);
+}
+.flowLive circle,
+.flowLive polygon {
+  fill: var(--accent);
+}
+.noodleHandle {
+  width: calc(14px / var(--z));
+  height: calc(14px / var(--z));
+  margin: calc(-7px / var(--z)) 0 0 calc(-7px / var(--z));
+  border: calc(2px / var(--z)) solid #fff;
+  border-radius: 50%;
+  background: var(--select);
+  box-shadow: 0 0 0 calc(3px / var(--z)) rgba(115, 208, 255, 0.25);
+  pointer-events: auto;
+  cursor: crosshair;
+}
+.noodleTarget {
+  outline: calc(3px / var(--z)) solid var(--accent);
+}

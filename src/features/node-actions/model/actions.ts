@@ -9,6 +9,7 @@ import {
   locate,
   moveNode,
   projectApi,
+  newId,
   removeNodes,
   screenOf,
   uniqueName,
@@ -211,4 +212,36 @@ export function distributeSelection(axis: "x" | "y") {
         axis,
       ),
     )
+}
+
+/**
+ * Figma's prototype noodle: a click on the node opens the screen. Retargets the node's click
+ * navigation if it has one, or adds one that slides the way the screens sit on the canvas.
+ */
+export function navigateOnClick(nodeId: string, screenId: string) {
+  const p = project()
+  const from = screenOf(p, nodeId)
+  const to = p.screens.find(s => s.id === screenId)
+  if (!from || !to || from.id === to.id) return
+  updateNode(nodeId, n => {
+    const click = n.events.find(
+      e => e.trigger === "LV_EVENT_CLICKED" && e.action.type === "navigate",
+    )
+    if (click?.action.type === "navigate") click.action.screen = screenId
+    else
+      n.events.push({
+        id: newId(),
+        trigger: "LV_EVENT_CLICKED",
+        action: {
+          type: "navigate",
+          screen: screenId,
+          anim:
+            to.frame.x >= from.frame.x
+              ? "LV_SCREEN_LOAD_ANIM_MOVE_LEFT"
+              : "LV_SCREEN_LOAD_ANIM_MOVE_RIGHT",
+          duration: 300,
+          delay: 0,
+        },
+      })
+  })
 }

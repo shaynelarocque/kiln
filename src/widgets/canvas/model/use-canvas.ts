@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { editorApi, useEditorStore } from "@/entities/editor"
 import {
   edit,
@@ -9,9 +9,11 @@ import {
   projectApi,
   screenOf,
   useProjectStore,
+  walk,
   type Phase,
   type Screen,
 } from "@/entities/project"
+import { navigateOnClick } from "@/features/node-actions"
 import type { Rect } from "@/shared/lvgl"
 import {
   flexDrop,
@@ -28,6 +30,10 @@ import {
 import { usePreview } from "./use-preview"
 
 export type DragState = { screen: string; guides: Guide[]; drop: Rect | null; marquee?: Rect }
+
+type Point = { x: number; y: number }
+/** A navigation drawn as Figma's prototype noodle, in canvas coordinates. */
+export type Flow = { id: string; from: Point; to: Point; selected: boolean }
 
 const MIN_ZOOM = 0.1
 const MAX_ZOOM = 16
@@ -64,11 +70,42 @@ function drag(
 export function useCanvas() {
   const preview = usePreview()
   const project = useProjectStore(s => s.project)
-  const { zoom, pan, selection, hover, rects } = useEditorStore()
+  const { zoom, pan, selection, hover, rects, rightTab } = useEditorStore()
   const viewport = useRef<HTMLDivElement>(null)
   const [spaceDown, setSpaceDown] = useState(false)
   const [dragState, setDragState] = useState<DragState | null>(null)
   const [editing, setEditing] = useState<{ screen: string; id: string } | null>(null)
+  const [noodle, setNoodle] = useState<{ from: Point; to: Point; target: string | null } | null>(
+    null,
+  )
+  // the Interact tab is where interactions are edited, so that's when the canvas shows them
+  const showFlows = rightTab === "interact"
+
+  /** Each navigation from a widget to the screen it opens, entering it from the side it faces. */
+  const flows = useMemo(() => {
+    if (!showFlows) return []
+    const { width, height } = project.target.display
+    const out: Flow[] = []
+    for (const screen of project.screens)
+      walk(screen, n => {
+        const r = rects.get(screen.id)?.get(n.id)
+        for (const ev of n.events) {
+          const { action } = ev
+          const target =
+            action.type === "navigate" && project.screens.find(s => s.id === action.screen)
+          if (!target || !r) continue
+          const from = { x: screen.frame.x + r.x + r.w, y: screen.frame.y + r.y + r.h / 2 }
+          const x = target.frame.x >= from.x ? target.frame.x : target.frame.x + width
+          out.push({
+            id: ev.id,
+            from,
+            to: { x, y: target.frame.y + height / 2 },
+            selected: selection.includes(n.id),
+          })
+        }
+      })
+    return out
+  }, [showFlows, project, rects, selection])
 
   const setView = editorApi.getState().setView
 
@@ -409,6 +446,41 @@ export function useCanvas() {
     )
   }
 
+  /** The screen under a canvas point, its name included. */
+  const screenAt = (p: Point) => {
+    const { screens, target } = projectApi.getState().project
+    const { width, height } = target.display
+    return screens.find(
+      s =>
+        p.x >= s.frame.x &&
+        p.x <= s.frame.x + width &&
+        p.y >= s.frame.y - 24 &&
+        p.y <= s.frame.y + height,
+    )
+  }
+
+  /** Drag from a widget's noodle handle onto a screen: a click on the widget opens it. */
+  const onNoodlePointerDown = (screen: Screen, id: string, e: React.PointerEvent) => {
+    e.stopPropagation()
+    const r = rects.get(screen.id)?.get(id)
+    const el = viewport.current
+    if (!r || !el) return
+    const from = { x: screen.frame.x + r.x + r.w, y: screen.frame.y + r.y + r.h / 2 }
+    const box = el.getBoundingClientRect()
+    drag(e, (_dx, _dy, phase, ev) => {
+      const { zoom, pan } = editorApi.getState()
+      const to = {
+        x: (ev.clientX - box.left - pan.x) / zoom,
+        y: (ev.clientY - box.top - pan.y) / zoom,
+      }
+      const over = screenAt(to)
+      const target = over && over.id !== screen.id ? over.id : null
+      if (phase !== "end") return setNoodle({ from, to, target })
+      setNoodle(null)
+      if (target) navigateOnClick(id, target)
+    })
+  }
+
   return {
     project,
     preview,
@@ -431,6 +503,10 @@ export function useCanvas() {
     onArtboardPointerLeave: () => editorApi.getState().setHover(null),
     onHandlePointerDown,
     onTitlePointerDown,
+    showFlows,
+    flows,
+    noodle,
+    onNoodlePointerDown,
     editing,
     finishEditing: (text: string | null) => {
       if (editing && text !== null) edit(d => void (locate(d, editing.id)!.node.props.text = text))
