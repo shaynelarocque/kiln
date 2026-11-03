@@ -21,6 +21,8 @@ export type BudgetInput = {
   ttfSizes: number[]
   imageBytes: number
   widgetTypes: number
+  /** the biggest transform layer LVGL will allocate (see transformLayerBytes) */
+  layerBytes: number
 }
 
 export type Budget = {
@@ -36,6 +38,19 @@ const ARDUINO_FLASH = 360 * KB
 const LVGL_CORE_FLASH = 380 * KB
 /** TinyTTF and the stb_truetype rasteriser inside it: 26 KB on a real ESP32-C3 build */
 const TINY_TTF_FLASH = 26 * KB
+
+/**
+ * The ARGB8888 layer LVGL draws a rotated or scaled widget into, from its heap, for each draw.
+ * Rotated, the worst case is the whole widget and its shadow; scaled only, it's the widget's
+ * width times the rows that map back onto one refresh band of `bufferRows`. LVGL pads it by
+ * 5 px a side.
+ */
+export function transformLayerBytes(w: number, h: number, t: { rotates: boolean; minScale: number; shadow: number }, bufferRows: number) {
+  const width = w + 2 * t.shadow + 10
+  const height = h + 2 * t.shadow + 10
+  const rows = t.rotates ? height : Math.min(height, Math.ceil((bufferRows * 256) / Math.max(1, t.minScale)) + 10)
+  return width * rows * 4
+}
 
 /** A TinyTTF font's glyph cache when full: A8 bitmaps of about 0.45 px² each, plus cache bookkeeping. */
 export const ttfCacheBytes = (size: number) => TTF_GLYPH_CACHE * Math.round(0.45 * size * size + 200)
@@ -55,9 +70,9 @@ export function appPartition(platform: string, rom: number) {
 export function estimateBudget(i: BudgetInput): Budget {
   const drawBuffers = 2 * i.width * i.bufferRows * 2
   // ~200 bytes per object with its styles, observers and timelines, plus TinyTTF's glyph caches,
-  // then 50% headroom; never under 48 KB
+  // then 50% headroom, then room for the biggest transform layer; never under 48 KB
   const caches = i.ttfSizes.reduce((sum, s) => sum + ttfCacheBytes(s), 0)
-  const heap = Math.max(48 * KB, Math.ceil(((i.objects * 200 + i.styleProps * 10 + i.stringBytes + caches) * 1.5 + 16 * KB) / KB) * KB)
+  const heap = Math.max(48 * KB, Math.ceil(((i.objects * 200 + i.styleProps * 10 + i.stringBytes + caches) * 1.5 + 16 * KB + i.layerBytes) / KB) * KB)
   const fonts = i.fonts.reduce((sum, f) => sum + fontBytes(f), 0) + i.ttfBytes + (i.ttfSizes.length ? TINY_TTF_FLASH : 0)
   const ram = [
     { label: "Draw buffers", bytes: drawBuffers },

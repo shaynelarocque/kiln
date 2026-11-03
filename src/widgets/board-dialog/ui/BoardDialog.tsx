@@ -105,7 +105,10 @@ export function BoardDialog() {
           <h3>Budget (estimated)</h3>
           <Meter title='Flash' used={vm.budget.flash.used} total={vm.budget.flash.total} parts={vm.budget.flash.parts} />
           <Meter title='RAM' used={vm.budget.ram.used} total={vm.budget.ram.total} parts={vm.budget.ram.parts} />
-          <Hint>Flash is the app partition PlatformIO gives this board. LVGL's heap is set to {formatBytes(vm.budget.lvglHeap)} in the exported lv_conf.h.</Hint>
+          <Hint>
+            Flash is the app partition PlatformIO gives this board. LVGL's heap is set to {formatBytes(vm.budget.lvglHeap)} in the exported lv_conf.h
+            {vm.budget.layer && <>, with {formatBytes(vm.budget.layer.bytes)} of it for drawing “{vm.budget.layer.name}” rotated or scaled</>}.
+          </Hint>
         </section>
       </div>
     </Dialog>

@@ -56,4 +56,7 @@ export const useEditorStore = create<EditorState>()(set => ({
 
 const sameIds = (a: string[], b: string[]) => a.length === b.length && a.every((id, i) => id === b[i])
 
+/** Every laid-out box by node id, across screens (node ids are unique project-wide). */
+export const nodeBoxes = (rects: EditorState["rects"]) => new Map([...rects.values()].flatMap(m => [...m]))
+
 export const editorApi = useEditorStore

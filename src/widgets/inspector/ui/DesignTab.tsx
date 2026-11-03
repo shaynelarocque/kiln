@@ -1,4 +1,5 @@
 import { Columns3, Minus, Plus, Rows3 } from "lucide-react"
+import { formatBytes } from "@/entities/board"
 import type { Layout } from "@/entities/project"
 import { ALIGN, EASINGS, FLEX_ALIGN, FLEX_FLOW, PARTS, STATES, SYMBOLS, STYLE_PROPS, TRANSITION_PROPS, type Coord, type Easing, type WidgetProp } from "@/shared/lvgl"
 import { ColorInput, Field, Hint, IconButton, NumberInput, Section, Select, StyleProps, TextInput, Toggle } from "@/shared/ui"
@@ -30,6 +31,14 @@ export function DesignTab({ vm }: { vm: InspectorViewModel }) {
         fonts={vm.fonts}
         widget={node.widget}
       />
+      {vm.transformLayer && (
+        <div className={s.note}>
+          <Hint>
+            While it's {vm.transformLayer.rotates ? "rotated" : "scaled"}, LVGL on the board draws this into a layer of up to {formatBytes(vm.transformLayer.bytes)} from its heap
+            ({vm.transformLayer.w}×{vm.transformLayer.h} px at 4 bytes each{vm.transformLayer.rotates ? "" : ", a band at a time"}). The RAM budget makes room for the biggest one.
+          </Hint>
+        </div>
+      )}
       <ClassesSection vm={vm} />
       <TransitionSection vm={vm} />
       <BehaviorSection vm={vm} />

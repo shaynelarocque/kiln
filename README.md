@@ -46,6 +46,8 @@ What you see is what flashes.
   to the port you pick, streaming PlatformIO's log.
 - **Know if it fits.** A flash and RAM meter estimates the build against the board's real limits,
   read from PlatformIO's board definitions, counting fonts, images and TinyTTF's glyph caches.
+  LVGL draws a rotated or scaled widget through a layer on its heap, which the preview's roomy heap
+  would never show; Kiln sizes the board's heap for the biggest one and says which widget it is.
 
 | Components | Board, display and pins | Export |
 |---|---|---|

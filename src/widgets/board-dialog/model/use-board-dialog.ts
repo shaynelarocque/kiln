@@ -1,12 +1,13 @@
 import { useMemo, useState } from "react"
 import { DISPLAY_PRESETS, checkPins, findBoard, pinMap, useBoards, type DisplayPreset } from "@/entities/board"
-import { editorApi } from "@/entities/editor"
+import { editorApi, nodeBoxes, useEditorStore } from "@/entities/editor"
 import { edit, useProjectStore, type DisplayConfig, type Phase } from "@/entities/project"
 import { budgetFor, pinClaims } from "@/features/export-firmware"
 
 /** View-model for the board dialog: which board, which panel, which pins, and whether it all fits. */
 export function useBoardDialog() {
   const project = useProjectStore(s => s.project)
+  const rects = useEditorStore(s => s.rects)
   const { boards, source } = useBoards()
   const [query, setQuery] = useState("")
   const board = findBoard(boards, project.target.board)
@@ -43,7 +44,7 @@ export function useBoardDialog() {
     display,
     pins: pinMap(mcu),
     problems: checkPins(mcu, pinClaims(project)),
-    budget: budgetFor(project, board),
+    budget: budgetFor(project, board, nodeBoxes(rects)),
     close: () => editorApi.getState().set({ dialog: null }),
     selectBoard: (id: string) => edit(d => void (d.target.board = id)),
     setDisplay,

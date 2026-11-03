@@ -1,6 +1,7 @@
 import { useMemo } from "react"
-import { editorApi, useEditorStore } from "@/entities/editor"
-import { cNames, edit, findMain, findNode, findParent, instancesOf, isLibrary, useProjectStore, type Layout, type Node, type Phase } from "@/entities/project"
+import { transformLayerBytes } from "@/entities/board"
+import { editorApi, nodeBoxes, useEditorStore } from "@/entities/editor"
+import { cNames, edit, findMain, findNode, findParent, instancesOf, isLibrary, transformedNodes, useProjectStore, type Layout, type Node, type Phase } from "@/entities/project"
 import { updateNode } from "@/features/node-actions"
 import { MAIN_DEFAULT, STATES, WIDGETS } from "@/shared/lvgl"
 
@@ -12,7 +13,9 @@ export function useInspector() {
   const selection = useEditorStore(s => s.selection)
   const selector = useEditorStore(s => s.selector)
   const tab = useEditorStore(s => s.rightTab)
+  const rects = useEditorStore(s => s.rects)
   const names = useMemo(() => cNames(project), [project])
+  const transforms = useMemo(() => transformedNodes(project), [project])
 
   const node = selection.length === 1 ? findNode(project, selection[0]) : undefined
   const parent = node ? findParent(project, node.id) : undefined
@@ -41,6 +44,12 @@ export function useInspector() {
     part,
     states,
     cName: node ? names[node.id] : "",
+    /** the layer the board's LVGL draws this node into while it's rotated or scaled */
+    transformLayer: (() => {
+      const t = node && transforms.get(node.id)
+      const box = node && nodeBoxes(rects).get(node.id)
+      return t && box ? { ...box, rotates: t.rotates, bytes: transformLayerBytes(box.w, box.h, t, project.target.display.bufferRows) } : null
+    })(),
     tokens: project.tokens,
     assets: project.assets,
     fonts: project.fonts,

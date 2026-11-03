@@ -1,7 +1,7 @@
 import { Clapperboard, Cpu, Download, FilePlus, FolderOpen, Keyboard, Play, Redo2, Save, Undo2 } from "lucide-react"
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { findBoard, formatBytes, useBoards } from "@/entities/board"
-import { editorApi, useEditorStore } from "@/entities/editor"
+import { editorApi, nodeBoxes, useEditorStore } from "@/entities/editor"
 import { edit, useProjectStore } from "@/entities/project"
 import { budgetFor } from "@/features/export-firmware"
 import { useHistory } from "@/features/history"
@@ -17,7 +17,9 @@ export function Toolbar() {
   const history = useHistory()
   const { boards } = useBoards()
   const board = findBoard(boards, project.target.board)
-  const budget = budgetFor(project, board)
+  const rects = useEditorStore(s => s.rects)
+  const boxes = useMemo(() => nodeBoxes(rects), [rects])
+  const budget = budgetFor(project, board, boxes)
   const [naming, setNaming] = useState(false)
   const timelineOpen = useEditorStore(s => s.timelineOpen)
   const flash = budget.flash.used / budget.flash.total

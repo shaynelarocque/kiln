@@ -30,10 +30,11 @@ import {
   type Program,
   type WidgetDef,
 } from "@/shared/lvgl"
-import { instancesOf, resolveScreens } from "../model/components"
+import { resolveScreens } from "../model/components"
 import type { Animation, Binding, Interaction, Node, Project, StyleValue } from "../model/types"
 import { ttfFallbacks, ttfUses } from "./fonts"
 import { cNames } from "./names"
+import { trackTargets, type Targets } from "./targets"
 import { screenOf, walk } from "./tree"
 
 /** edit: per-screen preview, no events or timelines. play: everything. export: play minus demo data. */
@@ -332,23 +333,6 @@ function segmentOps(nodeId: string, prop: AnimProp, seg: Segment, first: boolean
   if (easing.bezier) ops.push(call("lv_anim_set_bezier3_param", a, ...easing.bezier.map(int)))
   ops.push(call("lv_anim_timeline_add", timeline, int(start), a))
   return ops
-}
-
-/** Node ids a track's node maps to once instances are expanded (see trackTargets). */
-type Targets = (nodeId: string) => string[]
-
-/**
- * Where an animated node ends up in the built UI: the node itself (unless it sits on the
- * Components screen, which isn't built), its copies inside instances (ids ending in /<id>),
- * and, for a main component, every instance of it, nested ones included.
- */
-function trackTargets(source: Project, resolved: Project): Targets {
-  const ids: string[] = []
-  for (const s of resolved.screens) walk(s, n => void ids.push(n.id))
-  return nodeId => {
-    const from = [nodeId, ...instancesOf(source, nodeId).map(i => i.id)]
-    return ids.filter(id => from.some(f => id === f || id.endsWith(`/${f}`)))
-  }
 }
 
 function timelineOps(project: Project, anim: Animation, targets: Targets): Op[] {

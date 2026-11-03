@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 import { findBoard, useBoards } from "@/entities/board"
-import { editorApi } from "@/entities/editor"
+import { editorApi, nodeBoxes, useEditorStore } from "@/entities/editor"
 import { slug, useProjectStore } from "@/entities/project"
 import { generateFirmware, pickFolder, pioInfo, pioPorts, pioRun, writeProject, type SerialPort } from "@/features/export-firmware"
 import { download } from "@/features/project-file"
@@ -14,7 +14,8 @@ export function useExport() {
   const project = useProjectStore(s => s.project)
   const { boards } = useBoards()
   const board = findBoard(boards, project.target.board)
-  const files = useMemo(() => generateFirmware(project, board), [project, board])
+  const rects = useEditorStore(s => s.rects)
+  const files = useMemo(() => generateFirmware(project, board, nodeBoxes(rects)), [project, board, rects])
   const [selected, setSelected] = useState("src/ui/ui.c")
   const [folder, setFolder] = useState<string | null>(() => localStorage.getItem(folderKey(project.name)))
   const [status, setStatus] = useState<string | null>(null)
