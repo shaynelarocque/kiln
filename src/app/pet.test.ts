@@ -4,7 +4,7 @@ import { tmpdir } from "node:os"
 import { dirname, join } from "node:path"
 import { describe, expect, it } from "vitest"
 import { BUNDLED_BOARDS, findBoard } from "@/entities/board"
-import { allNodes, atSize, compile, createPetProject } from "@/entities/project"
+import { allNodes, atSize, compile, createPetProject, walk } from "@/entities/project"
 import { generateFirmware } from "@/features/export-firmware"
 import { LvglRuntime, Scene } from "@/shared/lvgl"
 
@@ -51,6 +51,15 @@ describe("the breathalyzer pet", () => {
     setup.dispose()
     display.delete()
     expect(logs.filter(l => /error|assert/i.test(l))).toEqual([])
+  })
+
+  it("costs the board nothing: a size's export matches a project that never had sizes", () => {
+    const board = findBoard(BUNDLED_BOARDS, pet.target.board)
+    const bare = structuredClone(pet)
+    bare.sizes = []
+    for (const screen of bare.screens) walk(screen, n => void delete n.at)
+    const files = (p: typeof pet) => generateFirmware(p, board).map(f => [f.path, f.content])
+    expect(files(atSize(pet, null))).toEqual(files(bare))
   })
 
   it.runIf(existsSync(lvgl))("exports C that compiles at every size", () => {
