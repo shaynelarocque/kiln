@@ -8,6 +8,7 @@ export {
   NumberInput,
   Section,
   Select,
+  Splitter,
   Tabs,
   TextInput,
   Toggle,

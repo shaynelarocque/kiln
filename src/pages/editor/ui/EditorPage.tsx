@@ -1,7 +1,13 @@
 import { useEffect } from "react"
-import { editorApi, useEditorStore, type LeftTab } from "@/entities/editor"
+import {
+  editorApi,
+  PANEL_DEFAULTS,
+  useEditorStore,
+  type LeftTab,
+  type Panels,
+} from "@/entities/editor"
 import { startAutosave } from "@/features/project-file"
-import { Tabs } from "@/shared/ui"
+import { Splitter, Tabs } from "@/shared/ui"
 import { AssetsPanel } from "@/widgets/assets-panel"
 import { BoardDialog } from "@/widgets/board-dialog"
 import { Canvas } from "@/widgets/canvas"
@@ -16,6 +22,12 @@ import { Timeline } from "@/widgets/timeline"
 import { Toolbar } from "@/widgets/toolbar"
 import { useShortcuts } from "../model/use-shortcuts"
 import s from "./editor-page.module.css"
+
+const setPanels = (patch: Partial<Panels>) =>
+  editorApi.getState().set({ panels: { ...editorApi.getState().panels, ...patch } })
+
+/** The canvas keeps at least this much room when a panel grows. */
+const CANVAS_MIN = 320
 
 const LEFT_TABS: { value: LeftTab; label: string }[] = [
   { value: "layers", label: "Layers" },
@@ -32,8 +44,13 @@ export function EditorPage() {
   const playing = useEditorStore(s => s.playing)
   const dialog = useEditorStore(s => s.dialog)
   const timelineOpen = useEditorStore(s => s.timelineOpen)
+  const panels = useEditorStore(s => s.panels)
+  const widest = (other: number) => Math.max(200, window.innerWidth - other - CANVAS_MIN)
   return (
-    <div className={s.page}>
+    <div
+      className={s.page}
+      style={{ gridTemplateColumns: `${panels.left}px minmax(0, 1fr) ${panels.right}px` }}
+    >
       <Toolbar />
       <aside className={s.left}>
         <Tabs
@@ -47,10 +64,32 @@ export function EditorPage() {
           {leftTab === "styles" && <StylesPanel />}
           {leftTab === "assets" && <AssetsPanel />}
         </div>
+        <Splitter
+          label='Layers panel width'
+          edge='right'
+          value={panels.left}
+          min={200}
+          max={Math.min(560, widest(panels.right))}
+          initial={PANEL_DEFAULTS.left}
+          onChange={left => setPanels({ left })}
+        />
       </aside>
       <main className={s.center}>
         <Canvas />
-        {timelineOpen && <Timeline />}
+        {timelineOpen && (
+          <div className={s.dock} style={{ height: panels.timeline }}>
+            <Splitter
+              label='Timeline height'
+              edge='top'
+              value={panels.timeline}
+              min={140}
+              max={Math.max(140, window.innerHeight - 44 - 200)}
+              initial={PANEL_DEFAULTS.timeline}
+              onChange={timeline => setPanels({ timeline })}
+            />
+            <Timeline />
+          </div>
+        )}
         {error && (
           <div className={s.error} role='alert'>
             <strong>Preview error.</strong> {error}
@@ -60,6 +99,15 @@ export function EditorPage() {
       </main>
       <aside className={s.right}>
         <Inspector />
+        <Splitter
+          label='Inspector width'
+          edge='left'
+          value={panels.right}
+          min={240}
+          max={Math.min(560, widest(panels.left))}
+          initial={PANEL_DEFAULTS.right}
+          onChange={right => setPanels({ right })}
+        />
       </aside>
       {playing && <Player />}
       {dialog === "board" && <BoardDialog />}

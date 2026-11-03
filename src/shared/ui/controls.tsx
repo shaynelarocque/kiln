@@ -404,3 +404,85 @@ export function Dialog({
 export function Hint({ children, tone }: { children: ReactNode; tone?: "warn" | "error" | "ok" }) {
   return <p className={`${s.hint} ${tone ? s[tone] : ""}`}>{children}</p>
 }
+
+/**
+ * A drag handle on a panel's edge. `edge` is the side of the panel it sits on, so dragging away
+ * from the panel grows it. Arrow keys nudge it (Shift for bigger steps), Home and End go to the
+ * limits, and a double-click puts it back to `initial`.
+ */
+export function Splitter({
+  label,
+  edge,
+  value,
+  min,
+  max,
+  initial,
+  onChange,
+}: {
+  label: string
+  edge: "left" | "right" | "top"
+  value: number
+  min: number
+  max: number
+  initial: number
+  onChange: (value: number) => void
+}) {
+  const [dragging, setDragging] = useState(false)
+  const clamp = (v: number) => Math.round(Math.min(max, Math.max(min, v)))
+  // which way the pointer moves to grow the panel
+  const grow = edge === "right" ? 1 : -1
+  const vertical = edge !== "top"
+  return (
+    <div
+      role='separator'
+      aria-label={label}
+      aria-orientation={vertical ? "vertical" : "horizontal"}
+      aria-valuenow={value}
+      aria-valuemin={min}
+      aria-valuemax={max}
+      tabIndex={0}
+      className={s.splitter}
+      data-edge={edge}
+      data-dragging={dragging || undefined}
+      onPointerDown={e => {
+        if (e.button !== 0) return
+        e.preventDefault()
+        const el = e.currentTarget
+        const start = vertical ? e.clientX : e.clientY
+        const from = value
+        el.setPointerCapture(e.pointerId)
+        setDragging(true)
+        // the whole page shows the resize cursor and selects no text while the drag lasts
+        const { cursor, userSelect } = document.body.style
+        document.body.style.cursor = vertical ? "col-resize" : "row-resize"
+        document.body.style.userSelect = "none"
+        const move = (ev: PointerEvent) =>
+          onChange(clamp(from + grow * ((vertical ? ev.clientX : ev.clientY) - start)))
+        const up = () => {
+          el.removeEventListener("pointermove", move)
+          el.removeEventListener("pointerup", up)
+          el.removeEventListener("pointercancel", up)
+          Object.assign(document.body.style, { cursor, userSelect })
+          setDragging(false)
+        }
+        el.addEventListener("pointermove", move)
+        el.addEventListener("pointerup", up)
+        el.addEventListener("pointercancel", up)
+      }}
+      onDoubleClick={() => onChange(clamp(initial))}
+      onKeyDown={e => {
+        const step = e.shiftKey ? 48 : 8
+        const keys: Record<string, number> = vertical
+          ? { ArrowRight: grow * step, ArrowLeft: -grow * step }
+          : { ArrowDown: grow * step, ArrowUp: -grow * step }
+        if (e.key in keys) onChange(clamp(value + keys[e.key]))
+        else if (e.key === "Home") onChange(min)
+        else if (e.key === "End") onChange(max)
+        else return
+        // keep the editor's own arrow-key nudging out of it
+        e.preventDefault()
+        e.stopPropagation()
+      }}
+    />
+  )
+}

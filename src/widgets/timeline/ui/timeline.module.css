@@ -2,7 +2,7 @@
   flex: none !important;
   display: flex;
   flex-direction: column;
-  height: 236px;
+  height: 100%;
   border-top: 1px solid var(--line);
   background: var(--bg);
 }

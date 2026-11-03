@@ -383,3 +383,52 @@ textarea.text {
 .ok {
   color: var(--green);
 }
+
+/* Splitter: a 7px grab strip centred on a panel's border, lit while hovered, focused or dragged */
+.splitter {
+  position: absolute;
+  z-index: 5;
+  touch-action: none;
+  outline: none;
+}
+.splitter[aria-orientation="vertical"] {
+  top: 0;
+  bottom: 0;
+  width: 7px;
+  cursor: col-resize;
+}
+.splitter[aria-orientation="horizontal"] {
+  left: 0;
+  right: 0;
+  height: 7px;
+  cursor: row-resize;
+}
+.splitter[data-edge="right"] {
+  right: -4px;
+}
+.splitter[data-edge="left"] {
+  left: -4px;
+}
+.splitter[data-edge="top"] {
+  top: -4px;
+}
+.splitter::after {
+  content: "";
+  position: absolute;
+  inset: 0 2px;
+  background: var(--select);
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+.splitter[aria-orientation="horizontal"]::after {
+  inset: 2px 0;
+}
+.splitter:hover::after {
+  opacity: 1;
+  transition-delay: 0.2s;
+}
+.splitter:focus-visible::after,
+.splitter[data-dragging]::after {
+  opacity: 1;
+  transition-delay: 0s;
+}
