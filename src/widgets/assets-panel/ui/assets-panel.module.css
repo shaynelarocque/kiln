@@ -26,6 +26,10 @@
     repeating-conic-gradient(#2a3040 0% 25%, #1f2430 0% 50%) 0 0 / 10px 10px;
   overflow: hidden;
 }
+.thumb {
+  color: var(--text-strong);
+  font-size: 22px;
+}
 .thumb img {
   max-width: 100%;
   max-height: 100%;

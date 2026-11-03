@@ -27,6 +27,7 @@ export function DesignTab({ vm }: { vm: InspectorViewModel }) {
         onChange={vm.setStyle}
         tokens={vm.tokens}
         assets={vm.assets}
+        fonts={vm.fonts}
         widget={node.widget}
       />
       <ClassesSection vm={vm} />

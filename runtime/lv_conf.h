@@ -54,4 +54,26 @@
 #define LV_FONT_UNSCII_8 1
 #define LV_FONT_UNSCII_16 1
 
+/* Imported TTF/OTF fonts, drawn by the same TinyTTF the board runs. */
+#define LV_USE_TINY_TTF 1
+#define LV_TINY_TTF_FILE_SUPPORT 0
+
+/* stb_truetype (inside TinyTTF) takes these from libc, which wasm32 doesn't have. floor, ceil, sqrt
+ * and fabs are wasm instructions. pow, fmod, cos, acos and rect packing only appear in stb's SDF and
+ * atlas code, which TinyTTF never calls, so -O2 drops them; if that changes, the link fails on pow. */
+#define STBTT_ifloor(x) ((int)__builtin_floor(x))
+#define STBTT_iceil(x) ((int)__builtin_ceil(x))
+#define STBTT_sqrt(x) ((float)__builtin_sqrt(x))
+#define STBTT_pow(x, y) __builtin_pow(x, y)
+#define STBTT_fmod(x, y) __builtin_fmod(x, y)
+#define STBTT_cos(x) __builtin_cos(x)
+#define STBTT_acos(x) __builtin_acos(x)
+#define STBTT_fabs(x) ((float)__builtin_fabs(x))
+#define STBTT_assert(x) LV_ASSERT(x)
+#define STBTT_strlen(x) lv_strlen(x)
+#define STBTT_memcpy lv_memcpy
+#define STBTT_memset lv_memset
+#define STBRP_SORT(base, n, size, cmp) __builtin_trap()
+#define STBRP_ASSERT(x) LV_ASSERT(x)
+
 #endif /*LV_CONF_H*/

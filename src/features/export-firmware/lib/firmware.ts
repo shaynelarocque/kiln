@@ -1,7 +1,7 @@
 import helpersC from "../../../../runtime/kiln_helpers.c?raw"
 import helpersH from "../../../../runtime/kiln_helpers.h?raw"
 import { DISPLAY_DRIVERS, appPartition, estimateBudget, type Board } from "@/entities/board"
-import { allNodes, compile, type Project, type Source, type Variable } from "@/entities/project"
+import { allNodes, compile, ttfUses, type Project, type Source, type Variable } from "@/entities/project"
 import { DEFAULT_FONT, LVGL_VERSION, cColor, cComment, declarations, fontConfName, opToC, usesAnim, type Op } from "@/shared/lvgl"
 
 export type FirmwareFile = {
@@ -47,6 +47,13 @@ export function usedFonts(project: Project) {
   return [...fonts].sort()
 }
 
+/** The imported fonts' file sizes and the TinyTTF font sizes made from them. */
+function ttfBudget(project: Project) {
+  const uses = ttfUses(project)
+  const files = project.fonts.filter(f => uses.some(u => u.id === f.id))
+  return { ttfBytes: files.reduce((sum, f) => sum + Math.ceil((f.data.length * 3) / 4), 0), ttfSizes: uses.map(u => u.size) }
+}
+
 export function budgetFor(project: Project, board: Board | undefined) {
   const nodes = allNodes(project)
   const strings = nodes.reduce((sum, n) => sum + Object.values(n.props).filter(v => typeof v === "string").join("").length, 0)
@@ -60,6 +67,7 @@ export function budgetFor(project: Project, board: Board | undefined) {
     styleProps: nodes.reduce((sum, n) => sum + Object.values(n.style).reduce((s, p) => s + Object.keys(p).length, 0), 0),
     stringBytes: strings + project.variables.filter(v => v.type === "string").length * 128,
     fonts: usedFonts(project),
+    ...ttfBudget(project),
     imageBytes: project.assets.reduce((sum, a) => sum + Math.ceil((a.data.length * 3) / 4), 0),
     widgetTypes: new Set(nodes.map(n => n.widget)).size,
   })
@@ -109,6 +117,9 @@ function uiFiles(project: Project): FirmwareFile[] {
       ...externs("series", "lv_chart_series_t *"),
       ...externs("transition", "lv_style_transition_dsc_t"),
       ...externs("image", "const lv_image_dsc_t"),
+      ...externs("font", "const lv_font_t *"),
+      // sized, so ui.c can take sizeof() for TinyTTF
+      ...program.setup.flatMap(op => (op.op === "ttf" ? [`extern const uint8_t ${names[op.id]}[${op.data.length}];`] : [])),
     ],
     "",
     "/** Builds every screen and loads the first. Call once, after the display is set up. */",
@@ -123,13 +134,13 @@ function uiFiles(project: Project): FirmwareFile[] {
     "",
   ].join("\n")
 
-  const setupOps = program.setup.filter(op => op.op !== "image")
+  const setupOps = program.setup.filter(op => op.op !== "image" && op.op !== "ttf")
   const uiC = [
     head,
     '#include "ui.h"',
     '#include "kiln_helpers.h"',
     "",
-    ...setupDecls.filter(d => d.kind !== "image").map(d => d.c),
+    ...setupDecls.filter(d => d.kind !== "image" && d.kind !== "ttf").map(d => d.c),
     ...wiringDecls.map(d => d.c),
     "",
     "/* Variables, shared styles and transitions: everything screens refer to. */",
@@ -178,11 +189,13 @@ function uiFiles(project: Project): FirmwareFile[] {
   }))
 
   const images = setupDecls.filter(d => d.kind === "image")
+  const ttfs = setupDecls.filter(d => d.kind === "ttf")
   return [
     { path: "src/ui/ui.h", content: uiH, overwrite: true },
     { path: "src/ui/ui.c", content: uiC, overwrite: true },
     ...screens,
     ...(images.length ? [{ path: "src/ui/ui_images.c", overwrite: true, content: [head, '#include "ui.h"', "", ...images.map(d => d.c + "\n")].join("\n") }] : []),
+    ...(ttfs.length ? [{ path: "src/ui/ui_fonts.c", overwrite: true, content: [head, '#include "ui.h"', "", ...ttfs.map(d => d.c + "\n")].join("\n") }] : []),
     { path: "src/ui/kiln_helpers.h", content: helpersH, overwrite: true },
     { path: "src/ui/kiln_helpers.c", content: helpersC, overwrite: true },
   ]
@@ -213,6 +226,7 @@ function lvConf(project: Project, board: Board | undefined) {
     "",
     "/* Fonts this UI uses */",
     ...fonts.map(f => `#define ${fontConfName(f)} 1`),
+    ...(ttfUses(project).length ? ["/* Imported fonts, drawn at any size from the TTF in flash */", "#define LV_USE_TINY_TTF 1", "#define LV_TINY_TTF_FILE_SUPPORT 0"] : []),
     "",
     "#endif /*LV_CONF_H*/",
     "",

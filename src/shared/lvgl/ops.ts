@@ -19,7 +19,10 @@ export type Arg =
   | { k: "color"; v: string; token?: string }
   /** An int printed as 0xRRGGBB in C */
   | { k: "hex"; v: number }
+  /** a built-in font, by its C name */
   | { k: "font"; name: string }
+  /** a font a `tiny_ttf` op made */
+  | { k: "tiny_ttf"; id: string }
   | { k: "image"; id: string }
   | { k: "subject"; id: string }
   | { k: "style"; id: string }
@@ -51,6 +54,10 @@ export type Op =
   | { op: "transition"; id: string; props: string[]; path: string; time: number; delay: number }
   /** A const lv_image_dsc_t. `cf` is an LV_COLOR_FORMAT_* name. */
   | { op: "image"; id: string; cf: string; w: number; h: number; stride: number; data: Uint8Array }
+  /** A TTF/OTF file's bytes, which the fonts made from it keep reading. */
+  | { op: "ttf"; id: string; data: Uint8Array }
+  /** A TinyTTF font at one pixel size, from a `ttf` op's bytes; LVGL's default font if it can't be made. */
+  | { op: "tiny_ttf"; id: string; ttf: string; size: number; cache: number }
 
 export type ScreenProgram = { id: string; ops: Op[] }
 

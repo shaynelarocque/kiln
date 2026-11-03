@@ -23,7 +23,9 @@ What you see is what flashes.
   each instance can override its texts and point its bindings at different variables.
 - **Style like CSS.** Every LVGL style property, per part (`indicator`, `knob`…) and per state
   (`pressed`, `checked`… and combinations like `checked+pressed`). Shared styles work like classes,
-  colour tokens like CSS variables, and transitions like `transition:`.
+  colour tokens like CSS variables, and transitions like `transition:`. Import your own TTF or OTF
+  fonts and use them at any size, like `@font-face`: LVGL's TinyTTF draws them, on the canvas and on
+  the board alike, straight from the font file in flash.
 - **Animate like the web.** A timeline with keyframes you drag along a ruler: `cubic-bezier`
   easing, delays, repeat and alternate, started when a screen loads or when something is tapped.
   Opacity, scale, rotation, translation, size and colour all animate.
@@ -41,7 +43,7 @@ What you see is what flashes.
 - **Build and flash it.** In the desktop app, Export writes the project, runs `pio run`, and uploads
   to the port you pick, streaming PlatformIO's log.
 - **Know if it fits.** A flash and RAM meter estimates the build against the board's real limits,
-  read from PlatformIO's board definitions.
+  read from PlatformIO's board definitions, counting fonts, images and TinyTTF's glyph caches.
 
 | Components | Board, display and pins | Export |
 |---|---|---|
@@ -96,7 +98,7 @@ Each slice is MVVM: views in `ui/` stay dumb and read a view-model hook in `mode
 editor. To rebuild it (after adding a new LVGL constant to the TypeScript, say):
 
 ```sh
-pnpm runtime
+pnpm run runtime
 ```
 
 That fetches LVGL 9.6.0 into `runtime/lvgl` and compiles it with clang's `wasm32` target. It doesn't use

@@ -15,6 +15,7 @@ export type Project = {
   tokens: Token[]
   animations: Animation[]
   assets: Asset[]
+  fonts: FontAsset[]
 }
 
 export type Theme = { primary: string; secondary: string; dark: boolean }
@@ -185,6 +186,17 @@ export type Asset = {
   /** LVGL pixel data in `format`, base64 */
   data: string
   stride: number
+}
+
+/**
+ * An imported TTF/OTF file. Styles use it at any size as `ttf:<id>:<px>`, and TinyTTF draws it,
+ * on the canvas and on the board alike.
+ */
+export type FontAsset = {
+  id: string
+  name: string
+  /** the font file, base64 */
+  data: string
 }
 
 export type DisplayDriver = "st7789" | "ili9341" | "st7735" | "st7796" | "gc9a01"

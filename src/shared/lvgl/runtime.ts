@@ -1,4 +1,4 @@
-import { stylePropConst } from "./catalog"
+import { DEFAULT_FONT, stylePropConst } from "./catalog"
 import type { Arg, Op } from "./ops"
 
 type Fn = (...args: number[]) => number
@@ -63,7 +63,7 @@ export class LvglRuntime {
   const(name: string) {
     return this.lookup(this.consts, name, p => {
       if (!this.x.kiln_const(p, this.scratch))
-        throw new Error(`${name} isn't in the preview runtime's constant table (run pnpm runtime)`)
+        throw new Error(`${name} isn't in the preview runtime's constant table (rebuild it: pnpm run runtime)`)
       return new Int32Array(this.memory, this.scratch, 1)[0]
     })
   }
@@ -95,6 +95,16 @@ export class LvglRuntime {
   }
 
   /** Absolute box of an object on its display, after layout. */
+  /** Whether TinyTTF can open these bytes as a font (an import check: it trusts what it's given). */
+  canReadFont(data: Uint8Array) {
+    const p = this.x.lv_malloc(data.length)
+    new Uint8Array(this.memory, p, data.length).set(data)
+    const font = this.x.lv_tiny_ttf_create_data_ex(p, data.length, 16, this.const("LV_FONT_KERNING_NORMAL"), 1)
+    if (font) this.x.lv_tiny_ttf_destroy(font)
+    this.x.lv_free(p)
+    return Boolean(font)
+  }
+
   coords(obj: number): Rect {
     this.x.lv_obj_update_layout(obj)
     this.x.lv_obj_get_coords(obj, this.scratch)
@@ -176,7 +186,7 @@ export class Display {
   }
 }
 
-type Kind = "obj" | "subject" | "style" | "transition" | "image" | "timeline" | "series"
+type Kind = "obj" | "subject" | "style" | "transition" | "image" | "ttf" | "tiny_ttf" | "timeline" | "series"
 
 /**
  * Executes ops on the runtime and owns what they create. A screen scene points at the
@@ -190,6 +200,8 @@ export class Scene {
   private subjects: number[] = []
   private blocks: number[] = []
   private images: number[] = []
+  private fonts: number[] = []
+  private ttfBytes = new Map<string, number>()
   private anim = 0
 
   constructor(
@@ -288,6 +300,22 @@ export class Scene {
         this.images.push(h)
         return this.set("image", op.id, h)
       }
+      case "ttf": {
+        // TinyTTF reads glyphs from these bytes for as long as its fonts live
+        const data = x.lv_malloc(op.data.length)
+        new Uint8Array(this.rt.memory, data, op.data.length).set(op.data)
+        this.blocks.push(data)
+        this.ttfBytes.set(op.id, op.data.length)
+        return this.set("ttf", op.id, data)
+      }
+      case "tiny_ttf": {
+        const kerning = this.rt.const("LV_FONT_KERNING_NORMAL")
+        const h = x.lv_tiny_ttf_create_data_ex(this.need("ttf", op.ttf), this.ttfBytes.get(op.ttf) ?? 0, op.size, kerning, op.cache)
+        if (h) this.fonts.push(h)
+        // like the generated C: the UI stays up in the default font
+        else console.warn(`Kiln: TinyTTF couldn't read font ${op.ttf}; using ${DEFAULT_FONT}`)
+        return this.set("tiny_ttf", op.id, h || this.rt.font(DEFAULT_FONT))
+      }
     }
   }
 
@@ -300,7 +328,7 @@ export class Scene {
     if (local || shared) {
       const prop = this.rt.const(stylePropConst((local ?? shared)![1]))
       const value = args[1]
-      const kind = value.k === "color" ? "color" : ["font", "image", "transition", "str"].includes(value.k) ? "ptr" : "num"
+      const kind = value.k === "color" ? "color" : ["font", "tiny_ttf", "image", "transition", "str"].includes(value.k) ? "ptr" : "num"
       const target = this.arg(args[0])
       if (local) x[`kiln_obj_style_${kind}`](target, prop, this.arg(value), this.arg(args[2]))
       else x[`kiln_style_${kind}`](target, prop, this.arg(value))
@@ -324,6 +352,7 @@ export class Scene {
       case "style":
       case "transition":
       case "image":
+      case "tiny_ttf":
       case "timeline":
       case "series":
         return this.need(a.k, a.id)
@@ -365,10 +394,13 @@ export class Scene {
     for (const s of this.styles) x.kiln_style_free(s)
     for (const s of this.subjects) x.lv_subject_delete(s)
     for (const i of this.images) x.kiln_image_free(i)
+    // after the screens and styles that use them, before the bytes they read
+    for (const f of this.fonts) x.lv_tiny_ttf_destroy(f)
     for (const b of this.blocks) x.lv_free(b)
     if (this.anim) x.lv_free(this.anim)
     this.handles.clear()
-    this.screens = this.timelines = this.styles = this.subjects = this.images = this.blocks = []
+    this.screens = this.timelines = this.styles = this.subjects = this.images = this.fonts = this.blocks = []
+    this.ttfBytes.clear()
     this.anim = 0
   }
 }

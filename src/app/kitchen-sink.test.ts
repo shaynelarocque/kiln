@@ -6,8 +6,13 @@ import { describe, expect, it } from "vitest"
 import { BUNDLED_BOARDS, findBoard } from "@/entities/board"
 import { compile, createAnimation, createEmptyProject, createInstance, createNode, createScreen, createVariable, makeComponent, newId, type Project } from "@/entities/project"
 import { generateFirmware } from "@/features/export-firmware"
-import { convert, toBase64 } from "@/features/import-image"
-import { ANIM_PROPS, INSERTABLE, LvglRuntime, Scene } from "@/shared/lvgl"
+import { convert } from "@/features/import-image"
+import { toBase64 } from "@/shared/lib/base64"
+import { ANIM_PROPS, INSERTABLE, LvglRuntime, Scene, ttfFont } from "@/shared/lvgl"
+
+const lvgl = new URL("../../runtime/lvgl", import.meta.url).pathname
+// LVGL's checkout carries Lato (OFL): the imported-font case needs it
+const lato = join(lvgl, "examples/libs/freetype/Lato-Regular.ttf")
 
 /** One of everything: every widget, binding, action, animated property and asset kind. */
 function kitchenSink(): Project {
@@ -78,10 +83,18 @@ function kitchenSink(): Project {
   const second = createInstance(p, tile.id, "tile_2")!
   second.overrides = { [caption.id]: { props: { text: "Switch" } }, [reading.id]: { variable: on.id } }
   other.children.push(second)
+
+  // an imported font at two sizes: on a widget, and through a shared style
+  if (existsSync(lato)) {
+    const font = { id: newId(), name: "Lato", data: readFileSync(lato).toString("base64") }
+    p.fonts.push(font)
+    other.children[0].style = { "main:default": { text_font: ttfFont(font.id, 30) } }
+    const small = { id: newId(), name: "small_print", props: { text_font: ttfFont(font.id, 12) } }
+    p.styles.push(small)
+    caption.classes = [{ style: small.id, selector: "main:default" }]
+  }
   return p
 }
-
-const lvgl = new URL("../../runtime/lvgl", import.meta.url).pathname
 
 describe("a project that uses everything", () => {
   it("plays on the wasm LVGL without errors", async () => {
@@ -111,7 +124,8 @@ describe("a project that uses everything", () => {
   it.runIf(existsSync(lvgl))("exports C that compiles against LVGL 9.6", () => {
     const project = kitchenSink()
     const files = generateFirmware(project, findBoard(BUNDLED_BOARDS, project.target.board))
-    const dir = mkdtempSync(join(tmpdir(), "kiln-sink-"))
+    // KILN_SINK_DIR keeps the export somewhere known, for a real `pio run`
+    const dir = process.env.KILN_SINK_DIR ?? mkdtempSync(join(tmpdir(), "kiln-sink-"))
     for (const f of files) {
       mkdirSync(dirname(join(dir, f.path)), { recursive: true })
       writeFileSync(join(dir, f.path), f.content)
@@ -119,6 +133,11 @@ describe("a project that uses everything", () => {
     for (const f of files.filter(f => /^src\/ui\/.*\.c$/.test(f.path)))
       execFileSync("cc", ["-fsyntax-only", "-std=c11", "-Wall", "-Werror=implicit-function-declaration", "-Werror=incompatible-pointer-types", "-Werror=int-conversion", "-Werror=deprecated-declarations", "-Wno-unused-variable", "-DLV_CONF_INCLUDE_SIMPLE", `-I${dir}/include`, `-I${lvgl}`, join(dir, f.path)], { stdio: "pipe" })
     expect(files.find(f => f.path === "src/ui/ui_images.c")!.content).toContain(".cf = LV_COLOR_FORMAT_RGB565A8")
+    expect(files.find(f => f.path === "src/ui/ui_fonts.c")!.content).toMatch(/^LV_ATTRIBUTE_LARGE_CONST const uint8_t ui_ttf_lato\[\d+\] = \{$/m)
+    expect(files.find(f => f.path === "include/lv_conf.h")!.content).toContain("#define LV_USE_TINY_TTF 1")
+    const ui = files.find(f => f.path === "src/ui/ui.c")!.content
+    expect(ui).toContain("ui_font_lato_30 = lv_tiny_ttf_create_data_ex(ui_ttf_lato, sizeof(ui_ttf_lato), 30, LV_FONT_KERNING_NORMAL, 48);")
+    expect(ui).toContain("lv_style_set_text_font(&ui_style_small_print, ui_font_lato_12);")
     // the Components screen isn't exported, but both instances are, as plain widgets
     expect(files.some(f => f.path === "src/ui/ui_components.c")).toBe(false)
     const other = files.find(f => f.path === "src/ui/ui_other.c")!.content

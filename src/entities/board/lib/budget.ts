@@ -1,3 +1,5 @@
+import { TTF_GLYPH_CACHE } from "@/shared/lvgl"
+
 /**
  * Rough RAM/flash estimate for an exported UI, calibrated against a real build (the sample
  * thermostat on an ESP32-C3, Arduino core 3, LVGL 9.6: 958 KB flash, 73 KB static RAM).
@@ -13,6 +15,10 @@ export type BudgetInput = {
   styleProps: number
   stringBytes: number
   fonts: string[]
+  /** bytes of the imported TTF/OTF files the UI uses */
+  ttfBytes: number
+  /** pixel size of each TinyTTF font the UI makes */
+  ttfSizes: number[]
   imageBytes: number
   widgetTypes: number
 }
@@ -28,6 +34,11 @@ const KB = 1024
 const ARDUINO_RAM = 48 * KB
 const ARDUINO_FLASH = 360 * KB
 const LVGL_CORE_FLASH = 380 * KB
+/** TinyTTF and the stb_truetype rasteriser inside it: 26 KB on a real ESP32-C3 build */
+const TINY_TTF_FLASH = 26 * KB
+
+/** A TinyTTF font's glyph cache when full: A8 bitmaps of about 0.45 px² each, plus cache bookkeeping. */
+export const ttfCacheBytes = (size: number) => TTF_GLYPH_CACHE * Math.round(0.45 * size * size + 200)
 
 /** Montserrat at 4 bpp is roughly 45 bytes per pixel of size squared (ASCII plus symbols). */
 export const fontBytes = (font: string) => {
@@ -43,9 +54,11 @@ export function appPartition(platform: string, rom: number) {
 
 export function estimateBudget(i: BudgetInput): Budget {
   const drawBuffers = 2 * i.width * i.bufferRows * 2
-  // ~200 bytes per object with its styles, observers and timelines, then 50% headroom; never under 48 KB
-  const heap = Math.max(48 * KB, Math.ceil(((i.objects * 200 + i.styleProps * 10 + i.stringBytes) * 1.5 + 16 * KB) / KB) * KB)
-  const fonts = i.fonts.reduce((sum, f) => sum + fontBytes(f), 0)
+  // ~200 bytes per object with its styles, observers and timelines, plus TinyTTF's glyph caches,
+  // then 50% headroom; never under 48 KB
+  const caches = i.ttfSizes.reduce((sum, s) => sum + ttfCacheBytes(s), 0)
+  const heap = Math.max(48 * KB, Math.ceil(((i.objects * 200 + i.styleProps * 10 + i.stringBytes + caches) * 1.5 + 16 * KB) / KB) * KB)
+  const fonts = i.fonts.reduce((sum, f) => sum + fontBytes(f), 0) + i.ttfBytes + (i.ttfSizes.length ? TINY_TTF_FLASH : 0)
   const ram = [
     { label: "Draw buffers", bytes: drawBuffers },
     { label: "LVGL heap", bytes: heap },

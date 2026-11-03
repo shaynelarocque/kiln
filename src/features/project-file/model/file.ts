@@ -14,6 +14,8 @@ export function parseProject(text: string): Project {
   if (data?.kiln !== 1 || !Array.isArray(data.screens) || !data.screens.length) throw new Error("Not a Kiln project file")
   if (typeof data.target?.board !== "string" || !/^[\w.-]+$/.test(data.target.board)) throw new Error("The file names an invalid board")
   data.name = String(data.name ?? "Untitled").replace(/[\x00-\x1f\x7f]/g, " ").slice(0, 120)
+  // files from before imported fonts
+  if (!Array.isArray(data.fonts)) data.fonts = []
   // before subjects became pointers (LVGL 9.6's lv_subject_create), custom code wrote &ui_var_x
   for (const v of data.variables ?? [])
     if (v.source?.kind === "custom") v.source.expr = String(v.source.expr).replace(/&\s*(ui_var_\w+)/g, "$1")

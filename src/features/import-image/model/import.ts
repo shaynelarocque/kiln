@@ -1,6 +1,7 @@
 import { editorApi } from "@/entities/editor"
 import { edit, newId, projectApi, slug, type Asset, type ImageFormat } from "@/entities/project"
-import { convert, hasAlpha, toBase64 } from "../lib/convert"
+import { toBase64 } from "@/shared/lib/base64"
+import { convert, hasAlpha } from "../lib/convert"
 
 /** Decodes an image (file or data: URL) to RGBA, scaled down to fit `max` pixels on its longer side. */
 async function decode(source: Blob | string, max: number) {

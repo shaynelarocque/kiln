@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
-import { convert, hasAlpha, toBase64 } from "./convert"
+import { toBase64 } from "@/shared/lib/base64"
+import { convert, hasAlpha } from "./convert"
 
 const px = (...rgba: number[]) => new Uint8Array(rgba)
 

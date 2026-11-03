@@ -29,3 +29,13 @@
   width: 22px;
   height: 22px;
 }
+.font {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 72px;
+  gap: 4px;
+  min-width: 0;
+}
+.font > :only-child {
+  grid-column: 1 / -1;
+}

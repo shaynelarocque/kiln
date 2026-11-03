@@ -43,6 +43,7 @@ export function useInspector() {
     cName: node ? names[node.id] : "",
     tokens: project.tokens,
     assets: project.assets,
+    fonts: project.fonts,
     setTab: (rightTab: "design" | "bind" | "interact") => editorApi.getState().set({ rightTab }),
     setSelector: (p: string, st: string[]) => editorApi.getState().set({ selector: selectorFor(p, st) }),
     resetSelector: () => editorApi.getState().set({ selector: MAIN_DEFAULT }),

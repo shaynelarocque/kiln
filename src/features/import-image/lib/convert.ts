@@ -44,8 +44,3 @@ export function convert(rgba: Uint8Array | Uint8ClampedArray, w: number, h: numb
 
 export const hasAlpha = (rgba: Uint8Array | Uint8ClampedArray) => rgba.some((v, i) => i % 4 === 3 && v < 255)
 
-export function toBase64(bytes: Uint8Array) {
-  let s = ""
-  for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode(...bytes.subarray(i, i + 0x8000))
-  return btoa(s)
-}

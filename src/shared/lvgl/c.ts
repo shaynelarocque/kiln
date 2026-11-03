@@ -82,6 +82,8 @@ export function argToC(a: Arg, names: Record<string, string>): string {
       return `0x${a.v.toString(16).toUpperCase().padStart(6, "0")}`
     case "font":
       return `&${a.name}`
+    case "tiny_ttf":
+      return name(names, a.id)
     case "anim":
       return "&a"
     case "fn":
@@ -123,11 +125,24 @@ export function opToC(op: Op, names: Record<string, string>): string[] {
       return [`lv_style_transition_dsc_init(&${n}, ${n}_props, ${op.path}, ${op.time}, ${op.delay}, NULL);`]
     }
     case "image":
+    case "ttf":
       return []
+    case "tiny_ttf": {
+      const n = name(names, op.id)
+      const ttf = name(names, op.ttf)
+      return [
+        `${n} = lv_tiny_ttf_create_data_ex(${ttf}, sizeof(${ttf}), ${op.size}, LV_FONT_KERNING_NORMAL, ${op.cache});`,
+        `if(${n} == NULL) ${n} = LV_FONT_DEFAULT; /* not enough heap, or not a font TinyTTF reads */`,
+      ]
+    }
   }
 }
 
-export type Declaration = { kind: "obj" | "subject" | "style" | "transition" | "timeline" | "series" | "image"; c: string; name: string }
+export type Declaration = {
+  kind: "obj" | "subject" | "style" | "transition" | "timeline" | "series" | "image" | "ttf" | "font"
+  c: string
+  name: string
+}
 
 /** Globals the ops need, in the order they appear. Images get their pixel data inline. */
 export function declarations(ops: Op[], names: Record<string, string>): Declaration[] {
@@ -157,18 +172,28 @@ export function declarations(ops: Op[], names: Record<string, string>): Declarat
     } else if (op.op === "image") {
       const n = name(names, op.id)
       out.push({ kind: "image", name: n, c: imageToC(op, n) })
+    } else if (op.op === "ttf") {
+      const n = name(names, op.id)
+      out.push({ kind: "ttf", name: n, c: [`LV_ATTRIBUTE_LARGE_CONST const uint8_t ${n}[${op.data.length}] = {`, ...hexRows(op.data), "};"].join("\n") })
+    } else if (op.op === "tiny_ttf") {
+      const n = name(names, op.id)
+      out.push({ kind: "font", name: n, c: `const lv_font_t * ${n};` })
     }
   }
   return out
 }
 
-function imageToC(op: Extract<Op, { op: "image" }>, n: string) {
+function hexRows(data: Uint8Array) {
   const rows: string[] = []
-  for (let i = 0; i < op.data.length; i += 24)
-    rows.push("    " + Array.from(op.data.subarray(i, i + 24), b => `0x${b.toString(16).padStart(2, "0")}`).join(", ") + ",")
+  for (let i = 0; i < data.length; i += 24)
+    rows.push("    " + Array.from(data.subarray(i, i + 24), b => `0x${b.toString(16).padStart(2, "0")}`).join(", ") + ",")
+  return rows
+}
+
+function imageToC(op: Extract<Op, { op: "image" }>, n: string) {
   return [
     `static const LV_ATTRIBUTE_MEM_ALIGN uint8_t ${n}_map[] = {`,
-    ...rows,
+    ...hexRows(op.data),
     "};",
     "",
     `const lv_image_dsc_t ${n} = {`,

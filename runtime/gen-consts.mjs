@@ -1,6 +1,6 @@
 // Writes consts.inc: every LVGL constant kiln_const() can resolve at runtime.
 // That's all style props, plus any "LV_..." or "KILN_..." string literal the TS sources mention.
-// Rebuild the runtime (pnpm runtime) after naming a new constant in TS; runtime.test.ts catches a stale build.
+// Rebuild the runtime (pnpm run runtime) after naming a new constant in TS; runtime.test.ts catches a stale build.
 import { readdirSync, readFileSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 
@@ -22,9 +22,9 @@ const walk = dir => {
 }
 walk(join(root, "src"))
 
-// Config switches, fonts and symbol strings aren't integer constants.
+// Config switches, fonts and symbol strings aren't integer constants (font kerning modes are).
 const list = [...names]
-  .filter(n => !/^LV_(USE|FONT|SYMBOL|CONF)_/.test(n) && n !== "LV_COLOR_FORMAT_DEFAULT")
+  .filter(n => !/^LV_(USE|SYMBOL|CONF)_|^LV_FONT_(?!KERNING_)/.test(n) && n !== "LV_COLOR_FORMAT_DEFAULT")
   .sort()
 writeFileSync(join(import.meta.dirname, "consts.inc"), list.map(n => `K(${n})`).join("\n") + "\n")
 console.log(`consts.inc: ${list.length} constants`)

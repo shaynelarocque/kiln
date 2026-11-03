@@ -84,6 +84,7 @@ export function createEmptyProject(name = "Untitled"): Project {
     tokens: [],
     animations: [],
     assets: [],
+    fonts: [],
   }
 }
 
@@ -252,5 +253,6 @@ export function createSampleProject(): Project {
     tokens: [accent, muted],
     animations: [intro, pulse],
     assets: [],
+    fonts: [],
   }
 }

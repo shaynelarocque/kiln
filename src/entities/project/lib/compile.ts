@@ -9,6 +9,7 @@ import {
   FONTS,
   SCREEN_LOAD_ANIM,
   TRANSITION_PROPS,
+  TTF_GLYPH_CACHE,
   WIDGETS,
   bool,
   c,
@@ -31,6 +32,7 @@ import {
 } from "@/shared/lvgl"
 import { resolveScreens } from "../model/components"
 import type { Animation, Binding, Interaction, Node, Project, StyleValue } from "../model/types"
+import { ttfUses } from "./fonts"
 import { cNames } from "./names"
 import { findNode, screenOf, walk } from "./tree"
 
@@ -89,6 +91,13 @@ export function compile(source: Project, mode: CompileMode): Program {
   // Instances expand into plain widgets; the Components screen is only built for the canvas.
   const project = { ...source, screens: resolveScreens(source, mode === "edit") }
   const names = cNames(project)
+  // imported fonts whose bytes decode; styles naming any other ttf: value keep the default font
+  const ttfData = new Map<string, Uint8Array>()
+  for (const f of project.fonts) {
+    const data = fromBase64(f.data)
+    if (data?.length) ttfData.set(f.id, data)
+  }
+  const ttfFonts = ttfUses(project).filter(u => ttfData.has(u.id))
 
   const styleArg = (prop: string, value: StyleValue): Arg | null => {
     const def = styleProp(prop)
@@ -100,8 +109,11 @@ export function compile(source: Project, mode: CompileMode): Program {
         const token = project.tokens.find(t => t.id === v.slice(1))
         return token && HEX.test(token.value) ? { k: "color", v: token.value, token: names[token.id] } : null
       }
-      case "font":
-        return FONT_NAMES.has(String(value)) ? { k: "font", name: String(value) } : null
+      case "font": {
+        if (FONT_NAMES.has(String(value))) return { k: "font", name: String(value) }
+        const f = ttfFonts.find(u => value === `ttf:${u.id}:${u.size}`)
+        return f ? { k: "tiny_ttf", id: `${f.id}@${f.size}` } : null
+      }
       case "enum":
         return known(def.options, value) ? c(String(value)) : null
       case "bool":
@@ -250,6 +262,8 @@ export function compile(source: Project, mode: CompileMode): Program {
   }
 
   const setup: Op[] = []
+  for (const id of new Set(ttfFonts.map(u => u.id))) setup.push({ op: "ttf", id, data: ttfData.get(id)! })
+  for (const u of ttfFonts) setup.push({ op: "tiny_ttf", id: `${u.id}@${u.size}`, ttf: u.id, size: u.size, cache: TTF_GLYPH_CACHE })
   for (const a of project.assets) {
     const data = a.format in IMAGE_CF ? fromBase64(a.data) : null
     if (data) setup.push({ op: "image", id: a.id, cf: IMAGE_CF[a.format], w: finite(a.width), h: finite(a.height), stride: finite(a.stride), data })

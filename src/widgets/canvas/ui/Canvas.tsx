@@ -1,5 +1,7 @@
 import { Maximize, Minus, Plus } from "lucide-react"
 import { findNode, type Screen } from "@/entities/project"
+import { fontFamily } from "@/shared/lib/font-faces"
+import { parseTtfFont } from "@/shared/lvgl"
 import { IconButton } from "@/shared/ui"
 import type { Handle } from "../model/interactions"
 import { useCanvas, type CanvasViewModel } from "../model/use-canvas"
@@ -100,12 +102,14 @@ function TextEditor({ vm, rect }: { vm: CanvasViewModel; rect: { x: number; y: n
   const node = findNode(vm.project, vm.editing!.id)!
   const font = String(node.style["main:default"]?.text_font ?? "lv_font_montserrat_14")
   const size = Number(/(\d+)$/.exec(font)?.[1] ?? 14)
+  const ttf = parseTtfFont(font)
+  const file = ttf && vm.project.fonts.find(f => f.id === ttf.id)
   return (
     <textarea
       className={s.textEdit}
       autoFocus
       defaultValue={String(node.props.text)}
-      style={{ left: rect.x - 2, top: rect.y - 2, minWidth: rect.w + 24, minHeight: rect.h + 4, fontSize: size }}
+      style={{ left: rect.x - 2, top: rect.y - 2, minWidth: rect.w + 24, minHeight: rect.h + 4, fontSize: size, fontFamily: file ? `${fontFamily(file.id, file.data)}, Montserrat` : undefined }}
       onFocus={e => e.target.select()}
       onBlur={e => vm.finishEditing(e.target.value)}
       onKeyDown={e => {

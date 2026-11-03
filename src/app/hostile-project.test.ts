@@ -13,6 +13,10 @@ describe("exporting a hostile project", () => {
     p.screens[0].style["main:default"].text_align = "LV_TEXT_ALIGN_CENTER); evil(); //"
     p.screens[0].style["main:default"]["bg_color); evil(); //"] = 1
     p.target.display.pins.sck = "6; evil()" as unknown as number
+    // imported fonts: a value or an id that tries to break out of the ttf:<id>:<px> form
+    p.fonts.push({ id: "f1", name: "font", data: btoa("\0\x01\0\0") }, { id: "f2); evil(); //", name: "font", data: btoa("\0\x01\0\0") })
+    p.screens[0].style["main:default"].text_font = "ttf:f1:16); evil(); //"
+    p.screens[0].children[0].style["main:default"] = { text_font: "ttf:f2); evil(); //:16" }
     const files = generateFirmware(p, findBoard(BUNDLED_BOARDS, p.target.board))
     // injected text may survive inside a comment, harmlessly, but never as code or config
     const code = files

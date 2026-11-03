@@ -76,7 +76,7 @@ export function StylesPanel() {
               </IconButton>
             </header>
             {vm.open === style.id && (
-              <StyleProps props={style.props} onChange={(name, value, phase) => vm.setStyleProp(style.id, name, value, phase)} tokens={project.tokens} assets={project.assets} />
+              <StyleProps props={style.props} onChange={(name, value, phase) => vm.setStyleProp(style.id, name, value, phase)} tokens={project.tokens} assets={project.assets} fonts={project.fonts} />
             )}
           </div>
         ))}

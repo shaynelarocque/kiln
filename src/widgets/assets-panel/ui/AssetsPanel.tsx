@@ -1,4 +1,4 @@
-import { ImagePlus, Minus } from "lucide-react"
+import { ImagePlus, Minus, Type } from "lucide-react"
 import { formatBytes } from "@/entities/board"
 import type { ImageFormat } from "@/entities/project"
 import { Button, Field, Hint, IconButton, Section, Select, Toggle } from "@/shared/ui"
@@ -48,6 +48,36 @@ export function AssetsPanel() {
           </div>
         </section>
       ))}
+      <Section title='Fonts' collapsible={false}>
+        <Button icon={<Type />} onClick={vm.pickFonts}>
+          Import fonts…
+        </Button>
+        <Hint>TTF or OTF, also by dropping them here. LVGL's TinyTTF draws them at any size, on the canvas and on the board alike; each size in use keeps a small glyph cache in RAM.</Hint>
+      </Section>
+      {vm.fonts.map(f => {
+        const sizes = vm.fontSizes(f)
+        return (
+          <section key={f.id} className={s.card}>
+            <div className={s.thumb} style={{ fontFamily: vm.fontFamily(f) }} aria-hidden>
+              Aa
+            </div>
+            <div className={s.meta}>
+              <code>{f.name}</code>
+              <small>
+                {formatBytes(vm.fontBytes(f))} flash · {sizes.length ? `used at ${sizes.join(", ")} px` : "not used yet"}
+              </small>
+            </div>
+            <IconButton label='Delete font' onClick={() => vm.removeFont(f.id)}>
+              <Minus />
+            </IconButton>
+            {vm.textTarget && (
+              <div className={s.controls}>
+                <Button onClick={() => vm.useFont(f.id, vm.textTarget!.id)}>Use on {vm.textTarget.name}</Button>
+              </div>
+            )}
+          </section>
+        )
+      })}
     </div>
   )
 }

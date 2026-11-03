@@ -171,6 +171,20 @@ export const DEFAULT_FONT = "lv_font_montserrat_14"
 /** lv_font_montserrat_20 → LV_FONT_MONTSERRAT_20, the lv_conf.h switch that compiles it in. */
 export const fontConfName = (font: string) => font.replace(/^lv_font_/, "LV_FONT_").toUpperCase()
 
+/** Pixel sizes an imported font can be used at (TinyTTF draws any size; LVGL asserts on 0). */
+export const TTF_SIZES = { min: 6, max: 160 }
+/** Glyphs TinyTTF keeps drawn per font size: a UI's digits and labels, without filling a C3's heap. */
+export const TTF_GLYPH_CACHE = 48
+
+/** How a style names an imported font at one size; built-in fonts go by their C names. */
+export const ttfFont = (id: string, size: number) => `ttf:${id}:${size}`
+
+/** The font id and pixel size in a `ttf:` style value, or null for anything else. */
+export function parseTtfFont(value: unknown) {
+  const m = typeof value === "string" ? /^ttf:(\w+):(\d+)$/.exec(value) : null
+  return m ? { id: m[1], size: Number(m[2]) } : null
+}
+
 /*---------- style props ----------*/
 
 export type StyleType =

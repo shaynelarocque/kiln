@@ -1,9 +1,10 @@
 import { Minus, Plus } from "lucide-react"
-import { DEFAULT_FONT, FONTS, STYLE_GROUPS, STYLE_PROPS, type StyleGroup, type StyleProp, type WidgetType } from "@/shared/lvgl"
+import { DEFAULT_FONT, FONT_SIZES, STYLE_GROUPS, STYLE_PROPS, TTF_SIZES, parseTtfFont, ttfFont, type StyleGroup, type StyleProp, type WidgetType } from "@/shared/lvgl"
 import { ColorInput, Field, IconButton, NumberInput, Section, Select, Toggle, type Phase, type Token } from "./controls"
 import s from "./style-props.module.css"
 
 type Value = string | number | boolean
+type Named = { id: string; name: string }
 
 /** Which groups make sense for a widget; the rest stay out of the way. */
 const RELEVANT: Partial<Record<StyleGroup, WidgetType[]>> = {
@@ -42,18 +43,46 @@ export function defaultFor(prop: StyleProp, assets: { id: string }[] = []): Valu
   }
 }
 
+const nearestSize = (size: number) => FONT_SIZES.reduce((a, b) => (Math.abs(b - size) < Math.abs(a - size) ? b : a))
+
+/** Montserrat at its built-in sizes, the Unscii pixel fonts, or an imported font at any size. */
+function FontInput({ value, onChange, fonts }: { value: string; onChange: (v: Value, phase?: Phase) => void; fonts: Named[] }) {
+  const ttf = parseTtfFont(value)
+  const size = ttf?.size ?? Number(/(\d+)$/.exec(value)?.[1] ?? 14)
+  const family = ttf ? ttf.id : value.startsWith("lv_font_unscii") ? value : "montserrat"
+  const families = [
+    { value: "montserrat", label: "Montserrat" },
+    { value: "lv_font_unscii_8", label: "Unscii 8 (pixel)" },
+    { value: "lv_font_unscii_16", label: "Unscii 16 (pixel)" },
+    ...fonts.map(f => ({ value: f.id, label: f.name })),
+    ...(ttf && !fonts.some(f => f.id === ttf.id) ? [{ value: ttf.id, label: "Missing font" }] : []),
+  ]
+  const pick = (f: string) =>
+    onChange(f === "montserrat" ? `lv_font_montserrat_${nearestSize(size)}` : f.startsWith("lv_font_") ? f : ttfFont(f, Math.min(TTF_SIZES.max, Math.max(TTF_SIZES.min, size))))
+  return (
+    <span className={s.font}>
+      <Select value={family} options={families} onChange={pick} />
+      {family === "montserrat" && <Select value={String(size)} options={FONT_SIZES.map(n => ({ value: String(n), label: `${n} px` }))} onChange={n => onChange(`lv_font_montserrat_${n}`)} />}
+      {ttf && <NumberInput value={size} min={TTF_SIZES.min} max={TTF_SIZES.max} unit='px' prefix='' onChange={(n, phase) => onChange(ttfFont(ttf.id, n), phase)} />}
+    </span>
+  )
+}
+
 export function StyleValueInput({
   prop,
   value,
   onChange,
   tokens,
   assets = [],
+  fonts = [],
 }: {
   prop: StyleProp
   value: Value
   onChange: (v: Value, phase?: Phase) => void
   tokens: Token[]
-  assets?: { id: string; name: string }[]
+  assets?: Named[]
+  /** imported fonts */
+  fonts?: Named[]
 }) {
   switch (prop.type) {
     case "color":
@@ -61,7 +90,7 @@ export function StyleValueInput({
     case "enum":
       return <Select value={String(value)} options={prop.options!} onChange={onChange} />
     case "font":
-      return <Select value={String(value)} options={FONTS} onChange={onChange} />
+      return <FontInput value={String(value)} onChange={onChange} fonts={fonts} />
     case "bool":
       return <Toggle checked={Boolean(value)} onChange={onChange} />
     case "image":
@@ -79,13 +108,15 @@ export function StyleProps({
   onChange,
   tokens,
   assets,
+  fonts,
   widget,
 }: {
   props: Record<string, Value>
   /** undefined removes the prop */
   onChange: (name: string, value: Value | undefined, phase?: Phase) => void
   tokens: Token[]
-  assets?: { id: string; name: string }[]
+  assets?: Named[]
+  fonts?: Named[]
   widget?: WidgetType
 }) {
   const groups = STYLE_GROUPS.filter(g => !widget || !RELEVANT[g.value] || RELEVANT[g.value]!.includes(widget))
@@ -127,8 +158,8 @@ export function StyleProps({
           >
             {set.length > 0 &&
               set.map(prop => (
-                <Field key={prop.name} label={prop.label}>
-                  <StyleValueInput prop={prop} value={props[prop.name]} onChange={(v, phase) => onChange(prop.name, v, phase)} tokens={tokens} assets={assets} />
+                <Field key={prop.name} label={prop.label} wide={prop.type === "font"}>
+                  <StyleValueInput prop={prop} value={props[prop.name]} onChange={(v, phase) => onChange(prop.name, v, phase)} tokens={tokens} assets={assets} fonts={fonts} />
                   <IconButton label={`Remove ${prop.label.toLowerCase()}`} className={s.remove} onClick={() => onChange(prop.name, undefined)}>
                     <Minus />
                   </IconButton>
