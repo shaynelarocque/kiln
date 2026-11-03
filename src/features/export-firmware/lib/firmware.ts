@@ -1,7 +1,7 @@
 import helpersC from "../../../../runtime/kiln_helpers.c?raw"
 import helpersH from "../../../../runtime/kiln_helpers.h?raw"
 import { DISPLAY_DRIVERS, appPartition, estimateBudget, type Board } from "@/entities/board"
-import { allNodes, compile, ttfUses, type Project, type Source, type Variable } from "@/entities/project"
+import { allNodes, compile, resolveScreens, ttfFallbacks, ttfUses, type Project, type Source, type Variable } from "@/entities/project"
 import { DEFAULT_FONT, LVGL_VERSION, cColor, cComment, declarations, fontConfName, opToC, usesAnim, type Op } from "@/shared/lvgl"
 
 export type FirmwareFile = {
@@ -38,12 +38,14 @@ function statements(ops: Op[], names: Record<string, string>) {
   return out
 }
 
-/** Every font the UI uses, plus the default the theme needs. */
+/** Every built-in font the UI uses, plus the default the theme needs and the imported fonts' fallbacks. */
 export function usedFonts(project: Project) {
   const fonts = new Set([DEFAULT_FONT])
   const add = (v: unknown) => typeof v === "string" && v.startsWith("lv_font_") && fonts.add(v)
   for (const n of allNodes(project)) for (const props of Object.values(n.style)) add(props.text_font)
   for (const s of project.styles) add(s.props.text_font)
+  // worked out on the screens as the export builds them, like compile does
+  for (const f of ttfFallbacks({ ...project, screens: resolveScreens(project, false) }).values()) fonts.add(f)
   return [...fonts].sort()
 }
 

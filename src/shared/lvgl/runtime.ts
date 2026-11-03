@@ -309,12 +309,12 @@ export class Scene {
         return this.set("ttf", op.id, data)
       }
       case "tiny_ttf": {
-        const kerning = this.rt.const("LV_FONT_KERNING_NORMAL")
-        const h = x.lv_tiny_ttf_create_data_ex(this.need("ttf", op.ttf), this.ttfBytes.get(op.ttf) ?? 0, op.size, kerning, op.cache)
-        if (h) this.fonts.push(h)
-        // like the generated C: the UI stays up in the default font
-        else console.warn(`Kiln: TinyTTF couldn't read font ${op.ttf}; using ${DEFAULT_FONT}`)
-        return this.set("tiny_ttf", op.id, h || this.rt.font(DEFAULT_FONT))
+        const fallback = op.fallback ? this.rt.font(op.fallback) : 0
+        const h = x.kiln_tiny_ttf(this.need("ttf", op.ttf), this.ttfBytes.get(op.ttf) ?? 0, op.size, op.cache, fallback)
+        // the helper hands back LVGL's default font when TinyTTF can't: the UI stays up in it
+        if (h === this.rt.font(DEFAULT_FONT)) console.warn(`Kiln: TinyTTF couldn't read font ${op.ttf}; using ${DEFAULT_FONT}`)
+        else this.fonts.push(h)
+        return this.set("tiny_ttf", op.id, h)
       }
     }
   }

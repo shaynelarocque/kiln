@@ -16,7 +16,7 @@ Each flag was set in a review against the code and the checks, not from memory. 
 | G9 | **LVGL export**: clean LVGL 9.6 C plus a PlatformIO project for ESP32-C3 that compiles; never overwrites the user's code | ✅ | `features/export-firmware`; clang checks fail on deprecated API; `pio run` on esp32-c3-devkitm-1: sample and kitchen sink both build with no warnings from generated code |
 | G10 | **Build and flash from the app**: run `pio run` / upload with streamed logs | 🟡 | `src-tauri/src/pio.rs`, `widgets/export-dialog`. The build path is tested end to end: `builds_an_exported_project` runs the real `pio_run` command on an export and checks the streamed log ends in SUCCESS. Upload is the same command with `-t upload` and hasn't met a board yet |
 | G11 | **Images**: import PNG/JPG, convert to LVGL formats (RGB565 / RGB565A8 / ARGB8888) with optional Bayer dithering | ✅ | `features/import-image` (tested), `widgets/assets-panel` |
-| G12 | **Quality**: tests for the compiler, runtime, export, canvas maths, image conversion, zip and Rust file writes; typecheck and Steiger clean; CI; README for Michael | ✅ | `pnpm check` (50 tests), `cargo test`, `.github/workflows/ci.yml` |
+| G12 | **Quality**: tests for the compiler, runtime, export, canvas maths, image conversion, zip and Rust file writes; typecheck and Steiger clean; CI; README for Michael | ✅ | `pnpm check` (51 tests), `cargo test`, `.github/workflows/ci.yml` |
 
 ## Not done, on purpose or not yet
 

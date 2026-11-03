@@ -189,3 +189,20 @@ lv_observer_t * kiln_chart_bind_series(lv_obj_t * chart, lv_chart_series_t * ser
 {
     return lv_subject_add_observer_obj(subject, chart_cb, chart, series);
 }
+
+const lv_font_t * kiln_tiny_ttf(const void * data, size_t size, int32_t px, size_t cache, const lv_font_t * fallback)
+{
+#if LV_USE_TINY_TTF
+    lv_font_t * font = lv_tiny_ttf_create_data_ex(data, size, px, LV_FONT_KERNING_NORMAL, cache);
+    if(font == NULL) return LV_FONT_DEFAULT; /* not enough heap, or not a font TinyTTF reads */
+    font->fallback = fallback;
+    return font;
+#else
+    LV_UNUSED(data);
+    LV_UNUSED(size);
+    LV_UNUSED(px);
+    LV_UNUSED(cache);
+    LV_UNUSED(fallback);
+    return LV_FONT_DEFAULT;
+#endif
+}

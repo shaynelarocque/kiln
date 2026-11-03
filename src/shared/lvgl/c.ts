@@ -128,12 +128,8 @@ export function opToC(op: Op, names: Record<string, string>): string[] {
     case "ttf":
       return []
     case "tiny_ttf": {
-      const n = name(names, op.id)
       const ttf = name(names, op.ttf)
-      return [
-        `${n} = lv_tiny_ttf_create_data_ex(${ttf}, sizeof(${ttf}), ${op.size}, LV_FONT_KERNING_NORMAL, ${op.cache});`,
-        `if(${n} == NULL) ${n} = LV_FONT_DEFAULT; /* not enough heap, or not a font TinyTTF reads */`,
-      ]
+      return [`${name(names, op.id)} = kiln_tiny_ttf(${ttf}, sizeof(${ttf}), ${op.size}, ${op.cache}, ${op.fallback ? `&${op.fallback}` : "NULL"});`]
     }
   }
 }

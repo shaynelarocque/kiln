@@ -13,7 +13,7 @@ export {
 export { ProjectPreview, ProjectPlayer, simulate } from "./model/preview"
 export { compile, safeFormat, type CompileMode } from "./lib/compile"
 export { cNames, slug } from "./lib/names"
-export { ttfUses } from "./lib/fonts"
+export { ttfFallbacks, ttfUses } from "./lib/fonts"
 export { allNodes, findNode, findParent, screenOf, walk } from "./lib/tree"
 export { canContain, cloneNode, insertNode, locate, moveNode, removeNodes, uniqueName, type Found } from "./model/mutations"
 export { WidgetIcon } from "./ui/WidgetIcon"

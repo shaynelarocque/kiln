@@ -90,6 +90,8 @@ function kitchenSink(): Project {
   if (existsSync(lato)) {
     const font = { id: newId(), name: "Lato", data: readFileSync(lato).toString("base64") }
     p.fonts.push(font)
+    // with one of LVGL's symbols, which Lato lacks: that size borrows it from Montserrat 30
+    other.children[0].props.text = "\uF0E7 Charging"
     other.children[0].style = { "main:default": { text_font: ttfFont(font.id, 30) } }
     const small = { id: newId(), name: "small_print", props: { text_font: ttfFont(font.id, 12) } }
     p.styles.push(small)
@@ -138,7 +140,9 @@ describe("a project that uses everything", () => {
     expect(files.find(f => f.path === "src/ui/ui_fonts.c")!.content).toMatch(/^LV_ATTRIBUTE_LARGE_CONST const uint8_t ui_ttf_lato\[\d+\] = \{$/m)
     expect(files.find(f => f.path === "include/lv_conf.h")!.content).toContain("#define LV_USE_TINY_TTF 1")
     const ui = files.find(f => f.path === "src/ui/ui.c")!.content
-    expect(ui).toContain("ui_font_lato_30 = lv_tiny_ttf_create_data_ex(ui_ttf_lato, sizeof(ui_ttf_lato), 30, LV_FONT_KERNING_NORMAL, 48);")
+    expect(ui).toContain("ui_font_lato_30 = kiln_tiny_ttf(ui_ttf_lato, sizeof(ui_ttf_lato), 30, 48, &lv_font_montserrat_30);")
+    expect(ui).toContain("ui_font_lato_12 = kiln_tiny_ttf(ui_ttf_lato, sizeof(ui_ttf_lato), 12, 48, NULL);")
+    expect(files.find(f => f.path === "include/lv_conf.h")!.content).toContain("#define LV_FONT_MONTSERRAT_30 1")
     expect(ui).toContain("lv_style_set_text_font(&ui_style_small_print, ui_font_lato_12);")
     // the Components screen isn't exported, but both instances are, as plain widgets
     expect(files.some(f => f.path === "src/ui/ui_components.c")).toBe(false)

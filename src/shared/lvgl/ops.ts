@@ -56,8 +56,11 @@ export type Op =
   | { op: "image"; id: string; cf: string; w: number; h: number; stride: number; data: Uint8Array }
   /** A TTF/OTF file's bytes, which the fonts made from it keep reading. */
   | { op: "ttf"; id: string; data: Uint8Array }
-  /** A TinyTTF font at one pixel size, from a `ttf` op's bytes; LVGL's default font if it can't be made. */
-  | { op: "tiny_ttf"; id: string; ttf: string; size: number; cache: number }
+  /**
+   * A TinyTTF font at one pixel size, from a `ttf` op's bytes, with an optional built-in font
+   * for the glyphs it lacks; LVGL's default font if it can't be made.
+   */
+  | { op: "tiny_ttf"; id: string; ttf: string; size: number; cache: number; fallback: string | null }
 
 export type ScreenProgram = { id: string; ops: Op[] }
 

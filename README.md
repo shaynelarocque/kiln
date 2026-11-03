@@ -26,7 +26,8 @@ What you see is what flashes.
   (`pressed`, `checked`… and combinations like `checked+pressed`). Shared styles work like classes,
   colour tokens like CSS variables, and transitions like `transition:`. Import your own TTF or OTF
   fonts and use them at any size, like `@font-face`: LVGL's TinyTTF draws them, on the canvas and on
-  the board alike, straight from the font file in flash.
+  the board alike, straight from the font file in flash. LVGL's symbol icons keep working in them,
+  borrowed from the built-in Montserrat.
 - **Animate like the web.** A timeline with keyframes you drag along a ruler: `cubic-bezier`
   easing, delays, repeat and alternate, started when a screen loads or when something is tapped.
   Opacity, scale, rotation, translation, size and colour all animate.

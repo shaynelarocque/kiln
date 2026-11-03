@@ -41,6 +41,12 @@ lv_observer_t * kiln_bind_state_if(lv_obj_t * obj, lv_subject_t * subject, lv_st
  */
 void kiln_obj_add_play_event(lv_obj_t * obj, lv_event_code_t trigger, lv_anim_timeline_t * at, uint32_t delay, bool reverse);
 
+/**
+ * A TinyTTF font at `px` from a TTF/OTF file in memory, borrowing the glyphs it lacks (LVGL's
+ * symbols) from `fallback`, which may be NULL. LVGL's default font if TinyTTF can't make it.
+ */
+const lv_font_t * kiln_tiny_ttf(const void * data, size_t size, int32_t px, size_t cache, const lv_font_t * fallback);
+
 /** Append each new subject value to a chart series, so the chart shows its history. */
 lv_observer_t * kiln_chart_bind_series(lv_obj_t * chart, lv_chart_series_t * series, lv_subject_t * subject);
 

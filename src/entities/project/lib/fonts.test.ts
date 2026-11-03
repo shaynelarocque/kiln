@@ -4,7 +4,7 @@ import { LvglRuntime, Scene, parseTtfFont, ttfFont } from "@/shared/lvgl"
 import { createEmptyProject, createNode, newId } from "../model/factory"
 import type { Project } from "../model/types"
 import { compile } from "./compile"
-import { ttfUses } from "./fonts"
+import { ttfFallbacks, ttfUses } from "./fonts"
 import { cNames } from "./names"
 
 // LVGL's checkout (runtime/lvgl, cloned by the runtime build and by CI) carries Lato, under the OFL
@@ -61,6 +61,22 @@ describe.runIf(LATO)("imported fonts", () => {
     const names = cNames(p)
     expect([names[lato.id], names[`${lato.id}@24`]]).toEqual(["ui_ttf_lato_regular", "ui_font_lato_regular_24"])
     expect(parseTtfFont("lv_font_montserrat_14")).toBeNull()
+  })
+
+  it("borrow LVGL's symbols from Montserrat, for the sizes set on text that has them", () => {
+    const { p, lato } = project([id => ttfFont(id, 24), id => ttfFont(id, 30)])
+    const [icon, plain] = p.screens[0].children
+    icon.props.text = "\uF0E7 Heating" // LV_SYMBOL_CHARGE
+    expect([...ttfFallbacks(p)]).toEqual([[ttfFont(lato.id, 24), "lv_font_montserrat_24"]])
+    const program = compile(p, "edit")
+    const setup = new Scene(rt)
+    setup.run(program.setup)
+    const dsc = rt.x.lv_malloc(64)
+    const has = (size: number, letter: number) => rt.x.lv_font_get_glyph_dsc(setup.get("tiny_ttf", `${lato.id}@${size}`)!, dsc, letter, 0)
+    expect([has(24, 0xf0e7), has(30, 0xf0e7), has(30, 0x41)]).toEqual([1, 0, 1])
+    rt.x.lv_free(dsc)
+    setup.dispose()
+    expect(plain.props.text).toBe("Hello 42")
   })
 
   it("fall back to the default font when the file isn't one TinyTTF reads", () => {

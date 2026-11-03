@@ -32,7 +32,7 @@ import {
 } from "@/shared/lvgl"
 import { instancesOf, resolveScreens } from "../model/components"
 import type { Animation, Binding, Interaction, Node, Project, StyleValue } from "../model/types"
-import { ttfUses } from "./fonts"
+import { ttfFallbacks, ttfUses } from "./fonts"
 import { cNames } from "./names"
 import { screenOf, walk } from "./tree"
 
@@ -263,7 +263,9 @@ export function compile(source: Project, mode: CompileMode): Program {
 
   const setup: Op[] = []
   for (const id of new Set(ttfFonts.map(u => u.id))) setup.push({ op: "ttf", id, data: ttfData.get(id)! })
-  for (const u of ttfFonts) setup.push({ op: "tiny_ttf", id: `${u.id}@${u.size}`, ttf: u.id, size: u.size, cache: TTF_GLYPH_CACHE })
+  const fallbacks = ttfFallbacks(project)
+  for (const u of ttfFonts)
+    setup.push({ op: "tiny_ttf", id: `${u.id}@${u.size}`, ttf: u.id, size: u.size, cache: TTF_GLYPH_CACHE, fallback: fallbacks.get(`ttf:${u.id}:${u.size}`) ?? null })
   for (const a of project.assets) {
     const data = a.format in IMAGE_CF ? fromBase64(a.data) : null
     if (data) setup.push({ op: "image", id: a.id, cf: IMAGE_CF[a.format], w: finite(a.width), h: finite(a.height), stride: finite(a.stride), data })

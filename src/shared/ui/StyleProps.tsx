@@ -1,5 +1,5 @@
 import { Minus, Plus } from "lucide-react"
-import { DEFAULT_FONT, FONT_SIZES, STYLE_GROUPS, STYLE_PROPS, TTF_SIZES, parseTtfFont, ttfFont, type StyleGroup, type StyleProp, type WidgetType } from "@/shared/lvgl"
+import { DEFAULT_FONT, FONT_SIZES, STYLE_GROUPS, STYLE_PROPS, TTF_SIZES, nearestFontSize, parseTtfFont, ttfFont, type StyleGroup, type StyleProp, type WidgetType } from "@/shared/lvgl"
 import { ColorInput, Field, IconButton, NumberInput, Section, Select, Toggle, type Phase, type Token } from "./controls"
 import s from "./style-props.module.css"
 
@@ -43,8 +43,6 @@ export function defaultFor(prop: StyleProp, assets: { id: string }[] = []): Valu
   }
 }
 
-const nearestSize = (size: number) => FONT_SIZES.reduce((a, b) => (Math.abs(b - size) < Math.abs(a - size) ? b : a))
-
 /** Montserrat at its built-in sizes, the Unscii pixel fonts, or an imported font at any size. */
 function FontInput({ value, onChange, fonts }: { value: string; onChange: (v: Value, phase?: Phase) => void; fonts: Named[] }) {
   const ttf = parseTtfFont(value)
@@ -58,7 +56,7 @@ function FontInput({ value, onChange, fonts }: { value: string; onChange: (v: Va
     ...(ttf && !fonts.some(f => f.id === ttf.id) ? [{ value: ttf.id, label: "Missing font" }] : []),
   ]
   const pick = (f: string) =>
-    onChange(f === "montserrat" ? `lv_font_montserrat_${nearestSize(size)}` : f.startsWith("lv_font_") ? f : ttfFont(f, Math.min(TTF_SIZES.max, Math.max(TTF_SIZES.min, size))))
+    onChange(f === "montserrat" ? `lv_font_montserrat_${nearestFontSize(size)}` : f.startsWith("lv_font_") ? f : ttfFont(f, Math.min(TTF_SIZES.max, Math.max(TTF_SIZES.min, size))))
   return (
     <span className={s.font}>
       <Select value={family} options={families} onChange={pick} />
