@@ -5,12 +5,12 @@ import { dirname, join } from "node:path"
 import { describe, expect, it } from "vitest"
 import { BUNDLED_BOARDS, findBoard } from "@/entities/board"
 import { compile, createAnimation, createEmptyProject, createInstance, createNode, createScreen, createVariable, makeComponent, newId, type Project } from "@/entities/project"
-import { convert, toBase64 } from "@/features/import-image/lib/convert"
+import { generateFirmware } from "@/features/export-firmware"
+import { convert, toBase64 } from "@/features/import-image"
 import { ANIM_PROPS, INSERTABLE, LvglRuntime, Scene } from "@/shared/lvgl"
-import { generateFirmware } from "./firmware"
 
 /** One of everything: every widget, binding, action, animated property and asset kind. */
-export function kitchenSink(): Project {
+function kitchenSink(): Project {
   const p = createEmptyProject("Kitchen sink")
   const [home] = p.screens
   const other = createScreen("Other", p.target.display, { x: 400, y: 0 })
@@ -81,12 +81,12 @@ export function kitchenSink(): Project {
   return p
 }
 
-const lvgl = new URL("../../../../runtime/lvgl", import.meta.url).pathname
+const lvgl = new URL("../../runtime/lvgl", import.meta.url).pathname
 
 describe("a project that uses everything", () => {
   it("plays on the wasm LVGL without errors", async () => {
     const logs: string[] = []
-    const rt = await LvglRuntime.load(readFileSync(new URL("../../../shared/lvgl/runtime/kiln-rt.wasm", import.meta.url)), m => logs.push(m))
+    const rt = await LvglRuntime.load(readFileSync(new URL("../shared/lvgl/runtime/kiln-rt.wasm", import.meta.url)), m => logs.push(m))
     const project = kitchenSink()
     const program = compile(project, "play")
     const display = rt.createDisplay(240, 240)
