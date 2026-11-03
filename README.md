@@ -42,6 +42,10 @@ What you see is what flashes.
   the fonts you used, a LovyanGFX panel config, the hardware glue, and a `platformio.ini`. Your code
   goes in `src/app.cpp`, which Kiln writes once and never touches again. The output uses LVGL 9.6's
   current API (`lv_subject_create`, `lv_obj_set_hidden`…), so it compiles without a single warning.
+- **Design once, for every screen.** Add sizes (a 128×160 ST7735 beside a round GC9A01, say),
+  each with its own board and panel. Pick one and every screen shows at that size; LVGL's relative
+  layout (align, %, flex) does most of the work, and anything you change there stays there, like
+  a CSS media query. Play, export and the budget follow the size you're on.
 - **Build and flash it.** In the desktop app, Export writes the project, runs `pio run`, and uploads
   to the port you pick, streaming PlatformIO's log.
 - **Know if it fits.** A flash and RAM meter estimates the build against the board's real limits,
