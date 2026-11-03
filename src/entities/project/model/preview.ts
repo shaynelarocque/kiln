@@ -181,6 +181,14 @@ export class ProjectPlayer {
     if (h && this.rt.x.lv_subject_get_int(h) !== value) this.rt.x.lv_subject_set_int(h, Math.round(value))
   }
 
+  /** Starts an animation from the top, e.g. to preview it from the timeline. */
+  play(animationId: string) {
+    const tl = this.scene.get("timeline", animationId)
+    if (!tl) return
+    this.rt.x.lv_anim_timeline_set_progress(tl, 0)
+    this.rt.x.lv_anim_timeline_start(tl)
+  }
+
   activeScreen() {
     const active = this.rt.x.lv_display_get_screen_active(this.display.ptr)
     return [...this.scene.objects()].find(([, h]) => h === active)?.[0]

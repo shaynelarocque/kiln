@@ -2,11 +2,16 @@ import { useEffect } from "react"
 import { editorApi, useEditorStore, type LeftTab } from "@/entities/editor"
 import { startAutosave } from "@/features/project-file"
 import { Tabs } from "@/shared/ui"
+import { AssetsPanel } from "@/widgets/assets-panel"
+import { BoardDialog } from "@/widgets/board-dialog"
 import { Canvas } from "@/widgets/canvas"
 import { DataPanel } from "@/widgets/data-panel"
+import { ExportDialog } from "@/widgets/export-dialog"
 import { Inspector } from "@/widgets/inspector"
 import { LayersPanel } from "@/widgets/layers-panel"
 import { Player } from "@/widgets/player"
+import { StylesPanel } from "@/widgets/styles-panel"
+import { Timeline } from "@/widgets/timeline"
 import { Toolbar } from "@/widgets/toolbar"
 import { useShortcuts } from "../model/use-shortcuts"
 import s from "./editor-page.module.css"
@@ -24,6 +29,8 @@ export function EditorPage() {
   const leftTab = useEditorStore(s => s.leftTab)
   const error = useEditorStore(s => s.error)
   const playing = useEditorStore(s => s.playing)
+  const dialog = useEditorStore(s => s.dialog)
+  const timelineOpen = useEditorStore(s => s.timelineOpen)
   return (
     <div className={s.page}>
       <Toolbar />
@@ -32,10 +39,13 @@ export function EditorPage() {
         <div className={s.leftBody}>
           {leftTab === "layers" && <LayersPanel />}
           {leftTab === "data" && <DataPanel />}
+          {leftTab === "styles" && <StylesPanel />}
+          {leftTab === "assets" && <AssetsPanel />}
         </div>
       </aside>
       <main className={s.center}>
         <Canvas />
+        {timelineOpen && <Timeline />}
         {error && (
           <div className={s.error} role='alert'>
             <strong>Preview error.</strong> {error}
@@ -47,6 +57,8 @@ export function EditorPage() {
         <Inspector />
       </aside>
       {playing && <Player />}
+      {dialog === "board" && <BoardDialog />}
+      {dialog === "export" && <ExportDialog />}
     </div>
   )
 }

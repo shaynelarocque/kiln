@@ -1,7 +1,7 @@
-import { Cpu, Download, FilePlus, FolderOpen, Play, Redo2, Save, Undo2 } from "lucide-react"
+import { Clapperboard, Cpu, Download, FilePlus, FolderOpen, Play, Redo2, Save, Undo2 } from "lucide-react"
 import { useState } from "react"
 import { findBoard, formatBytes, useBoards } from "@/entities/board"
-import { editorApi } from "@/entities/editor"
+import { editorApi, useEditorStore } from "@/entities/editor"
 import { edit, useProjectStore } from "@/entities/project"
 import { budgetFor } from "@/features/export-firmware"
 import { useHistory } from "@/features/history"
@@ -18,6 +18,7 @@ export function Toolbar() {
   const board = findBoard(boards, project.target.board)
   const budget = budgetFor(project, board)
   const [naming, setNaming] = useState(false)
+  const timelineOpen = useEditorStore(s => s.timelineOpen)
   const flash = budget.flash.used / budget.flash.total
   const ram = budget.ram.used / budget.ram.total
 
@@ -60,6 +61,10 @@ export function Toolbar() {
         </IconButton>
         <IconButton label='Redo (⇧⌘Z)' disabled={!history.canRedo} onClick={history.redo}>
           <Redo2 />
+        </IconButton>
+        <span className={s.sep} />
+        <IconButton label='Animations timeline' active={timelineOpen} onClick={() => editorApi.getState().set({ timelineOpen: !timelineOpen })}>
+          <Clapperboard />
         </IconButton>
       </div>
 

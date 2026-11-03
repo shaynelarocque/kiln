@@ -19,6 +19,8 @@ type EditorState = {
   selector: string
   timelineOpen: boolean
   animation: string | null
+  /** an animation to start as soon as Play opens */
+  preview: string | null
   dialog: Dialog
   error: string | null
 
@@ -39,6 +41,7 @@ export const useEditorStore = create<EditorState>()(set => ({
   selector: MAIN_DEFAULT,
   timelineOpen: false,
   animation: null,
+  preview: null,
   dialog: null,
   error: null,
 

@@ -23,7 +23,11 @@ export function useData() {
     mcu,
     pins: pinMap(mcu),
     problems,
-    problemsFor: (v: Variable) => problems.filter(p => p.message.includes(`${v.name}`)),
+    /** problems on the pins this variable reads or drives */
+    problemsFor: (v: Variable) => {
+      const pins = [v.source && "pin" in v.source ? v.source.pin : -1, v.sink?.pin ?? -1]
+      return problems.filter(p => pins.includes(p.pin))
+    },
     uses: (id: string) => nodes.filter(n => n.bindings.some(b => b.variable === id)).map(n => n.name),
     add: () =>
       edit(d => {

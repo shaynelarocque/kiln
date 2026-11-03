@@ -1,0 +1,153 @@
+.timeline {
+  flex: none !important;
+  display: flex;
+  flex-direction: column;
+  height: 236px;
+  border-top: 1px solid var(--line);
+  background: var(--bg);
+}
+.head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 8px 0 12px;
+  border-bottom: 1px solid var(--line);
+}
+.head > strong {
+  color: var(--text-strong);
+  margin-right: 4px;
+}
+.head select {
+  max-width: 150px;
+}
+.name {
+  width: 110px;
+  height: 26px;
+  padding: 0 6px;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--cyan);
+  font-family: var(--mono);
+  font-size: 11px;
+  outline: none;
+}
+.name:hover {
+  border-color: var(--line);
+}
+.name:focus {
+  border-color: var(--select);
+  background: var(--bg-input);
+}
+.opt {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+.num {
+  width: 92px;
+}
+.spacer {
+  flex: 1;
+}
+.dim {
+  color: var(--text-faint);
+}
+.empty {
+  padding: 16px;
+}
+.body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 200px 1fr 230px;
+  overflow: hidden;
+}
+.tracks {
+  overflow-y: auto;
+  border-right: 1px solid var(--line);
+}
+.trackHead {
+  display: flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 8px;
+  border-bottom: 1px solid var(--line);
+}
+.trackName {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 30px;
+  padding: 0 4px 0 12px;
+  border-bottom: 1px solid var(--line);
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+}
+.trackName strong {
+  color: var(--text-strong);
+  font-weight: 500;
+}
+.lanes {
+  position: relative;
+  overflow-y: auto;
+  padding: 0 14px;
+}
+.ruler {
+  position: relative;
+  height: 30px;
+  border-bottom: 1px solid var(--line);
+}
+.ruler span {
+  position: absolute;
+  bottom: 0;
+  height: 6px;
+  border-left: 1px solid var(--line-strong);
+  font-size: 10px;
+  color: var(--text-faint);
+}
+.ruler .major {
+  height: 16px;
+  padding-left: 3px;
+  line-height: 10px;
+}
+.lane {
+  position: relative;
+  height: 30px;
+  border-bottom: 1px solid var(--line);
+}
+.span {
+  position: absolute;
+  top: 13px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 204, 102, 0.25);
+}
+.key {
+  position: absolute;
+  top: 9px;
+  width: 12px;
+  height: 12px;
+  margin-left: -6px;
+  padding: 0;
+  border: 1px solid var(--accent-ink);
+  background: var(--accent);
+  transform: rotate(45deg);
+  cursor: ew-resize;
+}
+.keyOn {
+  background: var(--select);
+  box-shadow: 0 0 0 2px rgba(115, 208, 255, 0.35);
+}
+.keyEditor {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  padding: 10px 12px;
+  border-left: 1px solid var(--line);
+  overflow-y: auto;
+}

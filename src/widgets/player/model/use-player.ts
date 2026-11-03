@@ -20,11 +20,18 @@ export function usePlayer() {
     let alive = true
     let raf = 0
     const selected = editorApi.getState().selection[0]
-    const start = (selected && screenOf(project, selected)?.id) || project.screens[0].id
+    const previewed = project.animations.find(a => a.id === editorApi.getState().preview)
+    const from = previewed?.tracks[0]?.node ?? selected
+    const start = (from && screenOf(project, from)?.id) || project.screens[0].id
     getRuntime().then(rt => {
       if (!alive || !canvas.current) return
       try {
         player.current = new ProjectPlayer(rt, project, start)
+        const preview = editorApi.getState().preview
+        if (preview) {
+          player.current.play(preview)
+          editorApi.getState().set({ preview: null })
+        }
       } catch (e) {
         setFailure(e instanceof Error ? e.message : String(e))
         return
