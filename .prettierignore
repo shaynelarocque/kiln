@@ -1,0 +1,7 @@
+runtime/lvgl
+runtime/build
+src-tauri/target
+src-tauri/gen
+dist
+pnpm-lock.yaml
+*.wasm

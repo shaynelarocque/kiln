@@ -1,0 +1,11 @@
+node_modules
+dist
+runtime/lvgl
+runtime/build
+src-tauri/target
+src-tauri/gen
+.DS_Store
+*.local
+.vscode/*
+!.vscode/extensions.json
+.claude/

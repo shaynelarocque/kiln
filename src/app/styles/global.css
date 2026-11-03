@@ -1,0 +1,89 @@
+/* Ayu Mirage, the palette of Michael's Arduino IDE port, tuned for a design tool. */
+:root {
+  --bg-canvas: #171b24;
+  --bg: #1f2430;
+  --bg-raised: #242936;
+  --bg-input: #191e2a;
+  --bg-hover: #2a3040;
+  --line: #2d3342;
+  --line-strong: #3a4152;
+  --text: #cccac2;
+  --text-strong: #f3f0e8;
+  --text-dim: #8a919e;
+  --text-faint: #5c6573;
+  --accent: #ffcc66;
+  --accent-ink: #1f2430;
+  --orange: #ffa659;
+  --select: #73d0ff;
+  --select-soft: rgba(115, 208, 255, 0.14);
+  --green: #87d96c;
+  --red: #f28779;
+  --purple: #dfbfff;
+  --cyan: #95e6cb;
+
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", system-ui, sans-serif;
+  --mono: "SF Mono", "JetBrains Mono", ui-monospace, Menlo, monospace;
+  --radius: 6px;
+  --row: 26px;
+
+  color-scheme: dark;
+  font-family: var(--font);
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+input,
+textarea {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+:focus-visible {
+  outline: 2px solid var(--select);
+  outline-offset: 1px;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--line);
+  border: 3px solid transparent;
+  background-clip: padding-box;
+  border-radius: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+code,
+kbd {
+  font-family: var(--mono);
+  font-size: 11px;
+}

@@ -1,0 +1,107 @@
+.panel {
+  overflow-y: auto;
+  height: 100%;
+}
+.list {
+  margin: 0 -12px;
+  padding: 0;
+  list-style: none;
+}
+.row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 28px;
+  padding: 0 4px 0 8px;
+  color: var(--text);
+  cursor: default;
+}
+.row:hover,
+.hovered {
+  background: var(--bg-hover);
+}
+.on,
+.on:hover {
+  background: var(--select-soft);
+  color: var(--text-strong);
+}
+.active .icon {
+  color: var(--accent);
+}
+.muted {
+  color: var(--text-faint);
+}
+.icon {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  color: var(--text-dim);
+}
+.name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rename {
+  flex: 1;
+  min-width: 0;
+  height: 22px;
+  padding: 0 4px;
+  border: 1px solid var(--select);
+  border-radius: 4px;
+  background: var(--bg-input);
+  outline: none;
+}
+.twisty {
+  display: grid;
+  place-items: center;
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text-faint);
+  cursor: pointer;
+}
+.twisty svg {
+  width: 12px;
+  height: 12px;
+}
+.tool {
+  width: 22px;
+  height: 22px;
+  opacity: 0;
+}
+.tool svg {
+  width: 13px;
+  height: 13px;
+}
+.row:hover .tool,
+.pinned {
+  opacity: 1;
+}
+.before::before,
+.after::after {
+  content: "";
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  height: 2px;
+  background: var(--accent);
+}
+.before::before {
+  top: 0;
+}
+.after::after {
+  bottom: 0;
+}
+.inside {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+.empty {
+  margin: 4px 0;
+  color: var(--text-faint);
+}

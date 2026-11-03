@@ -1,0 +1,31 @@
+.idle {
+  color: var(--text-dim);
+  font-weight: 500;
+}
+.add {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius);
+  color: var(--text-dim);
+}
+.add:hover {
+  background: var(--bg-hover);
+  color: var(--text-strong);
+}
+.add svg {
+  width: 16px;
+  height: 16px;
+}
+.add select {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.remove {
+  width: 22px;
+  height: 22px;
+}

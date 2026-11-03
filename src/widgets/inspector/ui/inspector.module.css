@@ -1,0 +1,273 @@
+.inspector {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+.scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+.empty {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+}
+.empty strong {
+  color: var(--text-strong);
+}
+.actions {
+  display: flex;
+  gap: 6px;
+}
+.head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 12px 6px;
+}
+.headIcon {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  color: var(--accent);
+}
+.headName {
+  flex: 1;
+  min-width: 0;
+  height: 26px;
+  padding: 0 6px;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text-strong);
+  font-weight: 600;
+  outline: none;
+}
+.headName:hover {
+  border-color: var(--line);
+}
+.headName:focus {
+  border-color: var(--select);
+  background: var(--bg-input);
+}
+.head code {
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-faint);
+}
+
+.alignRow {
+  display: grid;
+  grid-template-columns: 54px 1fr;
+  gap: 8px;
+  align-items: center;
+}
+.alignGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+  width: 54px;
+  height: 54px;
+  padding: 4px;
+  border-radius: var(--radius);
+  background: var(--bg-input);
+}
+.alignGrid button {
+  border: 0;
+  border-radius: 2px;
+  background: var(--line);
+  cursor: pointer;
+  padding: 0;
+}
+.alignGrid button:hover {
+  background: var(--text-faint);
+}
+.alignGrid .alignOn {
+  background: var(--select);
+}
+.xy {
+  display: grid;
+  gap: 6px;
+}
+.pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+.coord {
+  display: flex;
+  min-width: 0;
+  gap: 2px;
+}
+.unit {
+  width: 34px;
+  flex: none;
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--bg-input);
+  color: var(--text-faint);
+  font-size: 10px;
+  text-align: center;
+  appearance: none;
+  cursor: pointer;
+}
+.segmented {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+  padding: 2px;
+  border-radius: var(--radius);
+  background: var(--bg-input);
+}
+.segmented button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 24px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+.segmented button svg {
+  width: 14px;
+  height: 14px;
+}
+.segmented [aria-pressed="true"] {
+  background: var(--bg-hover);
+  color: var(--text-strong);
+}
+.textWithSymbols {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+  align-items: flex-start;
+}
+.symbols {
+  width: 46px;
+  height: var(--row);
+  flex: none;
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--bg-input);
+  color: var(--text-dim);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.selector {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg-raised);
+}
+.selectorHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+  color: var(--text-strong);
+}
+.selectorHead code {
+  color: var(--purple);
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.chips button {
+  position: relative;
+  height: 22px;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 11px;
+}
+.chips button:hover {
+  color: var(--text-strong);
+}
+.chips [aria-checked="true"],
+.chips [aria-pressed="true"] {
+  border-color: var(--select);
+  background: var(--select-soft);
+  color: var(--text-strong);
+}
+.chips button i {
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.chips small {
+  color: var(--text-faint);
+}
+.sel {
+  flex: 1;
+  color: var(--purple);
+}
+.hint {
+  color: var(--text-faint);
+  font-size: 11px;
+}
+
+.card {
+  display: grid;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg-raised);
+}
+.cardHead {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.cardHead strong {
+  flex: 1;
+  color: var(--text-strong);
+}
+.compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  flex: 1;
+}
+.addMenu {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius);
+  color: var(--text-dim);
+}
+.addMenu:hover {
+  background: var(--bg-hover);
+  color: var(--text-strong);
+}
+.addMenu svg {
+  width: 16px;
+  height: 16px;
+}
+.addMenu select {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
