@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { editorApi } from "@/entities/editor"
 import { ProjectPlayer, screenOf, useProjectStore } from "@/entities/project"
-import { getRuntime } from "@/shared/lvgl"
+import { getRuntime, resetRuntime } from "@/shared/lvgl"
 
 /**
  * Play mode: the whole UI running on one device-sized LVGL display, with real input,
@@ -42,7 +42,11 @@ export function usePlayer() {
       const loop = (now: number) => {
         const p = player.current
         if (!p) return
-        p.frame(Math.min(100, now - last), ctx)
+        try {
+          p.frame(Math.min(100, now - last), ctx)
+        } catch (e) {
+          return crash(e)
+        }
         last = now
         if (now - lastRead > 100) {
           lastRead = now
@@ -56,12 +60,32 @@ export function usePlayer() {
     return () => {
       alive = false
       cancelAnimationFrame(raf)
-      player.current?.dispose()
+      try {
+        player.current?.dispose()
+      } catch {
+        // the runtime it lived on was already reset after a trap
+      }
       player.current = null
     }
     // the player runs a snapshot: edits made meanwhile show on the next Play
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [run])
+
+  /** A trap leaves LVGL unusable: say so, drop the player, and reset the shared runtime. */
+  const crash = (e: unknown) => {
+    setFailure(`LVGL stopped: ${e instanceof Error ? e.message : e}. Restart to try again.`)
+    player.current = null
+    resetRuntime()
+  }
+  const guarded = (fn: (p: ProjectPlayer) => void) => {
+    const p = player.current
+    if (!p) return
+    try {
+      fn(p)
+    } catch (e) {
+      crash(e)
+    }
+  }
 
   /** Pointer position in display pixels; the canvas is scaled up on screen. */
   const point = (e: React.PointerEvent<HTMLCanvasElement>) => {
@@ -75,14 +99,24 @@ export function usePlayer() {
     values,
     failure,
     screenName: project.screens.find(s => s.id === screen)?.name,
-    restart: () => setRun(r => r + 1),
+    restart: () => {
+      setFailure(null)
+      setRun(r => r + 1)
+    },
     close: () => editorApi.getState().set({ playing: false }),
-    setValue: (id: string, v: number) => player.current?.set(id, v),
+    setValue: (id: string, v: number) => guarded(p => p.set(id, v)),
     onPointerDown: (e: React.PointerEvent<HTMLCanvasElement>) => {
       e.currentTarget.setPointerCapture(e.pointerId)
-      player.current?.pointer(...point(e), true)
+      const at = point(e)
+      guarded(p => p.pointer(...at, true))
     },
-    onPointerMove: (e: React.PointerEvent<HTMLCanvasElement>) => player.current?.pointer(...point(e), e.buttons > 0),
-    onPointerUp: (e: React.PointerEvent<HTMLCanvasElement>) => player.current?.pointer(...point(e), false),
+    onPointerMove: (e: React.PointerEvent<HTMLCanvasElement>) => {
+      const at = point(e)
+      guarded(p => p.pointer(...at, e.buttons > 0))
+    },
+    onPointerUp: (e: React.PointerEvent<HTMLCanvasElement>) => {
+      const at = point(e)
+      guarded(p => p.pointer(...at, false))
+    },
   }
 }

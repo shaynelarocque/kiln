@@ -29,4 +29,16 @@ Each flag was set in a review against the code and the checks, not from memory. 
 ## Review log
 
 - **Review 1, after the first milestone.** The `pio run` build surfaced LVGL 9.6 deprecations (`lv_subject_init_*`, `lv_obj_bind_*_if_*`, `lv_obj_add_flag`). The generated code moved to `lv_subject_create`, `lv_obj_set_hidden()` and friends, plus Kiln's own comparison binders, and the clang checks now treat deprecations as errors. Steiger caught an integration test reaching into another feature's internals; it moved to the `app` layer. The budget estimator was recalibrated against the real build (it had assumed the whole 4 MB chip instead of the 1.25 MB app partition).
-- **Review 2, final.** See the findings applied in the last commits.
+- **Review 2, a fresh-eyes code review** (a separate agent given the code, not my conclusions) found 12 defects, most reproduced on the wasm LVGL or with clang. All 12 are fixed, each with a regression test:
+  1. A hostile `.kiln` could inject `platformio.ini` sections (`upload_command` = shell on Build). Board ids are validated on open and at export, names are flattened, and every value that reaches C is checked (catalog enums, `#rrggbb`, finite numbers, known style props, comment-safe text).
+  2. A restored autosave counted as saved, so New/Open could drop work silently. It now stays marked unsaved, and closing asks first.
+  3. Timelines with 3+ keyframes, or alternating, froze: LVGL re-applies pending segments' start values (`early_apply`). Segments are emitted in time order with early apply only on each track's first. Tested on the wasm LVGL.
+  4. Re-exporting after renaming a screen left the old file in place, and the link failed. Stale generated files in `src/ui` are removed (only ones with Kiln's header).
+  5. C names could collide with `ui_setup()`, `<screen>_create()` or string buffers. Those are reserved, plus every derived form.
+  6. Arc min = max divided by zero in LVGL, and the trap froze every canvas for good. Ranges are repaired at compile time, and any trap now resets the runtime and rebuilds the canvas and Play.
+  7. Animation delays were ignored on replays and first triggers (LVGL only applies them to finished timelines). Autoplay and Play actions go through `kiln_obj_add_play_event`.
+  8. Deleting Home could leave only the Components screen. The last real screen can't be deleted.
+  9. Custom C from before subjects became pointers (`&ui_var_x`) no longer compiled. Files are migrated on open.
+  10. `pio run` could hang on a non-UTF-8 byte. The output is now decoded loosely.
+  11. The flex reorder drop line was drawn in the wrong place, and reversed flows reordered backwards. Fixed.
+  12. A control character before a hex digit broke a C string literal. The literal is now split.

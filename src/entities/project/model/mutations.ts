@@ -1,6 +1,6 @@
 import { WIDGETS } from "@/shared/lvgl"
 import { newId } from "./factory"
-import type { Node, Project } from "./types"
+import type { Node, Project, Screen } from "./types"
 
 /** Helpers for immer drafts of a Project. Every feature edits nodes through these. */
 
@@ -31,7 +31,8 @@ export function removeNodes(project: Project, ids: string[]) {
     const hit = locate(project, id)
     if (!hit) continue
     if (hit.parent) hit.parent.children.splice(hit.index, 1)
-    else if (project.screens.length > 1) project.screens.splice(hit.index, 1)
+    // keep at least one real screen; the Components screen can always go
+    else if ((hit.node as Screen).library || project.screens.filter(s => !s.library).length > 1) project.screens.splice(hit.index, 1)
   }
   const alive = new Set<string>()
   for (const s of project.screens) collect(s, alive)

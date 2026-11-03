@@ -34,6 +34,13 @@ lv_observer_t * kiln_bind_flag_if(lv_obj_t * obj, lv_subject_t * subject, lv_obj
 /** Adds a state while `subject <op> ref` holds, removes it otherwise. */
 lv_observer_t * kiln_bind_state_if(lv_obj_t * obj, lv_subject_t * subject, lv_state_t state, kiln_compare_t op, int32_t ref);
 
+/**
+ * Plays a timeline from its start (or, reversed, from its end) after `delay` ms whenever `trigger`
+ * fires, like re-triggering a CSS animation. LVGL's own play event only applies the delay to a
+ * restart of a finished timeline.
+ */
+void kiln_obj_add_play_event(lv_obj_t * obj, lv_event_code_t trigger, lv_anim_timeline_t * at, uint32_t delay, bool reverse);
+
 /** Append each new subject value to a chart series, so the chart shows its history. */
 lv_observer_t * kiln_chart_bind_series(lv_obj_t * chart, lv_chart_series_t * series, lv_subject_t * subject);
 

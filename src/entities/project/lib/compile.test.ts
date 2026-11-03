@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs"
 import { beforeAll, describe, expect, it } from "vitest"
 import { ALIGN, BIND_FLAGS, BIND_STATES, EVENTS, FLEX_ALIGN, FLEX_FLOW, LvglRuntime, SCREEN_LOAD_ANIM, Scene, STYLE_PROPS, WIDGETS, stylePropConst, type Op } from "@/shared/lvgl"
-import { createSampleProject } from "../model/factory"
+import { createAnimation, createEmptyProject, createNode, createSampleProject } from "../model/factory"
 import { compile, safeFormat } from "./compile"
 
 let rt: LvglRuntime
@@ -96,6 +96,53 @@ describe("compiling the sample project", () => {
     setup.dispose()
     display.delete()
     expect(logs.filter(l => /error/i.test(l))).toEqual([])
+  })
+})
+
+describe("timelines", () => {
+  /** Plays a one-track x animation and samples the box's position along the way. */
+  function sample(keyframes: [number, number][], alternate: boolean, at: number[]) {
+    const p = createEmptyProject()
+    const box = createNode("container", { name: "box", layout: { x: 0, y: 0, w: 20, h: 20, align: "LV_ALIGN_TOP_LEFT" } })
+    p.screens[0].children = [box]
+    p.animations = [{ ...createAnimation("move"), autoplay: true, alternate, tracks: [{ id: "t", node: box.id, prop: "x", keyframes: keyframes.map(([t, value]) => ({ t, value, easing: "linear" as const })) }] }]
+    const program = compile(p, "play")
+    const display = rt.createDisplay(240, 240)
+    display.setTheme(p.theme)
+    display.makeDefault()
+    const setup = new Scene(rt)
+    setup.run(program.setup)
+    const scene = new Scene(rt, setup)
+    for (const sc of program.screens) scene.run(sc.ops)
+    scene.run(program.wiring)
+    rt.x.lv_screen_load(scene.screen(0))
+    const xs: number[] = []
+    let now = 0
+    for (const t of at) {
+      while (now < t) {
+        rt.tick(10)
+        now += 10
+      }
+      xs.push(rt.coords(scene.get("obj", box.id)!).x)
+    }
+    display.release()
+    scene.dispose()
+    setup.dispose()
+    display.delete()
+    return xs
+  }
+
+  it("moves through every keyframe in order", () => {
+    const [a, b, c] = sample([[0, 0], [500, 100], [1000, 200]], false, [250, 750, 1100])
+    expect(Math.abs(a - 50)).toBeLessThan(12)
+    expect(Math.abs(b - 150)).toBeLessThan(12)
+    expect(c).toBe(200)
+  })
+
+  it("plays an alternating track out and back", () => {
+    const [out, back] = sample([[0, 0], [400, 100]], true, [200, 600])
+    expect(Math.abs(out - 50)).toBeLessThan(12)
+    expect(Math.abs(back - 50)).toBeLessThan(12)
   })
 })
 

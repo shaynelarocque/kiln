@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { createNode } from "@/entities/project"
-import { alignFactors, flexIndex, hitChain, pickDeeper, pickTarget, resizeLayout, snapMove, type Rects } from "./interactions"
+import { alignFactors, flexDrop, hitChain, pickDeeper, pickTarget, resizeLayout, snapMove, type Rects } from "./interactions"
 
 function tree() {
   const screen = createNode("screen", { name: "s" })
@@ -65,7 +65,7 @@ describe("geometry", () => {
     expect(r.guides).toEqual([{ axis: "x", at: 120 }])
   })
 
-  it("finds the insertion index in a flex row", () => {
+  it("finds the insertion point in a flex row, and draws the line where it lands", () => {
     const parent = createNode("container", { layout: { x: 0, y: 0, w: 300, h: 40, align: "LV_ALIGN_TOP_LEFT", flex: { flow: "LV_FLEX_FLOW_ROW", main: "", cross: "", track: "" } } })
     const [a, b, c] = ["a", "b", "c"].map(name => createNode("label", { name }))
     parent.children = [a, b, c]
@@ -74,7 +74,13 @@ describe("geometry", () => {
       [b.id, { x: 60, y: 0, w: 50, h: 20 }],
       [c.id, { x: 120, y: 0, w: 50, h: 20 }],
     ])
-    expect(flexIndex(parent, rects, a.id, 100, 10)).toBe(2)
-    expect(flexIndex(parent, rects, c.id, 5, 10)).toBe(0)
+    // A dragged just past B's middle lands between B and C, and the line is right after B
+    const past = flexDrop(parent, rects, a.id, 100, 10)
+    expect(past.index).toBe(2)
+    expect(past.line).toEqual({ x: 111, y: 0, w: 0, h: 20 })
+    expect(flexDrop(parent, rects, c.id, 5, 10).index).toBe(0)
+    // a reversed row draws right to left, so the same spot means the other side
+    parent.layout.flex!.flow = "LV_FLEX_FLOW_ROW_REVERSE"
+    expect(flexDrop(parent, rects, a.id, 100, 10).index).toBe(1)
   })
 })

@@ -47,8 +47,9 @@ export function useLayers() {
       if (i > 0) d.screens.unshift(...d.screens.splice(i, 1))
     })
 
+  const realScreens = project.screens.filter(sc => !sc.library).length
   const deleteScreen = (id: string) => {
-    if (project.screens.length < 2) return
+    if (!project.screens.find(sc => sc.id === id)?.library && realScreens < 2) return
     edit(d => removeNodes(d, [id]))
     editorApi.getState().select([])
   }
@@ -93,6 +94,7 @@ export function useLayers() {
     addScreen,
     deleteScreen,
     makeStart,
+    canDelete: (id: string) => Boolean(project.screens.find(sc => sc.id === id)?.library) || realScreens > 1,
     startId: project.screens.find(sc => !sc.library)?.id,
     dropAt,
     finishDrop,

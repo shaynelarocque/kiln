@@ -1,30 +1,40 @@
 import { editorApi } from "@/entities/editor"
 import { createEmptyProject, projectApi, type Project } from "@/entities/project"
-import { inTauri, invoke } from "@/shared/lib/tauri"
+import { confirmAction, inTauri, invoke } from "@/shared/lib/tauri"
 
 const FILTERS = [{ name: "Kiln project", extensions: ["kiln"] }]
 const AUTOSAVE = "kiln:autosave"
 
-/** Reads a project file, checking it's one of ours before it replaces the open project. */
+/**
+ * Reads a project file, checking it's one of ours before it replaces the open project. Fields that
+ * end up in platformio.ini (which pio runs) are checked here too, not only at export.
+ */
 export function parseProject(text: string): Project {
   const data = JSON.parse(text)
   if (data?.kiln !== 1 || !Array.isArray(data.screens) || !data.screens.length) throw new Error("Not a Kiln project file")
+  if (typeof data.target?.board !== "string" || !/^[\w.-]+$/.test(data.target.board)) throw new Error("The file names an invalid board")
+  data.name = String(data.name ?? "Untitled").replace(/[\x00-\x1f\x7f]/g, " ").slice(0, 120)
+  // before subjects became pointers (LVGL 9.6's lv_subject_create), custom code wrote &ui_var_x
+  for (const v of data.variables ?? [])
+    if (v.source?.kind === "custom") v.source.expr = String(v.source.expr).replace(/&\s*(ui_var_\w+)/g, "$1")
   return data as Project
 }
 
-const confirmDiscard = () => {
+const isDirty = () => {
   const { project, saved } = projectApi.getState()
-  return project === saved || window.confirm("Discard unsaved changes?")
+  return project !== saved
 }
 
-export function newProject() {
-  if (!confirmDiscard()) return
+const confirmDiscard = async () => !isDirty() || confirmAction("Discard unsaved changes?")
+
+export async function newProject() {
+  if (!(await confirmDiscard())) return
   projectApi.getState().replace(createEmptyProject())
   editorApi.getState().select([])
 }
 
 export async function openProject() {
-  if (!confirmDiscard()) return
+  if (!(await confirmDiscard())) return
   try {
     if (inTauri()) {
       const { open } = await import("@tauri-apps/plugin-dialog")
@@ -82,26 +92,43 @@ export function download(name: string, contents: BlobPart, type = "application/j
   setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
 
-/** Keeps the open project in localStorage so a crash or reload loses nothing; restores it at launch. */
+/**
+ * Keeps the open project in localStorage so a crash or reload loses nothing, and restores it at
+ * launch, still marked unsaved if it was. Closing with unsaved work asks first.
+ */
 export function startAutosave() {
   try {
     const saved = localStorage.getItem(AUTOSAVE)
     if (saved) {
-      const { project, path } = JSON.parse(saved)
-      projectApi.getState().replace(parseProject(JSON.stringify(project)), path)
+      const { project, path, dirty } = JSON.parse(saved)
+      projectApi.getState().replace(parseProject(JSON.stringify(project)), path, dirty !== false)
     }
   } catch {
     // a bad or missing autosave just means starting from the sample
   }
   let timer = 0
-  return projectApi.subscribe(s => {
+  const stop = projectApi.subscribe(s => {
     clearTimeout(timer)
     timer = window.setTimeout(() => {
       try {
-        localStorage.setItem(AUTOSAVE, JSON.stringify({ project: s.project, path: s.path }))
+        localStorage.setItem(AUTOSAVE, JSON.stringify({ project: s.project, path: s.path, dirty: s.project !== s.saved }))
       } catch {
         // over quota (big images): the file on disk is still the source of truth
       }
     }, 500)
   })
+  const unload = (e: BeforeUnloadEvent) => isDirty() && e.preventDefault()
+  window.addEventListener("beforeunload", unload)
+  let unlisten: (() => void) | undefined
+  if (inTauri())
+    import("@tauri-apps/api/window").then(async ({ getCurrentWindow }) => {
+      unlisten = await getCurrentWindow().onCloseRequested(async e => {
+        if (isDirty() && !(await confirmAction("Quit without saving? Your changes stay in Kiln's autosave."))) e.preventDefault()
+      })
+    })
+  return () => {
+    stop()
+    window.removeEventListener("beforeunload", unload)
+    unlisten?.()
+  }
 }

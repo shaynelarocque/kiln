@@ -57,3 +57,16 @@ describe("components", () => {
     expect(node.children.every(c => !c.id.includes("/"))).toBe(true)
   })
 })
+
+describe("screens", () => {
+  it("never deletes the last real screen, even with a Components screen around", async () => {
+    const { removeNodes } = await import("./mutations")
+    const { p, card } = withCard()
+    makeComponent(p, card.id)
+    removeNodes(p, [p.screens[0].id])
+    expect(p.screens.filter(s => !s.library)).toHaveLength(1)
+    // the Components screen itself can go
+    removeNodes(p, [p.screens.find(s => s.library)!.id])
+    expect(p.screens).toHaveLength(1)
+  })
+})

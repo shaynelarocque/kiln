@@ -117,6 +117,14 @@ partition, 27% RAM), with no warnings from the generated code.
 
 CI (`.github/workflows/ci.yml`) runs the same checks plus the production build and the Rust tests.
 
+## Opening files you didn't make
+
+A `.kiln` file turns into C that gets compiled and a `platformio.ini` that `pio` runs, so Kiln
+treats project files as untrusted: board ids are checked on open, and everything that reaches
+generated code is validated (catalog enums, `#rrggbb` colours, finite numbers, comment-safe text).
+The one deliberate exception is a variable's **C expression** source, which is pasted into the
+firmware as written; that's its job. Read those before building someone else's project.
+
 ## Status
 
 See [GOALS.md](GOALS.md). The export compiles for `esp32-c3-devkitm-1`, but nothing has been flashed

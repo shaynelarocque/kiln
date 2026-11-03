@@ -113,18 +113,30 @@ export function resizeLayout(start: { x: number; y: number; w: number; h: number
   return { x: Math.round(x), y: Math.round(y), w: Math.round(w), h: Math.round(h) }
 }
 
-/** Where a dragged child would land among its flex siblings, by the pointer's position. */
-export function flexIndex(parent: Node, rects: Rects, dragged: string, x: number, y: number) {
-  const column = parent.layout.flex?.flow.includes("COLUMN")
-  const siblings = parent.children.filter(c => c.id !== dragged)
-  let index = 0
-  for (const child of siblings) {
+/**
+ * Where a dragged child would land among its flex siblings: next to the sibling nearest the
+ * pointer (which copes with wrapped rows), on the side the pointer is on, flipped for *_REVERSE flows.
+ * `index` is an insertion point in the full children list, as moveNode takes it.
+ */
+export function flexDrop(parent: Node, rects: Rects, dragged: string, x: number, y: number) {
+  const flow = parent.layout.flex?.flow ?? ""
+  const column = flow.includes("COLUMN")
+  const reverse = flow.includes("REVERSE")
+  let nearest: { id: string; r: Rect; d: number } | null = null
+  for (const child of parent.children) {
     const r = rects.get(child.id)
-    if (!r) continue
-    const centre = column ? r.y + r.h / 2 : r.x + r.w / 2
-    if ((column ? y : x) > centre) index = parent.children.indexOf(child) + 1
+    if (child.id === dragged || !r) continue
+    const d = Math.hypot(x - (r.x + r.w / 2), y - (r.y + r.h / 2))
+    if (!nearest || d < nearest.d) nearest = { id: child.id, r, d }
   }
-  return index
+  if (!nearest) return { index: 0, line: null }
+  const { r } = nearest
+  const past = column ? y > r.y + r.h / 2 : x > r.x + r.w / 2
+  const after = past !== reverse
+  const index = parent.children.findIndex(c => c.id === nearest!.id) + (after ? 1 : 0)
+  // the line sits on the side of the nearest sibling the pointer is on
+  const line: Rect = column ? { x: r.x, y: past ? r.y + r.h + 1 : r.y - 1, w: r.w, h: 0 } : { x: past ? r.x + r.w + 1 : r.x - 1, y: r.y, w: 0, h: r.h }
+  return { index, line }
 }
 
 export const isNumber = (v: Layout["x"]): v is number => typeof v === "number"

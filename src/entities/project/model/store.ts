@@ -9,8 +9,8 @@ type ProjectState = {
   project: Project
   /** file on disk, if saved */
   path: string | null
-  /** the project as last saved; dirty when it isn't `project` */
-  saved: Project
+  /** the project as last saved; dirty when it isn't `project` (null: never saved since a restore) */
+  saved: Project | null
   past: Project[]
   future: Project[]
 
@@ -24,7 +24,7 @@ type ProjectState = {
   settle: () => void
   undo: () => void
   redo: () => void
-  replace: (project: Project, path?: string | null) => void
+  replace: (project: Project, path?: string | null, dirty?: boolean) => void
   markSaved: (path: string) => void
 }
 
@@ -51,7 +51,7 @@ export const useProjectStore = create<ProjectState>()(set => {
       ),
     redo: () =>
       set(s => (s.future.length ? { project: s.future[0], future: s.future.slice(1), past: [...s.past, s.project] } : s)),
-    replace: (project, path = null) => set({ project, path, saved: project, past: [], future: [] }),
+    replace: (project, path = null, dirty = false) => set({ project, path, saved: dirty ? null : project, past: [], future: [] }),
     markSaved: path => set(s => ({ path, saved: s.project })),
   }
 })

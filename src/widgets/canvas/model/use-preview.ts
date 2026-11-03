@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import { editorApi } from "@/entities/editor"
 import { ProjectPreview, useProjectStore, type Project } from "@/entities/project"
-import { getRuntime, resetRuntime } from "@/shared/lvgl"
+import { getRuntime, onRuntimeReset, resetRuntime } from "@/shared/lvgl"
 import type { Rects } from "./interactions"
 
 /**
@@ -18,11 +18,19 @@ export function usePreview() {
   useEffect(() => {
     let alive = true
     let made: ProjectPreview | null = null
-    getRuntime().then(rt => {
-      if (alive) setPreview((made = new ProjectPreview(rt)))
+    const start = () =>
+      getRuntime().then(rt => {
+        if (alive) setPreview((made = new ProjectPreview(rt)))
+      })
+    start()
+    // whoever trapped LVGL (the canvas, Play) reset it; rebuild on the fresh one
+    const stop = onRuntimeReset(() => {
+      made = null
+      start()
     })
     return () => {
       alive = false
+      stop()
       made?.dispose()
     }
   }, [])
@@ -36,7 +44,7 @@ export function usePreview() {
     } catch (e) {
       failed.current = project
       editorApi.getState().set({ error: e instanceof Error ? e.message : String(e) })
-      resetRuntime().then(rt => setPreview(new ProjectPreview(rt)))
+      resetRuntime()
     }
   }, [preview, project])
 
@@ -45,7 +53,12 @@ export function usePreview() {
     let raf = 0
     let last = performance.now()
     const loop = (now: number) => {
-      preview.frame(Math.min(100, now - last))
+      try {
+        preview.frame(Math.min(100, now - last))
+      } catch (e) {
+        editorApi.getState().set({ error: `LVGL stopped: ${e instanceof Error ? e.message : e}` })
+        return resetRuntime()
+      }
       last = now
       raf = requestAnimationFrame(loop)
     }

@@ -152,6 +152,33 @@ lv_observer_t * kiln_bind_state_if(lv_obj_t * obj, lv_subject_t * subject, lv_st
     return bind_cond(obj, subject, (uint32_t)state, true, op, ref);
 }
 
+typedef struct {
+    lv_anim_timeline_t * at;
+    uint32_t delay;
+    bool reverse;
+} play_t;
+
+static void play_cb(lv_event_t * e)
+{
+    play_t * p = lv_event_get_user_data(e);
+    lv_anim_timeline_pause(p->at);
+    lv_anim_timeline_set_delay(p->at, p->delay);
+    lv_anim_timeline_set_reverse(p->at, p->reverse);
+    lv_anim_timeline_set_progress(p->at, p->reverse ? LV_ANIM_TIMELINE_PROGRESS_MAX : 0);
+    lv_anim_timeline_start(p->at);
+}
+
+void kiln_obj_add_play_event(lv_obj_t * obj, lv_event_code_t trigger, lv_anim_timeline_t * at, uint32_t delay, bool reverse)
+{
+    play_t * p = lv_malloc(sizeof(play_t));
+    LV_ASSERT_MALLOC(p);
+    p->at = at;
+    p->delay = delay;
+    p->reverse = reverse;
+    lv_obj_add_event_cb(obj, play_cb, trigger, p);
+    lv_obj_add_event_cb(obj, free_user_data_cb, LV_EVENT_DELETE, p);
+}
+
 static void chart_cb(lv_observer_t * observer, lv_subject_t * subject)
 {
     lv_chart_set_next_value(lv_observer_get_target_obj(observer), lv_observer_get_user_data(observer),

@@ -37,7 +37,7 @@ export function LayersPanel() {
                   </IconButton>
                 )
               )}
-              {vm.project.screens.length > 1 && (
+              {vm.canDelete(screen.id) && (
                 <IconButton label='Delete screen' className={s.tool} onClick={e => (e.stopPropagation(), vm.deleteScreen(screen.id))}>
                   <Trash />
                 </IconButton>

@@ -25,15 +25,15 @@ export function cString(text: string): string {
     }
     const code = ch.codePointAt(0)!
     if (code < 0x80) {
-      if (lastHex && /[0-9a-fA-F]/.test(ch)) {
-        flush()
-      }
+      if (lastHex && /[0-9a-fA-F]/.test(ch)) flush()
       lastHex = false
       if (ch === '"' || ch === "\\") lit += "\\" + ch
       else if (ch === "\n") lit += "\\n"
       else if (ch === "\t") lit += "\\t"
-      else if (code < 0x20) lit += `\\x${code.toString(16).padStart(2, "0")}`
-      else lit += ch
+      else if (code < 0x20 || code === 0x7f) {
+        lit += `\\x${code.toString(16).padStart(2, "0")}`
+        lastHex = true
+      } else lit += ch
       continue
     }
     for (const b of new TextEncoder().encode(ch)) lit += `\\x${b.toString(16).toUpperCase()}`
@@ -44,6 +44,9 @@ export function cString(text: string): string {
 }
 
 export const cColor = (color: string) => `lv_color_hex(0x${color.slice(1).toUpperCase()})`
+
+/** User text made safe inside a C block comment: no way to close it early, no control characters. */
+export const cComment = (text: string) => text.replace(/\*\//g, "* /").replace(/[\x00-\x1f\x7f]/g, " ")
 
 const name = (names: Record<string, string>, id: string) => {
   const n = names[id]

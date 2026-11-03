@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { editorApi, useEditorStore } from "@/entities/editor"
 import { edit, findNode, findParent, locate, moveNode, projectApi, useProjectStore, type Phase, type Screen } from "@/entities/project"
 import type { Rect } from "@/shared/lvgl"
-import { flexIndex, hitChain, isNumber, pickDeeper, pickTarget, resizeLayout, snapMove, type Guide, type Handle } from "./interactions"
+import { flexDrop, hitChain, isNumber, pickDeeper, pickTarget, resizeLayout, snapMove, type Guide, type Handle } from "./interactions"
 import { usePreview } from "./use-preview"
 
 export type DragState = { screen: string; guides: Guide[]; drop: Rect | null }
@@ -158,12 +158,8 @@ export function useCanvas() {
     if (parent.layout.flex && ids.length === 1) {
       const [px, py] = local(e, e.currentTarget as HTMLElement)
       drag(e, (dx, dy, phase) => {
-        const index = flexIndex(parent, screenRects, ids[0], px + dx, py + dy)
-        const before = parent.children.filter(c => c.id !== ids[0])[index] ?? null
-        const r = before ? screenRects.get(before.id) : screenRects.get(parent.children.at(-1)!.id)
-        const column = parent.layout.flex!.flow.includes("COLUMN")
-        const drop = r && (column ? { x: r.x, y: before ? r.y - 1 : r.y + r.h + 1, w: r.w, h: 0 } : { x: before ? r.x - 1 : r.x + r.w + 1, y: r.y, w: 0, h: r.h })
-        setDragState({ screen: screen.id, guides: [], drop: drop ?? null })
+        const { index, line } = flexDrop(parent, screenRects, ids[0], px + dx, py + dy)
+        setDragState({ screen: screen.id, guides: [], drop: line })
         if (phase === "end") {
           setDragState(null)
           edit(d => moveNode(d, ids[0], parent.id, index))
