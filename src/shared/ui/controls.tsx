@@ -190,19 +190,30 @@ export function ColorInput({ value, onChange, tokens = [] }: { value: string; on
   const token = value.startsWith("$") ? tokens.find(t => t.id === value.slice(1)) : undefined
   const hex = token?.value ?? (value.startsWith("#") ? value : "#000000")
   const picking = useRef(false)
+  const input = useRef<HTMLInputElement>(null)
+  const latest = useRef(onChange)
+  latest.current = onChange
+  // React's onChange fires on every tick of a colour picker; the native change event fires once,
+  // when it closes, which is where the gesture (and its single undo step) ends.
+  useEffect(() => {
+    const el = input.current!
+    const done = () => {
+      if (picking.current) latest.current(el.value, "end")
+      picking.current = false
+    }
+    el.addEventListener("change", done)
+    return () => el.removeEventListener("change", done)
+  }, [])
   return (
     <span className={s.color}>
       <label className={s.swatch} style={{ background: hex }}>
         <input
+          ref={input}
           type='color'
           value={hex}
-          onInput={e => {
-            onChange((e.target as HTMLInputElement).value, picking.current ? "move" : "start")
-            picking.current = true
-          }}
           onChange={e => {
-            if (picking.current) onChange(e.target.value, "end")
-            picking.current = false
+            latest.current(e.target.value, picking.current ? "move" : "start")
+            picking.current = true
           }}
         />
       </label>

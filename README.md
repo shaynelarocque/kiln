@@ -41,6 +41,10 @@ What you see is what flashes.
 - **Know if it fits.** A flash and RAM meter estimates the build against the board's real limits,
   read from PlatformIO's board definitions.
 
+| Components | Board, display and pins | Export |
+|---|---|---|
+| ![Components](docs/components.png) | ![Board dialog](docs/board.png) | ![Export](docs/export.png) |
+
 ## Getting started
 
 You need Node 22+, pnpm, and Rust (for the Tauri shell).

@@ -112,3 +112,31 @@ pub async fn pio_run(dir: String, upload: bool, port: Option<String>, on_event: 
     .await
     .map_err(|e| e.to_string())?
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::{Arc, Mutex};
+    use tauri::ipc::InvokeResponseBody;
+
+    /// The Build button's whole Rust path: pio_run on a real export, with the log streamed back.
+    /// `KILN_TEST_PROJECT=/path/to/export cargo test -- --ignored`
+    #[test]
+    #[ignore = "needs PlatformIO and an exported project in KILN_TEST_PROJECT"]
+    fn builds_an_exported_project() {
+        let dir = std::env::var("KILN_TEST_PROJECT").expect("set KILN_TEST_PROJECT to an exported project");
+        let lines = Arc::new(Mutex::new(Vec::new()));
+        let sink = lines.clone();
+        let channel = Channel::new(move |body| {
+            if let InvokeResponseBody::Json(json) = body {
+                sink.lock().unwrap().push(json);
+            }
+            Ok(())
+        });
+        let code = tauri::async_runtime::block_on(pio_run(dir, false, None, channel)).unwrap();
+        let lines = lines.lock().unwrap();
+        assert_eq!(code, 0);
+        assert!(lines.iter().any(|l| l.contains("SUCCESS")), "no SUCCESS line in {} lines", lines.len());
+        assert!(lines.last().unwrap().contains(r#""kind":"done""#));
+    }
+}
