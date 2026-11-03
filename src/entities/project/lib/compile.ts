@@ -76,6 +76,27 @@ const FOCUSABLE = new Set<Node["widget"]>([
 const focusable = (n: Node) =>
   n.clickable ?? (FOCUSABLE.has(n.widget) || n.events.some(ev => POINTER_EVENTS.has(ev.trigger)))
 
+/**
+ * Images something in the UI shows: only these are compiled in, so an image only one size uses
+ * costs the others nothing. Pass a project whose screens are resolved for one size.
+ */
+export function usedAssets(project: Project) {
+  const used = new Set<string>()
+  const scan = (props: Record<string, StyleValue>) => {
+    for (const [k, v] of Object.entries(props))
+      if (styleProp(k)?.type === "image" && typeof v === "string") used.add(v)
+  }
+  for (const s of project.styles) scan(s.props)
+  for (const screen of project.screens)
+    walk(screen, n => {
+      for (const p of WIDGETS[n.widget].props)
+        if (p.type === "image" && typeof n.props[p.key] === "string")
+          used.add(String(n.props[p.key]))
+      for (const props of Object.values(n.style)) scan(props)
+    })
+  return used
+}
+
 const COMPARE: Record<string, string> = {
   eq: "KILN_EQ",
   not_eq: "KILN_NOT_EQ",
@@ -425,7 +446,9 @@ export function compile(source: Project, mode: CompileMode): Program {
       cache: TTF_GLYPH_CACHE,
       fallback: fallbacks.get(`ttf:${u.id}:${u.size}`) ?? null,
     })
+  const shown = usedAssets(project)
   for (const a of project.assets) {
+    if (!shown.has(a.id)) continue
     const data = a.format in IMAGE_CF ? fromBase64(a.data) : null
     if (data)
       setup.push({

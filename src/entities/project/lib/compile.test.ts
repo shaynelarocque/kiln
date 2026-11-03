@@ -29,6 +29,8 @@ import {
   createSampleProject,
   newId,
 } from "../model/factory"
+import { atSize } from "../model/sizes"
+import type { Asset } from "../model/types"
 import { compile, safeFormat } from "./compile"
 
 let rt: LvglRuntime
@@ -271,5 +273,34 @@ describe("safeFormat", () => {
     expect(safeFormat("%d/%d", "int")).toBeNull()
     expect(safeFormat("no spec", "string")).toBeNull()
     expect(safeFormat("Hi %s", "string")).toBe("Hi %s")
+  })
+})
+
+describe("images", () => {
+  it("compiles in only the images shown, so one a single size uses costs the others nothing", () => {
+    const p = createEmptyProject()
+    const asset = (name: string): Asset => ({
+      id: newId(),
+      name,
+      width: 1,
+      height: 1,
+      format: "RGB565",
+      dither: false,
+      png: "",
+      data: "AAA=",
+      stride: 2,
+    })
+    const [big, small, spare] = [asset("big"), asset("small"), asset("spare")]
+    p.assets = [big, small, spare]
+    const logo = createNode("image", { name: "logo", props: { src: big.id } })
+    logo.at = { s: { props: { src: small.id } } }
+    p.screens[0].children = [logo]
+    p.sizes = [{ id: "s", name: "small", target: p.target }]
+    const images = (size: string | null) =>
+      compile(atSize(p, size), "export")
+        .setup.filter(op => op.op === "image")
+        .map(op => (op as { id: string }).id)
+    expect(images(null)).toEqual([big.id])
+    expect(images("s")).toEqual([small.id])
   })
 })

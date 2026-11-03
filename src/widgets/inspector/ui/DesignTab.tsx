@@ -42,7 +42,7 @@ export function DesignTab({ vm }: { vm: InspectorViewModel }) {
           <Hint>
             {vm.atSize.differs
               ? `This layer differs at ${vm.atSize.name}.`
-              : `Layout and style changes here apply at ${vm.atSize.name} only.`}
+              : `Layout, style and graphics changes here apply at ${vm.atSize.name} only.`}
           </Hint>
           {vm.atSize.differs && (
             <Button variant='ghost' onClick={vm.atSize.reset}>

@@ -1,6 +1,16 @@
 import type { Draft } from "immer"
+import { WIDGETS } from "@/shared/lvgl"
 import { walk } from "../lib/tree"
 import type { Node, Project, Screen, SizePatch, StyleMap } from "./types"
+
+/**
+ * Props a size can have its own of: a node's graphics (images, sprites, their zoom), since a
+ * different panel usually wants different art. Text and the other props stay shared.
+ */
+export const graphicProps = (n: Node) =>
+  WIDGETS[n.widget].props
+    .filter(p => p.type === "image" || p.type === "sprite" || p.type === "scale")
+    .map(p => p.key)
 
 type Patch = Record<string, unknown>
 
@@ -35,6 +45,7 @@ function nodeAt(n: Node, sizeId: string): Node {
     layout: p.layout ? patched(n.layout, p.layout) : n.layout,
     style: p.style ? patchedStyle(n.style, p.style) : n.style,
     hidden: p.hidden ?? n.hidden,
+    props: p.props ? patched(n.props, p.props) : n.props,
     children,
   }
 }
@@ -91,14 +102,19 @@ function patchFor(n: Node, base: Node, screen: boolean): SizePatch | undefined {
   }
   if (Object.keys(style).length) patch.style = style
   if (Boolean(n.hidden) !== Boolean(base.hidden)) patch.hidden = Boolean(n.hidden)
+  const keys = graphicProps(n)
+  const pick = (props: Node["props"]) =>
+    Object.fromEntries(keys.filter(k => k in props).map(k => [k, props[k]]))
+  const props = difference(pick(n.props), pick(base.props))
+  if (props) patch.props = props as SizePatch["props"]
   return Object.keys(patch).length ? patch : undefined
 }
 
 /**
- * Folds an edit made at a size back into the document. Layout, style and visibility become the
- * size's patch, diffed against the base, so setting a base value back drops it. Everything else
- * (structure, names, text, bindings, the shared lists) changes the base, and the board or
- * display edited becomes the size's own.
+ * Folds an edit made at a size back into the document. Layout, style, visibility and graphics
+ * become the size's patch, diffed against the base, so setting a base value back drops it.
+ * Everything else (structure, names, text, bindings, the shared lists) changes the base, and the
+ * board or display edited becomes the size's own.
  */
 export function unsize(doc: Project, before: Project, after: Project, sizeId: string): Project {
   if (!doc.sizes.some(s => s.id === sizeId)) return after
@@ -118,7 +134,13 @@ export function unsize(doc: Project, before: Project, after: Project, sizeId: st
     const patch = patchFor(n, b, screen)
     if (patch) at[sizeId] = patch
     else delete at[sizeId]
-    const out: Node = { ...n, layout: b.layout, style: b.style, hidden: b.hidden, children }
+    // the base keeps its own graphics; other prop edits reach it
+    const props = { ...n.props }
+    for (const k of graphicProps(n)) {
+      if (k in b.props) props[k] = b.props[k]
+      else delete props[k]
+    }
+    const out: Node = { ...n, layout: b.layout, style: b.style, hidden: b.hidden, props, children }
     if (Object.keys(at).length) out.at = at
     else delete out.at
     return out

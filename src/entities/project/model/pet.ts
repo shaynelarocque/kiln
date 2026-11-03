@@ -6,6 +6,7 @@ import {
   DEFAULT_DISPLAY,
   newId,
 } from "./factory"
+import { bubbleSprite, sparkleSprite, zzzSprite } from "./pet-art"
 import type { Easing } from "@/shared/lvgl"
 import type {
   Animation,
@@ -17,6 +18,7 @@ import type {
   Project,
   Size,
   SizePatch,
+  Sprite,
 } from "./types"
 
 const MINT = "#7ee0b5"
@@ -360,6 +362,44 @@ export function createPetProject(): Project {
     })
   const blow = pill("blow_button", "blow!", {})
 
+  // pixel art for each mood, at 2× on the round screen and 1× on the small one (its own zoom)
+  const sparkle = sparkleSprite()
+  const bubbles = bubbleSprite()
+  const zzz = zzzSprite()
+  const fx = (name: string, art: Sprite, layout: Partial<Layout>, extra: Partial<Node> = {}) => {
+    const node = createNode("sprite", {
+      name,
+      layout: { x: 0, y: 0, w: "content", h: "content", align: "LV_ALIGN_CENTER", ...layout },
+      clickable: false,
+      at: at({ props: { scale: 256 } }),
+      ...extra,
+    })
+    node.props = { ...node.props, sprite: art.id, scale: 512 }
+    return node
+  }
+  const sparkles = fx(
+    "sparkles",
+    sparkle,
+    { x: "-26%", y: "-27%" },
+    {
+      bindings: [hiddenWhen(booze.id, "gt", 30)],
+    },
+  )
+  // tipsy is a range, so it nests: the group hides past 70, the bubbles up to 30
+  const hiccups = group("hiccups", {
+    layout: { x: "25%", y: "-4%", w: "content", h: "content", align: "LV_ALIGN_CENTER" },
+    bindings: [hiddenWhen(booze.id, "gt", 70)],
+    children: [fx("bubbles", bubbles, {}, { bindings: [hiddenWhen(booze.id, "le", 30)] })],
+  })
+  const snoring = fx(
+    "zzz",
+    zzz,
+    { x: "23%", y: "-31%" },
+    {
+      bindings: [hiddenWhen(booze.id, "le", 85)],
+    },
+  )
+
   const pet = createScreen("Pet", display, { x: 0, y: 0 })
   pet.style = {
     "main:default": { bg_color: NIGHT, bg_grad_color: "#1d2442", bg_grad_dir: "LV_GRAD_DIR_VER" },
@@ -367,6 +407,9 @@ export function createPetProject(): Project {
   pet.children = [
     dizzy,
     buddy,
+    sparkles,
+    hiccups,
+    snoring,
     say("say_fresh", "feeling fresh!", { bindings: [hiddenWhen(booze.id, "gt", 30)] }),
     sayTipsy,
     say("say_cab", "call me a cab...", { bindings: [hiddenWhen(booze.id, "le", 70)] }),
@@ -548,7 +591,7 @@ export function createPetProject(): Project {
     animations: [idle, blink, spin, boop],
     assets: [],
     fonts: [],
-    sprites: [],
+    sprites: [sparkle, bubbles, zzz],
     sizes: [small],
   }
 }

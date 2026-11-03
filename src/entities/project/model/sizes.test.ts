@@ -78,3 +78,25 @@ it("shares everything else: names, new layers and the base, but not the board it
   expect(projectApi.getState().doc.sizes[0].target.display.bufferRows).not.toBe(16)
   expect(projectApi.getState().project.target.display.width).toBe(160)
 })
+
+it("gives a size its own graphics, while text stays shared", () => {
+  const { screen } = setup()
+  const sprite = createNode("sprite", { name: "bubbles", props: { sprite: "big", scale: 512 } })
+  const label = createNode("label", { name: "caption", props: { text: "hic!" } })
+  edit(d => void locate(d, screen)!.node.children.push(sprite, label))
+  projectApi.getState().setSize("small")
+  edit(d => {
+    const n = locate(d, sprite.id)!.node
+    n.props.sprite = "small"
+    n.props.scale = 256
+    locate(d, label.id)!.node.props.text = "hic"
+  })
+  expect(viewNode(sprite.id).props).toMatchObject({ sprite: "small", scale: 256 })
+  expect(docNode(sprite.id).props).toMatchObject({ sprite: "big", scale: 512 })
+  expect(docNode(sprite.id).at).toEqual({ small: { props: { sprite: "small", scale: 256 } } })
+  // text is content, not art: it changes everywhere
+  expect(docNode(label.id).props.text).toBe("hic")
+  expect(docNode(label.id).at).toBeUndefined()
+  projectApi.getState().setSize(null)
+  expect(viewNode(sprite.id).props).toMatchObject({ sprite: "big", scale: 512 })
+})

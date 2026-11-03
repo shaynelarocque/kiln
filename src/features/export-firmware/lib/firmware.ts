@@ -15,6 +15,7 @@ import {
   transformedNodes,
   ttfFallbacks,
   ttfUses,
+  usedAssets,
   type Node,
   type Project,
   type Source,
@@ -132,6 +133,7 @@ export function largestLayer(project: Project, boxes?: Boxes) {
 export function budgetFor(project: Project, board: Board | undefined, boxes?: Boxes) {
   const layer = largestLayer(project, boxes)
   const nodes = allNodes(project)
+  const shown = usedAssets(project)
   const strings = nodes.reduce(
     (sum, n) =>
       sum +
@@ -155,7 +157,9 @@ export function budgetFor(project: Project, board: Board | undefined, boxes?: Bo
     fonts: usedFonts(project),
     ...ttfBudget(project),
     imageBytes:
-      project.assets.reduce((sum, a) => sum + Math.ceil((a.data.length * 3) / 4), 0) +
+      project.assets
+        .filter(a => shown.has(a.id))
+        .reduce((sum, a) => sum + Math.ceil((a.data.length * 3) / 4), 0) +
       // only sprites a widget plays are compiled in
       project.sprites
         .filter(s => nodes.some(n => n.widget === "sprite" && n.props.sprite === s.id))

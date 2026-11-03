@@ -51,6 +51,17 @@ describe("the breathalyzer pet", () => {
     // the tipsy face needs both its group (booze ≤ 70) and its own binding (booze > 30)
     expect(faces(50)).toEqual(["tipsy", "tipsy_face"])
     expect(faces(90)).toEqual(["wasted_face", "dizzy"])
+    // the pixel art for each mood: sparkles, hiccup bubbles, then snoring once it's out. The
+    // bubbles and the hiccup line sit in content-sized groups, which must grow when they show
+    const art = (level: number) => {
+      rt.x.lv_subject_set_int(booze, level)
+      rt.tick(50)
+      return ["sparkles", "bubbles", "say_hic", "zzz"].filter(shown)
+    }
+    expect(art(10)).toEqual(["sparkles"])
+    expect(art(50)).toEqual(["bubbles", "say_hic"])
+    expect(art(80)).toEqual([])
+    expect(art(95)).toEqual(["zzz"])
     for (let t = 0; t < 3000; t += 33) rt.tick(33)
 
     display.release()

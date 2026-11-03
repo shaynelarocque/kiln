@@ -58,7 +58,9 @@ What you see is what flashes.
 - **Design once, for every screen.** Add sizes (a 128×160 ST7735 beside a round GC9A01, say),
   each with its own board and panel. Pick one and every screen shows at that size; LVGL's relative
   layout (align, %, flex) does most of the work, and anything you change there stays there, like
-  a CSS media query. Play, export and the budget follow the size you're on.
+  a CSS media query: layout, style, visibility, and graphics (an image, a sprite, their zoom),
+  since a different panel usually wants different art. Images are compiled in only where shown,
+  so art one size uses costs the others nothing. Play, export and the budget follow the size you're on.
 - **Build and flash it.** In the desktop app, Export writes the project, runs `pio run`, and uploads
   to the port you pick, streaming PlatformIO's log.
 - **Know if it fits.** A flash and RAM meter estimates the build against the board's real limits,

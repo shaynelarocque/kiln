@@ -125,7 +125,13 @@ static void cond_cb(lv_observer_t * observer, lv_subject_t * subject)
     lv_obj_t * obj = lv_observer_get_target_obj(observer);
     bool on = holds((kiln_compare_t)c->op, lv_subject_get_int(subject), c->ref);
     if(c->is_state) lv_obj_set_state(obj, (lv_state_t)c->what, on);
-    else if(c->what == LV_OBJ_FLAG_HIDDEN) lv_obj_set_hidden(obj, on);
+    else if(c->what == LV_OBJ_FLAG_HIDDEN) {
+        lv_obj_set_hidden(obj, on);
+        /* LVGL re-measures a parent only for children its flex or grid places, so a content-sized
+         * group whose child just showed would stay as small as it was with the child hidden */
+        lv_obj_t * parent = lv_obj_get_parent(obj);
+        if(parent) lv_obj_mark_layout_as_dirty(parent);
+    }
     else if(c->what == LV_OBJ_FLAG_CLICKABLE) lv_obj_set_clickable(obj, on);
 }
 

@@ -30,6 +30,8 @@ export type SizePatch = {
   layout?: { [K in keyof Layout]?: Layout[K] | null }
   style?: Record<string, Record<string, StyleValue | null>>
   hidden?: boolean
+  /** its graphics there: image, sprite and zoom props (see GRAPHIC_PROPS); text and the rest are shared */
+  props?: Record<string, string | number | boolean | null>
 }
 
 export type Theme = { primary: string; secondary: string; dark: boolean }

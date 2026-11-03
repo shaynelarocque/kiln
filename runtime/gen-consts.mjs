@@ -27,10 +27,13 @@ const walk = dir => {
 }
 walk(join(root, "src"))
 
-// Config switches, fonts and symbol strings aren't integer constants (font kerning modes are).
+// Config switches, fonts and symbol strings aren't integer constants (font kerning modes are), and
+// LVGL's maths macros, which Play's C expressions name, are functions.
 const list = [...names]
   .filter(
-    n => !/^LV_(USE|SYMBOL|CONF)_|^LV_FONT_(?!KERNING_)/.test(n) && n !== "LV_COLOR_FORMAT_DEFAULT",
+    n =>
+      !/^LV_(USE|SYMBOL|CONF)_|^LV_FONT_(?!KERNING_)|^LV_(ABS|CLAMP|MAX|MIN)$/.test(n) &&
+      n !== "LV_COLOR_FORMAT_DEFAULT",
   )
   .sort()
 writeFileSync(join(import.meta.dirname, "consts.inc"), list.map(n => `K(${n})`).join("\n") + "\n")
