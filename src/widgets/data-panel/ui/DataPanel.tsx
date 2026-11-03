@@ -53,7 +53,8 @@ export function DataPanel() {
       >
         <Hint>
           Each variable is an LVGL subject. Bind widgets to it, feed it from a pin, or let it drive
-          one. In Play, simulations stand in for the board.
+          one. In Play, simulations stand in for the board, and C expressions over other variables
+          run as they would on it.
         </Hint>
         {vm.variables.length === 0 && (
           <Button icon={<Plus />} onClick={vm.add}>
@@ -273,14 +274,17 @@ function VariableCard({ v, vm }: { v: Variable; vm: ReturnType<typeof useData> }
             </>
           )}
           {v.source?.kind === "custom" && (
-            <Field label='Expression' wide>
-              <TextInput
-                value={v.source.expr}
-                onChange={t => set(x => void ((x.source as { expr: string }).expr = t))}
-                mono
-                placeholder='e.g. my_sensor_read()'
-              />
-            </Field>
+            <>
+              <Field label='Expression' wide>
+                <TextInput
+                  value={v.source.expr}
+                  onChange={t => set(x => void ((x.source as { expr: string }).expr = t))}
+                  mono
+                  placeholder='e.g. my_sensor_read()'
+                />
+              </Field>
+              <ExprHint status={vm.exprStatus(v.id)} simulated={v.sim.kind !== "none"} />
+            </>
           )}
           {v.source && (
             <Field label='Read every'>
@@ -334,5 +338,28 @@ function VariableCard({ v, vm }: { v: Variable; vm: ReturnType<typeof useData> }
         {uses.length ? `Bound to ${uses.join(", ")}` : "Not bound yet: select a widget, then Bind."}
       </p>
     </section>
+  )
+}
+
+/** Whether Play runs a C expression source itself, or why it can't. */
+function ExprHint({
+  status,
+  simulated,
+}: {
+  status: ReturnType<ReturnType<typeof useData>["exprStatus"]>
+  simulated: boolean
+}) {
+  if (!status) return null
+  if (status.ok)
+    return (
+      <Hint tone='ok'>
+        Play runs this expression on its own, reading the other variables as they change.
+      </Hint>
+    )
+  return (
+    <Hint>
+      Play can't run this: {status.error}. It runs on the board;{" "}
+      {simulated ? "in Play, the simulation stands in." : "in Play, set it from the sidebar."}
+    </Hint>
   )
 }

@@ -1,6 +1,17 @@
 import { Scene, type Display, type LvglRuntime, type Op, type Rect } from "@/shared/lvgl"
 import { compile } from "../lib/compile"
+import { parseExpr, type ExprEnv } from "../lib/expr"
 import type { Project, Variable } from "./types"
+
+/** Each variable whose C expression Play can run (see parseExpr), keyed by the variable's id. */
+export function playableExprs(project: Project, names: Record<string, string>) {
+  const ints = project.variables.filter(v => v.type === "int")
+  const byName = Object.fromEntries(ints.map(v => [names[v.id], v.id]))
+  const exprs = new Map<string, ReturnType<typeof parseExpr>>()
+  for (const v of ints)
+    if (v.source?.kind === "custom") exprs.set(v.id, parseExpr(v.source.expr, byName))
+  return exprs
+}
 
 /** A cheap identity for an op list; image bytes are sampled instead of serialised. */
 function keyOf(ops: Op[]) {
@@ -133,6 +144,8 @@ export class ProjectPlayer {
   private scene: Scene
   private time = 0
   private lastSim = -Infinity
+  /** C expression sources Play can run, each on its own period like the board's poll */
+  private exprs: { id: string; every: number; next: number; run: (env: ExprEnv) => number }[] = []
 
   constructor(
     readonly rt: LvglRuntime,
@@ -140,6 +153,11 @@ export class ProjectPlayer {
     startScreen: string,
   ) {
     const program = compile(project, "play")
+    for (const [id, parsed] of playableExprs(project, program.names)) {
+      const v = project.variables.find(x => x.id === id)!
+      if (parsed.ok && v.source?.kind === "custom")
+        this.exprs.push({ id, every: Math.max(5, v.source.every), next: 0, run: parsed.run })
+    }
     const { width, height } = project.target.display
     this.display = rt.createDisplay(width, height)
     this.display.setTheme(project.theme)
@@ -178,10 +196,17 @@ export class ProjectPlayer {
     this.time += ms
     if (this.time - this.lastSim >= 50) {
       this.lastSim = this.time
+      // a simulation stands in for a source; an expression Play can run is the real thing
       for (const v of this.project.variables)
-        if (v.type === "int" && v.sim.kind !== "none")
+        if (v.type === "int" && v.sim.kind !== "none" && !this.exprs.some(e => e.id === v.id))
           this.set(v.id, simulate(v, this.time, this.get(v.id)))
     }
+    // in declaration order, each seeing the values set before it, as the board's loop does
+    for (const e of this.exprs)
+      if (this.time >= e.next) {
+        e.next = this.time + e.every
+        this.set(e.id, e.run({ get: id => this.get(id), now: this.time, random: Math.random }))
+      }
     this.rt.tick(ms)
     this.display.blit(ctx)
   }

@@ -1,8 +1,10 @@
 import { checkPins, findBoard, pinMap, useBoards } from "@/entities/board"
 import {
   allNodes,
+  cNames,
   createVariable,
   edit,
+  playableExprs,
   useProjectStore,
   type Phase,
   type Variable,
@@ -17,6 +19,8 @@ export function useData() {
   const mcu = board?.mcu ?? "ESP32C3"
   const problems = checkPins(mcu, pinClaims(project))
   const nodes = allNodes(project)
+  const names = cNames(project)
+  const exprs = playableExprs(project, names)
 
   const update = (id: string, recipe: (v: Variable) => void, phase?: Phase) =>
     edit(d => {
@@ -35,6 +39,10 @@ export function useData() {
       const pins = [v.source && "pin" in v.source ? v.source.pin : -1, v.sink?.pin ?? -1]
       return problems.filter(p => pins.includes(p.pin))
     },
+    /** the C name code reads it by: ui_var_… */
+    cName: (id: string) => names[id],
+    /** whether Play can run this variable's C expression, and if not, why */
+    exprStatus: (id: string) => exprs.get(id),
     uses: (id: string) =>
       nodes.filter(n => n.bindings.some(b => b.variable === id)).map(n => n.name),
     add: () =>
