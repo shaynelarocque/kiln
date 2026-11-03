@@ -1,4 +1,4 @@
-import { Film, ImagePlus, Minus, Type } from "lucide-react"
+import { Film, ImagePlus, Minus, Power, Type } from "lucide-react"
 import { useEffect, useState } from "react"
 import { formatBytes } from "@/entities/board"
 import type { ImageFormat, Sprite } from "@/entities/project"
@@ -122,6 +122,9 @@ export function AssetsPanel() {
             ) : (
               <Button onClick={() => vm.placeSprite(sp.id)}>Add to screen</Button>
             )}
+            <Button icon={<Power />} onClick={() => vm.bootWith(sp.id)}>
+              Make boot animation
+            </Button>
           </div>
         </section>
       ))}

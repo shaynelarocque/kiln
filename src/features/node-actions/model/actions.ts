@@ -3,6 +3,7 @@ import {
   canContain,
   cloneNode,
   createNode,
+  createScreen,
   edit,
   findParent,
   insertNode,
@@ -244,4 +245,49 @@ export function navigateOnClick(nodeId: string, screenId: string) {
         },
       })
   })
+}
+
+/**
+ * A boot animation in one go: a new first screen that plays the sprite once, centred and zoomed
+ * as big as fits (in whole steps, so pixel art stays crisp), then fades to the old first screen.
+ */
+export function addBootScreen(spriteId: string) {
+  const p = project()
+  const sprite = p.sprites.find(s => s.id === spriteId)
+  const start = p.screens.find(s => !s.library)
+  if (!sprite || !start) return
+  const { width, height } = p.target.display
+  const fit = Math.min(width / sprite.width, height / sprite.height)
+  const zoom = fit >= 1 ? Math.min(4, Math.floor(fit)) : fit
+  const screen = createScreen(uniqueName(p, "boot"), p.target.display, {
+    x: start.frame.x - width - 80,
+    y: start.frame.y,
+  })
+  screen.style = { "main:default": { bg_color: "#000000" } }
+  const play = createNode("sprite", {
+    name: uniqueName(p, `${sprite.name}_boot`),
+    layout: { x: 0, y: 0, w: "content", h: "content", align: "LV_ALIGN_CENTER" },
+    events: [
+      {
+        id: newId(),
+        trigger: "LV_EVENT_READY",
+        action: {
+          type: "navigate",
+          screen: start.id,
+          anim: "LV_SCREEN_LOAD_ANIM_FADE_IN",
+          duration: 400,
+          delay: 200,
+        },
+      },
+    ],
+  })
+  Object.assign(play.props, {
+    sprite: sprite.id,
+    once: true,
+    scale: Math.round(zoom * 256),
+    antialias: zoom < 1,
+  })
+  screen.children = [play]
+  edit(d => void d.screens.unshift(screen))
+  editorApi.getState().select([play.id])
 }

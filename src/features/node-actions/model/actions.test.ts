@@ -8,7 +8,7 @@ import {
   findNode,
   projectApi,
 } from "@/entities/project"
-import { alignSelection, distributeSelection, navigateOnClick } from "./actions"
+import { addBootScreen, alignSelection, distributeSelection, navigateOnClick } from "./actions"
 
 /** Three 20×10 buttons at x 10, 50, 100, with the boxes the preview would publish. */
 function setup() {
@@ -88,5 +88,33 @@ it("wires a click to open a screen, like a prototype noodle, and retargets it", 
       { k: "obj", id: label.id },
       { k: "bool", v: true },
     ],
+  })
+})
+
+it("makes a boot screen: the sprite plays once, as big as fits, then opens the old first screen", () => {
+  const p = createEmptyProject()
+  const home = p.screens[0]
+  const frame = { png: "", data: "" }
+  p.sprites.push({
+    id: "spr",
+    name: "logo",
+    width: 32,
+    height: 24,
+    format: "RGB565",
+    dither: false,
+    frameMs: 80,
+    stride: 64,
+    frames: [frame, frame],
+  })
+  projectApi.getState().replace(p)
+  addBootScreen("spr")
+  const [boot, second] = projectApi.getState().project.screens
+  expect([boot.name, second.id]).toEqual(["boot", home.id])
+  const play = boot.children[0]
+  // 240 / 32 = 7.5, so the biggest whole zoom up to 4×
+  expect(play.props).toMatchObject({ sprite: "spr", once: true, scale: 1024, antialias: false })
+  expect(play.events[0]).toMatchObject({
+    trigger: "LV_EVENT_READY",
+    action: { type: "navigate", screen: home.id },
   })
 })

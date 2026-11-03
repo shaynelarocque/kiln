@@ -1,5 +1,6 @@
 export type { AlignEdge } from "./lib/align"
 export {
+  addBootScreen,
   alignSelection,
   copySelection,
   cutSelection,

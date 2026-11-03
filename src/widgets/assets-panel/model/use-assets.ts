@@ -21,6 +21,7 @@ import {
   reconvertSprite,
 } from "@/features/import-image"
 import { insertWidget } from "@/features/insert-widget"
+import { addBootScreen } from "@/features/node-actions"
 import { fontFamily } from "@/shared/lib/font-faces"
 import { DEFAULT_FONT, parseTtfFont, ttfFont } from "@/shared/lvgl"
 
@@ -80,6 +81,7 @@ export function useAssets() {
       editorApi.getState().set({ rightTab: "design" })
     },
     placeSprite: (spriteId: string) => insertWidget("sprite", { sprite: spriteId }),
+    bootWith: addBootScreen,
     fonts: project.fonts,
     /** the selected layer, which "Use on" sets the font of */
     textTarget: selected && selected.widget !== "screen" ? selected : undefined,
