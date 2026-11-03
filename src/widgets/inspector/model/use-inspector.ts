@@ -1,6 +1,6 @@
 import { useMemo } from "react"
 import { editorApi, useEditorStore } from "@/entities/editor"
-import { cNames, edit, findNode, findParent, useProjectStore, type Layout, type Node, type Phase } from "@/entities/project"
+import { cNames, edit, findMain, findNode, findParent, instancesOf, isLibrary, useProjectStore, type Layout, type Node, type Phase } from "@/entities/project"
 import { updateNode } from "@/features/node-actions"
 import { MAIN_DEFAULT, STATES, WIDGETS } from "@/shared/lvgl"
 
@@ -21,6 +21,8 @@ export function useInspector() {
   const states = stateKey.split("+")
 
   const set = (recipe: (n: Node) => void, phase?: Phase) => node && updateNode(node.id, recipe, phase)
+  const main = node?.component ? findMain(project, node.component) : undefined
+  const isMain = Boolean(node && parent && project.screens.some(sc => isLibrary(sc) && sc.children.some(c => c.id === node.id)))
 
   /** The selector key for a part and a set of states, in LVGL's state order. */
   const selectorFor = (p: string, st: string[]) => {
@@ -65,6 +67,23 @@ export function useInspector() {
         else map[name] = value
       }, phase),
     rename: (name: string) => set(n => void (n.name = name)),
+    /** components: the main this instance follows, or how many instances follow this main */
+    main,
+    isMain,
+    instanceCount: node && isMain ? instancesOf(project, node.id).length : 0,
+    /** set (or with undefined, clear) an instance's override of one of its main's props */
+    overrideProp: (mainNodeId: string, key: string, value: string | number | boolean | undefined) =>
+      set(n => {
+        const o = ((n.overrides ??= {})[mainNodeId] ??= {})
+        if (value === undefined) delete o.props?.[key]
+        else (o.props ??= {})[key] = value
+      }),
+    overrideVariable: (mainNodeId: string, variable: string | undefined) =>
+      set(n => {
+        const o = ((n.overrides ??= {})[mainNodeId] ??= {})
+        if (variable) o.variable = variable
+        else delete o.variable
+      }),
     editProject: edit,
   }
 }

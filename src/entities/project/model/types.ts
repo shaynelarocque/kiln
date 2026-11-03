@@ -103,10 +103,26 @@ export type Node = {
   children: Node[]
   /** editor only: can't be selected on the canvas */
   locked?: boolean
+  /** on an instance: the id of its main component (a node on the Components screen) */
+  component?: string
+  /** on an instance: changes to the main's nodes, keyed by their ids */
+  overrides?: Record<string, Override>
+}
+
+/** What an instance changes about one node of its main component. */
+export type Override = {
+  props?: Record<string, string | number | boolean | null>
+  /** reads this variable instead, in every binding on that node */
+  variable?: string
 }
 
 /** A screen is a node with a spot on the infinite canvas. */
-export type Screen = Node & { widget: "screen"; frame: { x: number; y: number } }
+export type Screen = Node & {
+  widget: "screen"
+  frame: { x: number; y: number }
+  /** the Components screen: shown on the canvas for editing, never exported */
+  library?: boolean
+}
 
 export type Simulation = {
   kind: "none" | "sine" | "saw" | "square" | "random"

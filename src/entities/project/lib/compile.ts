@@ -20,6 +20,7 @@ import {
   type Program,
   type WidgetDef,
 } from "@/shared/lvgl"
+import { resolveScreens } from "../model/components"
 import type { Animation, Binding, Interaction, Node, Project, StyleValue } from "../model/types"
 import { cNames } from "./names"
 import { findNode, screenOf, walk } from "./tree"
@@ -36,6 +37,8 @@ const VALUE_BINDERS: Partial<Record<string, string>> = {
   roller: "lv_roller_bind_value",
   dropdown: "lv_dropdown_bind_value",
 }
+
+const COMPARE: Record<string, string> = { eq: "KILN_EQ", not_eq: "KILN_NOT_EQ", gt: "KILN_GT", ge: "KILN_GE", lt: "KILN_LT", le: "KILN_LE" }
 
 const coord = (v: Coord): Arg => ({ k: "coord", v })
 const hex = (v: string | number): Arg => ({ k: "hex", v: parseInt(String(v).replace("#", ""), 16) || 0 })
@@ -56,7 +59,9 @@ function reversed(easing: Easing) {
   return { path, bezier: [1024 - x2, 1024 - y2, 1024 - x1, 1024 - y1] }
 }
 
-export function compile(project: Project, mode: CompileMode): Program {
+export function compile(source: Project, mode: CompileMode): Program {
+  // Instances expand into plain widgets; the Components screen is only built for the canvas.
+  const project = { ...source, screens: resolveScreens(source, mode === "edit") }
   const names = cNames(project)
 
   const styleArg = (prop: string, value: StyleValue): Arg | null => {
@@ -121,9 +126,9 @@ export function compile(project: Project, mode: CompileMode): Program {
           ? call("kiln_chart_bind_series", o, { k: "series", id: `${node.id}.series` }, s)
           : null
       case "flag":
-        return call(`lv_obj_bind_flag_if_${b.compare}`, o, s, c(b.flag), int(b.ref))
+        return call("kiln_bind_flag_if", o, s, c(b.flag), c(COMPARE[b.compare]), int(b.ref))
       case "state":
-        return call(`lv_obj_bind_state_if_${b.compare}`, o, s, c(b.state), int(b.ref))
+        return call("kiln_bind_state_if", o, s, c(b.state), c(COMPARE[b.compare]), int(b.ref))
       case "style": {
         const prop = c(stylePropConst(b.prop))
         const sel = c(...selectorConsts(b.selector))

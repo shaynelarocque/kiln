@@ -114,7 +114,7 @@ export function createSampleProject(): Project {
     sim: { kind: "square", period: 3000 },
     source: {
       kind: "custom",
-      expr: "lv_subject_get_int(&ui_var_temperature) < lv_subject_get_int(&ui_var_target)",
+      expr: "lv_subject_get_int(ui_var_temperature) < lv_subject_get_int(ui_var_target)",
       every: 1000,
     },
     sink: { kind: "digital", pin: 1, invert: false },

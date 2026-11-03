@@ -3,6 +3,7 @@ import type { Layout } from "@/entities/project"
 import { ALIGN, EASINGS, FLEX_ALIGN, FLEX_FLOW, PARTS, STATES, SYMBOLS, STYLE_PROPS, TRANSITION_PROPS, type Coord, type Easing, type WidgetProp } from "@/shared/lvgl"
 import { ColorInput, Field, Hint, IconButton, NumberInput, Section, Select, StyleProps, TextInput, Toggle } from "@/shared/ui"
 import type { InspectorViewModel } from "../model/use-inspector"
+import { ComponentSection } from "./ComponentSection"
 import s from "./inspector.module.css"
 
 export function DesignTab({ vm }: { vm: InspectorViewModel }) {
@@ -11,8 +12,9 @@ export function DesignTab({ vm }: { vm: InspectorViewModel }) {
   return (
     <>
       {!isScreen && <LayoutSection vm={vm} />}
-      {(vm.def!.container || isScreen) && <AutoLayoutSection vm={vm} />}
-      {vm.def!.props.length > 0 && (
+      <ComponentSection vm={vm} />
+      {(vm.def!.container || isScreen) && !node.component && <AutoLayoutSection vm={vm} />}
+      {vm.def!.props.length > 0 && !node.component && (
         <Section title={vm.def!.label}>
           {vm.def!.props.map(p => (
             <PropField key={p.key} prop={p} vm={vm} />

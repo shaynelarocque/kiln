@@ -22,7 +22,8 @@ export function locate(project: Project, id: string): Found | null {
   return null
 }
 
-export const canContain = (node: Node) => Boolean(WIDGETS[node.widget].container)
+/** Instances show their main's children, so nothing can be added to them directly. */
+export const canContain = (node: Node) => Boolean(WIDGETS[node.widget].container) && !node.component
 
 /** Removes nodes (screens too, but never the last one) and anything pointing at them. */
 export function removeNodes(project: Project, ids: string[]) {

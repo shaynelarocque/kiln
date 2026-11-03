@@ -1,5 +1,5 @@
 // Writes consts.inc: every LVGL constant kiln_const() can resolve at runtime.
-// That's all style props, plus any "LV_..." string literal the TS sources mention.
+// That's all style props, plus any "LV_..." or "KILN_..." string literal the TS sources mention.
 // Rebuild the runtime (pnpm runtime) after naming a new constant in TS; runtime.test.ts catches a stale build.
 import { readdirSync, readFileSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
@@ -16,7 +16,7 @@ const walk = dir => {
     const path = join(dir, entry.name)
     if (entry.isDirectory()) walk(path)
     else if (/\.tsx?$/.test(entry.name) && !/\.test\.tsx?$/.test(entry.name))
-      for (const [, name] of readFileSync(path, "utf8").matchAll(/["'`](LV_[A-Z0-9_]+)["'`]/g))
+      for (const [, name] of readFileSync(path, "utf8").matchAll(/["'`]((?:LV|KILN)_[A-Z0-9_]+)["'`]/g))
         names.add(name)
   }
 }

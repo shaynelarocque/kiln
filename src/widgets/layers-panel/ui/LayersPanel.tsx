@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronRight, Eye, EyeOff, Lock, LockOpen, Plus, Trash } from "lucide-react"
+import { ChevronDown, ChevronRight, Component, Eye, EyeOff, Lock, LockOpen, Plus, Trash } from "lucide-react"
 import { useState } from "react"
 import { WidgetIcon } from "@/entities/project"
 import { IconButton, Section } from "@/shared/ui"
@@ -65,7 +65,7 @@ function LayerRow({ row, vm }: { row: Row; vm: ReturnType<typeof useLayers> }) {
       <button className={s.twisty} onClick={e => (e.stopPropagation(), vm.toggle(node.id))} disabled={!row.container} aria-label='Expand'>
         {row.container && (row.collapsed ? <ChevronRight /> : <ChevronDown />)}
       </button>
-      <WidgetIcon type={node.widget} className={s.icon} />
+      {node.component ? <Component className={`${s.icon} ${s.instance}`} /> : <WidgetIcon type={node.widget} className={s.icon} />}
       <Name value={node.name} onRename={name => vm.rename(node.id, name)} />
       <IconButton label={node.locked ? "Unlock" : "Lock"} className={`${s.tool} ${node.locked ? s.pinned : ""}`} onClick={e => (e.stopPropagation(), vm.toggleLocked(node.id))}>
         {node.locked ? <Lock /> : <LockOpen />}

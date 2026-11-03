@@ -69,7 +69,7 @@ function uiFiles(project: Project): FirmwareFile[] {
   const tokenLines = project.tokens.map(t => `#define ${names[t.id]} 0x${t.value.slice(1).toUpperCase()}`)
   const variableDocs = project.variables.map(v => {
     const range = v.type === "int" ? ` (${v.min}..${v.max})` : ""
-    return `extern lv_subject_t ${names[v.id]}; /* ${v.name}: ${v.type}${range} */`
+    return `extern lv_subject_t * ${names[v.id]}; /* ${v.name}: ${v.type}${range} */`
   })
 
   const uiH = [
@@ -85,7 +85,7 @@ function uiFiles(project: Project): FirmwareFile[] {
     "",
     ...(tokenLines.length ? ["/* Colour tokens */", ...tokenLines, ""] : []),
     ...(variableDocs.length
-      ? ["/* Variables. Read with lv_subject_get_int(&ui_var_x), set with lv_subject_set_int(&ui_var_x, v):", " * every bound widget follows. */", ...variableDocs, ""]
+      ? ["/* Variables. Read with lv_subject_get_int(ui_var_x), set with lv_subject_set_int(ui_var_x, v):", " * every bound widget follows. */", ...variableDocs, ""]
       : []),
     "/* Screens and widgets */",
     ...externs("obj", "lv_obj_t *"),
@@ -302,11 +302,11 @@ function hardware(project: Project): FirmwareFile[] {
     const n = names[v.id]
     init.push(`pinMode(${s.pin}, OUTPUT);`)
     if (s.kind === "digital")
-      init.push(`/* ${v.name} → GPIO${s.pin} */`, `lv_subject_add_observer(&${n}, [](lv_observer_t *, lv_subject_t * s) { digitalWrite(${s.pin}, ${s.invert ? "!" : ""}lv_subject_get_int(s) ? HIGH : LOW); }, NULL);`)
+      init.push(`/* ${v.name} → GPIO${s.pin} */`, `lv_subject_add_observer(${n}, [](lv_observer_t *, lv_subject_t * s) { digitalWrite(${s.pin}, ${s.invert ? "!" : ""}lv_subject_get_int(s) ? HIGH : LOW); }, NULL);`)
     else
       init.push(
         `/* ${v.name} (${v.min}..${v.max}) → PWM on GPIO${s.pin} */`,
-        `lv_subject_add_observer(&${n}, [](lv_observer_t *, lv_subject_t * s) { analogWrite(${s.pin}, lv_map(lv_subject_get_int(s), ${v.min}, ${v.max}, 0, 255)); }, NULL);`,
+        `lv_subject_add_observer(${n}, [](lv_observer_t *, lv_subject_t * s) { analogWrite(${s.pin}, lv_map(lv_subject_get_int(s), ${v.min}, ${v.max}, 0, 255)); }, NULL);`,
       )
   }
 
@@ -319,7 +319,7 @@ function hardware(project: Project): FirmwareFile[] {
       `static uint32_t next_${n};`,
       `if ((int32_t)(now - next_${n}) >= 0) {`,
       `    next_${n} = now + ${s.every};`,
-      `    set_if_changed(&${n}, ${readExpr(s, v)});`,
+      `    set_if_changed(${n}, ${readExpr(s, v)});`,
       "}",
     )
   }
@@ -331,11 +331,9 @@ function hardware(project: Project): FirmwareFile[] {
     '#include "ui/ui.h"',
     '#include "kiln_hw.h"',
     "",
-    "static void set_if_changed(lv_subject_t * subject, int32_t value)",
-    "{",
-    "    if (lv_subject_get_int(subject) != value) lv_subject_set_int(subject, value);",
-    "}",
-    "",
+    ...(sources.length
+      ? ["static void set_if_changed(lv_subject_t * subject, int32_t value)", "{", "    if (lv_subject_get_int(subject) != value) lv_subject_set_int(subject, value);", "}", ""]
+      : []),
     "uint32_t kiln_free_heap(void)",
     "{",
     "#if defined(ARDUINO_ARCH_ESP32)",
@@ -462,7 +460,7 @@ const APP_CPP = `// Your code. Kiln writes this file once and never touches it a
 void app_setup(void)
 {
     // Runs once, after the UI is up. Variables are LVGL subjects, e.g.
-    //   lv_subject_set_int(&ui_var_target, 21);
+    //   lv_subject_set_int(ui_var_target, 21);
 }
 
 void app_loop(void)

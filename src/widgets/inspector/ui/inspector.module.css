@@ -271,3 +271,13 @@
   opacity: 0;
   cursor: pointer;
 }
+.instanceTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--purple);
+}
+.instanceTitle svg {
+  width: 14px;
+  height: 14px;
+}

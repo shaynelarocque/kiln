@@ -56,8 +56,8 @@ export function argToC(a: Arg, names: Record<string, string>): string {
     case "obj":
     case "timeline":
     case "series":
-      return name(names, a.id)
     case "subject":
+      return name(names, a.id)
     case "style":
     case "transition":
     case "image":
@@ -100,12 +100,17 @@ export function opToC(op: Op, names: Record<string, string>): string[] {
     case "subject": {
       const n = name(names, op.id)
       if (op.type === "string")
-        return [`lv_subject_init_string(&${n}, ${n}_buf, ${n}_prev, sizeof(${n}_buf), ${cString(String(op.init))});`]
-      if (op.type === "color") return [`lv_subject_init_color(&${n}, ${cColor(String(op.init))});`]
+        return [
+          `${n} = lv_subject_create(LV_SUBJECT_TYPE_STRING);`,
+          `lv_subject_set_string_buffer_static(${n}, ${n}_buf, ${n}_prev, sizeof(${n}_buf));`,
+          `lv_subject_set_string(${n}, ${cString(String(op.init))});`,
+        ]
+      if (op.type === "color") return [`${n} = lv_subject_create(LV_SUBJECT_TYPE_COLOR);`, `lv_subject_set_color(${n}, ${cColor(String(op.init))});`]
       return [
-        `lv_subject_init_int(&${n}, ${op.init});`,
-        ...(op.min !== undefined ? [`lv_subject_set_min_value_int(&${n}, ${op.min});`] : []),
-        ...(op.max !== undefined ? [`lv_subject_set_max_value_int(&${n}, ${op.max});`] : []),
+        `${n} = lv_subject_create(LV_SUBJECT_TYPE_INT);`,
+        ...(op.min !== undefined ? [`lv_subject_set_min_value_int(${n}, ${op.min});`] : []),
+        ...(op.max !== undefined ? [`lv_subject_set_max_value_int(${n}, ${op.max});`] : []),
+        `lv_subject_set_int(${n}, ${op.init});`,
       ]
     }
     case "style":
@@ -131,7 +136,7 @@ export function declarations(ops: Op[], names: Record<string, string>): Declarat
     } else if (op.op === "subject") {
       const n = name(names, op.id)
       const bufs = op.type === "string" ? `\nstatic char ${n}_buf[64], ${n}_prev[64];` : ""
-      out.push({ kind: "subject", name: n, c: `lv_subject_t ${n};${bufs}` })
+      out.push({ kind: "subject", name: n, c: `lv_subject_t * ${n};${bufs}` })
     } else if (op.op === "style") {
       const n = name(names, op.id)
       out.push({ kind: "style", name: n, c: `lv_style_t ${n};` })

@@ -105,3 +105,6 @@
   margin: 4px 0;
   color: var(--text-faint);
 }
+.instance {
+  color: var(--purple);
+}

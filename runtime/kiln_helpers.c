@@ -98,6 +98,60 @@ lv_observer_t * kiln_bind_style_map(lv_obj_t * obj, lv_style_prop_t prop, lv_sty
     return lv_subject_add_observer_obj(subject, style_map_cb, obj, m);
 }
 
+/* LVGL 9.6 deprecates lv_obj_bind_flag_if_* and lv_obj_bind_state_if_*; this is their replacement. */
+typedef struct {
+    uint32_t what;
+    int32_t ref;
+    uint8_t op;
+    bool is_state;
+} cond_t;
+
+static bool holds(kiln_compare_t op, int32_t v, int32_t ref)
+{
+    switch(op) {
+        case KILN_EQ: return v == ref;
+        case KILN_NOT_EQ: return v != ref;
+        case KILN_GT: return v > ref;
+        case KILN_GE: return v >= ref;
+        case KILN_LT: return v < ref;
+        case KILN_LE: return v <= ref;
+    }
+    return false;
+}
+
+static void cond_cb(lv_observer_t * observer, lv_subject_t * subject)
+{
+    cond_t * c = lv_observer_get_user_data(observer);
+    lv_obj_t * obj = lv_observer_get_target_obj(observer);
+    bool on = holds((kiln_compare_t)c->op, lv_subject_get_int(subject), c->ref);
+    if(c->is_state) lv_obj_set_state(obj, (lv_state_t)c->what, on);
+    else if(c->what == LV_OBJ_FLAG_HIDDEN) lv_obj_set_hidden(obj, on);
+    else if(c->what == LV_OBJ_FLAG_CLICKABLE) lv_obj_set_clickable(obj, on);
+}
+
+static lv_observer_t * bind_cond(lv_obj_t * obj, lv_subject_t * subject, uint32_t what, bool is_state,
+                                 kiln_compare_t op, int32_t ref)
+{
+    cond_t * c = lv_malloc(sizeof(cond_t));
+    LV_ASSERT_MALLOC(c);
+    c->what = what;
+    c->ref = ref;
+    c->op = (uint8_t)op;
+    c->is_state = is_state;
+    lv_obj_add_event_cb(obj, free_user_data_cb, LV_EVENT_DELETE, c);
+    return lv_subject_add_observer_obj(subject, cond_cb, obj, c);
+}
+
+lv_observer_t * kiln_bind_flag_if(lv_obj_t * obj, lv_subject_t * subject, lv_obj_flag_t flag, kiln_compare_t op, int32_t ref)
+{
+    return bind_cond(obj, subject, (uint32_t)flag, false, op, ref);
+}
+
+lv_observer_t * kiln_bind_state_if(lv_obj_t * obj, lv_subject_t * subject, lv_state_t state, kiln_compare_t op, int32_t ref)
+{
+    return bind_cond(obj, subject, (uint32_t)state, true, op, ref);
+}
+
 static void chart_cb(lv_observer_t * observer, lv_subject_t * subject)
 {
     lv_chart_set_next_value(lv_observer_get_target_obj(observer), lv_observer_get_user_data(observer),

@@ -39,7 +39,7 @@ describe("firmware export", () => {
     const home = file("src/ui/ui_home.c")
     expect(home).toContain("ui_dial = lv_arc_create(ui_home);")
     expect(home).toContain("lv_obj_set_style_arc_color(ui_dial, lv_color_hex(UI_COLOR_ACCENT), LV_PART_INDICATOR | LV_STATE_DEFAULT);")
-    expect(home).toContain('lv_label_bind_text(ui_temperature, &ui_var_temperature, "%d\\xC2\\xB0");')
+    expect(home).toContain('lv_label_bind_text(ui_temperature, ui_var_temperature, "%d\\xC2\\xB0");')
     expect(home).toContain('lv_label_set_text(ui_heating_icon, LV_SYMBOL_CHARGE " Heating");')
     expect(file("src/ui/ui.c")).toContain("lv_obj_add_screen_load_event(ui_settings_button, LV_EVENT_CLICKED, ui_settings, LV_SCREEN_LOAD_ANIM_MOVE_LEFT, 300, 0);")
   })
@@ -53,7 +53,7 @@ describe("firmware export", () => {
     for (const f of files.filter(f => /^src\/ui\/.*\.c$/.test(f.path)))
       execFileSync("cc", [
         "-fsyntax-only", "-std=c11", "-Wall", "-Werror=implicit-function-declaration", "-Werror=incompatible-pointer-types",
-        "-Werror=int-conversion", "-Wno-unused-variable", "-DLV_CONF_INCLUDE_SIMPLE", `-I${dir}/include`, `-I${lvgl}`, join(dir, f.path),
+        "-Werror=int-conversion", "-Werror=deprecated-declarations", "-Wno-unused-variable", "-DLV_CONF_INCLUDE_SIMPLE", `-I${dir}/include`, `-I${lvgl}`, join(dir, f.path),
       ], { stdio: "pipe" })
   })
 })

@@ -26,6 +26,14 @@ lv_observer_t * kiln_bind_style_map(lv_obj_t * obj, lv_style_prop_t prop, lv_sty
                                     lv_subject_t * subject, int32_t in_min, int32_t in_max,
                                     int32_t out_min, int32_t out_max);
 
+typedef enum { KILN_EQ, KILN_NOT_EQ, KILN_GT, KILN_GE, KILN_LT, KILN_LE } kiln_compare_t;
+
+/** Sets a flag (LV_OBJ_FLAG_HIDDEN or LV_OBJ_FLAG_CLICKABLE) while `subject <op> ref` holds, clears it otherwise. */
+lv_observer_t * kiln_bind_flag_if(lv_obj_t * obj, lv_subject_t * subject, lv_obj_flag_t flag, kiln_compare_t op, int32_t ref);
+
+/** Adds a state while `subject <op> ref` holds, removes it otherwise. */
+lv_observer_t * kiln_bind_state_if(lv_obj_t * obj, lv_subject_t * subject, lv_state_t state, kiln_compare_t op, int32_t ref);
+
 /** Append each new subject value to a chart series, so the chart shows its history. */
 lv_observer_t * kiln_chart_bind_series(lv_obj_t * chart, lv_chart_series_t * series, lv_subject_t * subject);
 

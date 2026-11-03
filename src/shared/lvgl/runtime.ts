@@ -248,17 +248,22 @@ export class Scene {
       case "call":
         return this.call(op.fn, op.args, op.ret)
       case "subject": {
-        let h: number
+        const type = { int: "LV_SUBJECT_TYPE_INT", string: "LV_SUBJECT_TYPE_STRING", color: "LV_SUBJECT_TYPE_COLOR" }[op.type]
+        const h = x.lv_subject_create(this.rt.const(type))
         if (op.type === "string") {
+          // the generated code uses two static 64-byte buffers; these stand in for them
+          const buf = x.lv_malloc(64)
+          const prev = x.lv_malloc(64)
+          this.blocks.push(buf, prev)
+          x.lv_subject_set_string_buffer_static(h, buf, prev, 64)
           const p = this.rt.cstr(String(op.init))
-          h = x.kiln_subject_new_string(64, p)
+          x.lv_subject_set_string(h, p)
           x.lv_free(p)
-        } else {
-          h = x.kiln_subject_new()
-          if (op.type === "color") x.kiln__lv_subject_init_color(h, hex(String(op.init)))
-          else x.lv_subject_init_int(h, Number(op.init))
+        } else if (op.type === "color") x.kiln__lv_subject_set_color(h, hex(String(op.init)))
+        else {
           if (op.min !== undefined) x.lv_subject_set_min_value_int(h, op.min)
           if (op.max !== undefined) x.lv_subject_set_max_value_int(h, op.max)
+          x.lv_subject_set_int(h, Number(op.init))
         }
         this.subjects.push(h)
         return this.set("subject", op.id, h)
@@ -358,7 +363,7 @@ export class Scene {
     for (const tl of this.timelines) x.lv_anim_timeline_delete(tl)
     for (const scr of this.screens) x.lv_obj_delete(scr)
     for (const s of this.styles) x.kiln_style_free(s)
-    for (const s of this.subjects) x.kiln_subject_free(s)
+    for (const s of this.subjects) x.lv_subject_delete(s)
     for (const i of this.images) x.kiln_image_free(i)
     for (const b of this.blocks) x.lv_free(b)
     if (this.anim) x.lv_free(this.anim)

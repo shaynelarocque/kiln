@@ -5,6 +5,7 @@ import { editorApi, useEditorStore } from "@/entities/editor"
 import { edit, useProjectStore } from "@/entities/project"
 import { budgetFor } from "@/features/export-firmware"
 import { useHistory } from "@/features/history"
+import { ComponentMenu } from "@/features/components"
 import { InsertBar } from "@/features/insert-widget"
 import { newProject, openProject, saveProject } from "@/features/project-file"
 import { Button, IconButton } from "@/shared/ui"
@@ -70,6 +71,7 @@ export function Toolbar() {
 
       <div className={`${s.group} ${s.insert}`}>
         <InsertBar />
+        <ComponentMenu />
       </div>
 
       <div className={s.group}>

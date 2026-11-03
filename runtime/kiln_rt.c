@@ -212,11 +212,6 @@ EXPORT void kiln__lv_led_set_color(lv_obj_t * led, uint32_t hex)
     lv_led_set_color(led, lv_color_hex(hex));
 }
 
-EXPORT void kiln__lv_subject_init_color(lv_subject_t * subject, uint32_t hex)
-{
-    lv_subject_init_color(subject, lv_color_hex(hex));
-}
-
 EXPORT void kiln__lv_subject_set_color(lv_subject_t * subject, uint32_t hex)
 {
     lv_subject_set_color(subject, lv_color_hex(hex));
@@ -228,26 +223,6 @@ EXPORT lv_chart_series_t * kiln__lv_chart_add_series(lv_obj_t * chart, uint32_t 
 }
 
 /*---------- objects JS allocates for the generated code's statics ----------*/
-
-EXPORT lv_subject_t * kiln_subject_new(void)
-{
-    return lv_malloc_zeroed(sizeof(lv_subject_t));
-}
-
-/** A string subject with its two buffers in the same block, so one lv_free releases it. */
-EXPORT lv_subject_t * kiln_subject_new_string(uint32_t size, const char * value)
-{
-    lv_subject_t * subject = lv_malloc_zeroed(sizeof(lv_subject_t) + size * 2);
-    char * buf = (char *)(subject + 1);
-    lv_subject_init_string(subject, buf, buf + size, size, value);
-    return subject;
-}
-
-EXPORT void kiln_subject_free(lv_subject_t * subject)
-{
-    lv_subject_deinit(subject);
-    lv_free(subject);
-}
 
 EXPORT lv_anim_t * kiln_anim_new(void)
 {

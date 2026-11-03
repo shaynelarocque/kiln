@@ -19,7 +19,7 @@ export function Canvas() {
     >
       <div className={s.world} style={{ transform: `translate(${vm.pan.x}px, ${vm.pan.y}px) scale(${vm.zoom})` }}>
         {vm.project.screens.map(screen => (
-          <Artboard key={screen.id} vm={vm} screen={screen} width={width} height={height} round={round} />
+          <Artboard key={screen.id} vm={vm} screen={screen} width={width} height={height} round={round && !screen.library} />
         ))}
       </div>
       <div className={s.zoom}>
