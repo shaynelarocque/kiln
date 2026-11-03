@@ -15,7 +15,9 @@ import { download } from "@/features/project-file"
 import { inTauri } from "@/shared/lib/tauri"
 import { zip } from "@/shared/lib/zip"
 
-const folderKey = (name: string) => `kiln:export:${name}`
+/** Each size builds for its own board and panel, so each remembers its own folder. */
+const folderKey = (name: string, size: string | null) =>
+  `kiln:export:${name}${size ? `@${size}` : ""}`
 
 /** View-model for the export dialog: the generated files, where they go, and building them. */
 export function useExport() {
@@ -28,8 +30,9 @@ export function useExport() {
     [project, board, rects],
   )
   const [selected, setSelected] = useState("src/ui/ui.c")
+  const size = useProjectStore(s => s.size)
   const [folder, setFolder] = useState<string | null>(() =>
-    localStorage.getItem(folderKey(project.name)),
+    localStorage.getItem(folderKey(project.name, size)),
   )
   const [status, setStatus] = useState<string | null>(null)
   const [log, setLog] = useState<string[]>([])
@@ -48,7 +51,7 @@ export function useExport() {
   const exportTo = async (dir: string) => {
     try {
       const written = await writeProject(dir, files)
-      localStorage.setItem(folderKey(project.name), dir)
+      localStorage.setItem(folderKey(project.name, size), dir)
       setFolder(dir)
       const kept = files.length - written.length
       setStatus(

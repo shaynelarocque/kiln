@@ -8,6 +8,7 @@ import {
   findNode,
   findParent,
   instancesOf,
+  locate,
   isLibrary,
   transformedNodes,
   useProjectStore,
@@ -16,6 +17,7 @@ import {
   type Phase,
 } from "@/entities/project"
 import { updateNode } from "@/features/node-actions"
+import { resetAtSize } from "@/features/sizes"
 import { MAIN_DEFAULT, STATES, WIDGETS } from "@/shared/lvgl"
 
 type Value = string | number | boolean
@@ -27,6 +29,8 @@ export function useInspector() {
   const selector = useEditorStore(s => s.selector)
   const tab = useEditorStore(s => s.rightTab)
   const rects = useEditorStore(s => s.rects)
+  const doc = useProjectStore(s => s.doc)
+  const size = useProjectStore(s => s.size)
   const names = useMemo(() => cNames(project), [project])
   const transforms = useMemo(() => transformedNodes(project), [project])
 
@@ -62,6 +66,14 @@ export function useInspector() {
     part,
     states,
     cName: node ? names[node.id] : "",
+    /** the size being edited, if not the base, and whether this node differs there */
+    atSize: size
+      ? {
+          name: doc.sizes.find(x => x.id === size)?.name ?? "",
+          differs: Boolean(node && locate(doc, node.id)?.node.at?.[size]),
+          reset: () => node && resetAtSize(node.id),
+        }
+      : null,
     /** the layer the board's LVGL draws this node into while it's rotated or scaled */
     transformLayer: (() => {
       const t = node && transforms.get(node.id)

@@ -1,5 +1,6 @@
 import { Maximize, Minus, Plus } from "lucide-react"
 import { findNode, type Screen } from "@/entities/project"
+import { SizeBar } from "@/features/sizes"
 import { fontFamily } from "@/shared/lib/font-faces"
 import { parseTtfFont } from "@/shared/lvgl"
 import { IconButton } from "@/shared/ui"
@@ -40,6 +41,7 @@ export function Canvas() {
           />
         ))}
       </div>
+      <SizeBar />
       <div className={s.zoom}>
         <IconButton label='Zoom out (−)' onClick={() => vm.zoomCenter(vm.zoom / 1.25)}>
           <Minus />

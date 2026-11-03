@@ -13,8 +13,11 @@ export function parseProject(text: string): Project {
   const data = JSON.parse(text)
   if (data?.kiln !== 1 || !Array.isArray(data.screens) || !data.screens.length)
     throw new Error("Not a Kiln project file")
-  if (typeof data.target?.board !== "string" || !/^[\w.-]+$/.test(data.target.board))
-    throw new Error("The file names an invalid board")
+  // files from before sizes; each size has a board of its own, which reaches platformio.ini too
+  if (!Array.isArray(data.sizes)) data.sizes = []
+  for (const target of [data.target, ...data.sizes.map((s: { target?: unknown }) => s?.target)])
+    if (typeof target?.board !== "string" || !/^[\w.-]+$/.test(target.board))
+      throw new Error("The file names an invalid board")
   data.name = String(data.name ?? "Untitled")
     .replace(/[\x00-\x1f\x7f]/g, " ")
     .slice(0, 120)
@@ -28,8 +31,8 @@ export function parseProject(text: string): Project {
 }
 
 const isDirty = () => {
-  const { project, saved } = projectApi.getState()
-  return project !== saved
+  const { doc, saved } = projectApi.getState()
+  return doc !== saved
 }
 
 const confirmDiscard = async () => !isDirty() || confirmAction("Discard unsaved changes?")
@@ -59,7 +62,8 @@ export async function openProject() {
 }
 
 export async function saveProject(saveAs = false) {
-  const { project, path } = projectApi.getState()
+  // the document, with every size; not the view of the size being edited
+  const { doc: project, path } = projectApi.getState()
   const text = JSON.stringify(project, null, 1)
   try {
     if (inTauri()) {
@@ -120,7 +124,7 @@ export function startAutosave() {
     try {
       localStorage.setItem(
         AUTOSAVE,
-        JSON.stringify({ project: s.project, path: s.path, dirty: s.project !== s.saved }),
+        JSON.stringify({ project: s.doc, path: s.path, dirty: s.doc !== s.saved }),
       )
     } catch {
       // over quota (big images): the file on disk is still the source of truth

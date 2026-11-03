@@ -16,6 +16,18 @@ export type Project = {
   animations: Animation[]
   assets: Asset[]
   fonts: FontAsset[]
+  /** other displays the same UI is built for, like CSS breakpoints (see atSize) */
+  sizes: Size[]
+}
+
+/** Another display for the same UI: its own board and panel, plus what nodes change there. */
+export type Size = { id: string; name: string; target: Target }
+
+/** What one node changes at one size. A null style prop or layout field is removed there. */
+export type SizePatch = {
+  layout?: { [K in keyof Layout]?: Layout[K] | null }
+  style?: Record<string, Record<string, StyleValue | null>>
+  hidden?: boolean
 }
 
 export type Theme = { primary: string; secondary: string; dark: boolean }
@@ -108,6 +120,8 @@ export type Node = {
   component?: string
   /** on an instance: changes to the main's nodes, keyed by their ids */
   overrides?: Record<string, Override>
+  /** per size id: how this node's layout, style and visibility differ at that size */
+  at?: Record<string, SizePatch>
 }
 
 /** What an instance changes about one node of its main component. */

@@ -16,6 +16,7 @@ import {
   type WidgetProp,
 } from "@/shared/lvgl"
 import {
+  Button,
   ColorInput,
   Field,
   Hint,
@@ -36,6 +37,20 @@ export function DesignTab({ vm }: { vm: InspectorViewModel }) {
   const isScreen = !vm.parent
   return (
     <>
+      {vm.atSize && (
+        <div className={s.sizeNote}>
+          <Hint>
+            {vm.atSize.differs
+              ? `This layer differs at ${vm.atSize.name}.`
+              : `Layout and style changes here apply at ${vm.atSize.name} only.`}
+          </Hint>
+          {vm.atSize.differs && (
+            <Button variant='ghost' onClick={vm.atSize.reset}>
+              Reset
+            </Button>
+          )}
+        </div>
+      )}
       {!isScreen && <LayoutSection vm={vm} />}
       <ComponentSection vm={vm} />
       {(vm.def!.container || isScreen) && !node.component && <AutoLayoutSection vm={vm} />}

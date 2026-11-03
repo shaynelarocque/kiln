@@ -1,0 +1,69 @@
+.wrap {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+  pointer-events: none;
+}
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  pointer-events: auto;
+}
+.bar > button[role="tab"] {
+  height: 26px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--text-dim);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.bar > button[role="tab"]:hover {
+  color: var(--text-strong);
+}
+.bar > button[aria-selected="true"] {
+  background: var(--select-soft);
+  color: var(--select);
+}
+.add {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  color: var(--text-dim);
+}
+.add:hover {
+  background: var(--bg-hover);
+  color: var(--text-strong);
+}
+.add svg {
+  width: 15px;
+  height: 15px;
+}
+.add select {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.note {
+  margin: 0;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(23, 27, 36, 0.85);
+  color: var(--select);
+  font-size: 11px;
+}

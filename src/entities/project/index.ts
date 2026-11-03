@@ -1,5 +1,6 @@
 export type * from "./model/types"
 export { useProjectStore, projectApi, edit, type Phase } from "./model/store"
+export { atSize, removeSize } from "./model/sizes"
 export {
   createAnimation,
   createEmptyProject,

@@ -24,7 +24,7 @@ import s from "./toolbar.module.css"
 
 export function Toolbar() {
   const project = useProjectStore(s => s.project)
-  const dirty = useProjectStore(s => s.project !== s.saved)
+  const dirty = useProjectStore(s => s.doc !== s.saved)
   const history = useHistory()
   const { boards } = useBoards()
   const board = findBoard(boards, project.target.board)
