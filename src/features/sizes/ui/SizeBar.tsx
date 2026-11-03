@@ -65,7 +65,9 @@ export function SizeBar() {
         )}
       </div>
       {current && (
-        <p className={s.note}>Layout and style changes now apply to {current.name} only.</p>
+        <p className={s.note}>
+          Layout, style and graphics changes now apply to {current.name} only.
+        </p>
       )}
     </div>
   )
