@@ -9,8 +9,9 @@ import {
 } from "@/entities/board"
 import { editorApi, nodeBoxes, useEditorStore } from "@/entities/editor"
 import {
-  edit,
+  edit as editProject,
   newId,
+  projectApi,
   useProjectStore,
   type ButtonKey,
   type DisplayConfig,
@@ -21,7 +22,14 @@ import {
   type TouchDriver,
 } from "@/entities/project"
 import { budgetFor, pinClaims, wiringProblems } from "@/features/export-firmware"
+import { rememberHardware } from "@/features/project-file"
 import { kitIndex, type Kit } from "./kits"
+
+/** Every change here is also remembered as this person's hardware, for the next new project. */
+const edit: typeof editProject = (recipe, phase) => {
+  editProject(recipe, phase)
+  if (phase !== "move") rememberHardware(projectApi.getState().project.target)
+}
 
 /** Screens always fill the panel. */
 const fitScreens = (d: Project) => {

@@ -7,6 +7,7 @@ import {
   type Project,
 } from "@/entities/project"
 import { confirmAction, inTauri, invoke } from "@/shared/lib/tauri"
+import { withHardware } from "./hardware"
 
 const FILTERS = [{ name: "Kiln project", extensions: ["kiln"] }]
 const AUTOSAVE = "kiln:autosave"
@@ -55,7 +56,7 @@ export const TEMPLATES = [
 export async function newProject(template = "blank") {
   const t = TEMPLATES.find(x => x.value === template)
   if (!t || !(await confirmDiscard())) return
-  projectApi.getState().replace(t.create())
+  projectApi.getState().replace(withHardware(t.create(), t.value === "blank"))
   editorApi.getState().select([])
 }
 
