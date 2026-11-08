@@ -287,6 +287,18 @@ textarea.text {
   align-items: center;
   gap: 6px;
 }
+.chevron {
+  width: 12px;
+  height: 12px;
+  color: var(--text-faint);
+  transition: transform 0.12s;
+}
+.sectionTitle:hover .chevron {
+  color: var(--text-dim);
+}
+.chevron[data-open] {
+  transform: rotate(90deg);
+}
 .sectionActions {
   display: flex;
   align-items: center;

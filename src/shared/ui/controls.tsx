@@ -1,3 +1,4 @@
+import { ChevronRight } from "lucide-react"
 import { useEffect, useRef, useState, type ReactNode } from "react"
 import s from "./controls.module.css"
 
@@ -371,6 +372,8 @@ export function Section({
   defaultOpen?: boolean
 }) {
   const [open, setOpen] = useState(defaultOpen)
+  // a section with something folded inside says so; a closed one otherwise reads as empty
+  const folds = collapsible && Boolean(children)
   return (
     <section className={s.section}>
       <header>
@@ -378,9 +381,10 @@ export function Section({
           type='button'
           className={s.sectionTitle}
           onClick={() => collapsible && setOpen(!open)}
-          aria-expanded={open}
+          aria-expanded={folds ? open : undefined}
         >
           {title}
+          {folds && <ChevronRight className={s.chevron} data-open={open || undefined} />}
         </button>
         <span className={s.sectionActions}>{actions}</span>
       </header>
