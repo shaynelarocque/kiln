@@ -1,13 +1,21 @@
 import { editorApi } from "@/entities/editor"
 import { build, stopBuild, toggleMonitor, toggleOutput } from "@/features/export-firmware"
-import { newProject, openProject, saveProject } from "@/features/project-file"
+import {
+  closeActive,
+  newProject,
+  openProject,
+  saveProject,
+  showHome,
+} from "@/features/project-file"
 import { useSettings } from "@/shared/config"
 import { inTauri } from "@/shared/lib/tauri"
 
 /** What each item of the native menu bar does (src-tauri/src/menu.rs sends its id). */
 export const MENU: Record<string, () => unknown> = {
   "settings": () => editorApi.getState().set({ dialog: "settings" }),
+  "home": showHome,
   "new": () => newProject("blank"),
+  "close-tab": closeActive,
   "open": openProject,
   "save": () => saveProject(),
   "save-as": () => saveProject(true),

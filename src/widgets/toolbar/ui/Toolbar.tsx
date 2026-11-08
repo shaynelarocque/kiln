@@ -19,7 +19,7 @@ import { budgetFor } from "@/features/export-firmware"
 import { useHistory } from "@/features/history"
 import { ComponentMenu } from "@/features/components"
 import { InsertBar } from "@/features/insert-widget"
-import { TEMPLATES, newProject, openProject, saveProject } from "@/features/project-file"
+import { openProject, saveProject, showHome } from "@/features/project-file"
 import { Button, IconButton } from "@/shared/ui"
 import { DeviceControls } from "./DeviceControls"
 import s from "./toolbar.module.css"
@@ -66,23 +66,9 @@ export function Toolbar() {
             {dirty && <span className={s.dirty} title='Unsaved changes' />}
           </button>
         )}
-        <label className={s.menu} title='New project'>
+        <IconButton label='New project… (⇧⌘H)' onClick={showHome}>
           <FilePlus />
-          <select
-            value=''
-            aria-label='New project'
-            onChange={e => e.target.value && newProject(e.target.value)}
-          >
-            <option value='' disabled>
-              New project
-            </option>
-            {TEMPLATES.map(t => (
-              <option key={t.value} value={t.value}>
-                {t.label}
-              </option>
-            ))}
-          </select>
-        </label>
+        </IconButton>
         <IconButton label='Open… (⌘O)' onClick={openProject}>
           <FolderOpen />
         </IconButton>

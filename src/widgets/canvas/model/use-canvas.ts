@@ -234,19 +234,22 @@ export function useCanvas() {
     }
   }, [fit, fitSelection, zoomCenter])
 
-  // fit the screens to the window the first time it has a real size
+  // a project that just opened fits its screens to the window, once the window has a real size;
+  // one coming back from another tab keeps the view it had
+  const fitPending = useEditorStore(s => s.fitPending)
   useEffect(() => {
     const el = viewport.current
-    if (!el) return
+    if (!el || !fitPending) return
     const observer = new ResizeObserver(() => {
       if (el.clientWidth > 200 && el.clientHeight > 200) {
         fit()
+        editorApi.getState().set({ fitPending: false })
         observer.disconnect()
       }
     })
     observer.observe(el)
     return () => observer.disconnect()
-  }, [fit])
+  }, [fit, fitPending])
 
   const panBy = (e: React.PointerEvent) => {
     const start = editorApi.getState().pan

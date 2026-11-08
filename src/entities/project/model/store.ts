@@ -6,6 +6,16 @@ import type { Project } from "./types"
 
 const HISTORY = 200
 
+/** Everything a project tab keeps while another tab is open: the document and its history. */
+export type ProjectSnapshot = {
+  doc: Project
+  size: string | null
+  path: string | null
+  saved: Project | null
+  past: Project[]
+  future: Project[]
+}
+
 type ProjectState = {
   /** the document: base values plus every size's patches; what's saved and undone */
   doc: Project
@@ -34,6 +44,8 @@ type ProjectState = {
   markSaved: (path: string) => void
   /** Edits another size from now on; null for the base. */
   setSize: (size: string | null) => void
+  /** Swaps in another tab's project, history and all. */
+  load: (snapshot: ProjectSnapshot) => void
 }
 
 /** The view for a document at a size, falling back to the base if that size is gone. */
@@ -91,11 +103,19 @@ export const useProjectStore = create<ProjectState>()(set => {
       set({ ...view(project, null), path, saved: dirty ? null : project, past: [], future: [] }),
     markSaved: path => set(s => ({ path, saved: s.doc })),
     setSize: size => set(s => view(s.doc, size)),
+    load: ({ doc, size, path, saved, past, future }) =>
+      set({ ...view(doc, size), path, saved, past, future }),
   }
 })
 
 /** For code outside React (keyboard shortcuts, the canvas loop). */
 export const projectApi = useProjectStore
+
+/** The open project as a tab keeps it. */
+export function snapshot(): ProjectSnapshot {
+  const { doc, size, path, saved, past, future } = useProjectStore.getState()
+  return { doc, size, path, saved, past, future }
+}
 
 /** Where a change sits in a drag: start checkpoints, move previews, end settles. None commits. */
 export type Phase = "start" | "move" | "end"

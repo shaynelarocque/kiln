@@ -1,0 +1,126 @@
+.bar {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 38px;
+  padding: 0 8px 0 80px; /* room for the macOS traffic lights */
+  border-bottom: 1px solid var(--line);
+  background: var(--bg-canvas);
+}
+.home {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 30px;
+  margin-bottom: 3px;
+  border: 0;
+  border-radius: var(--radius);
+  background: none;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+.home svg,
+.add svg {
+  width: 15px;
+  height: 15px;
+}
+.home:hover,
+.add:hover {
+  background: var(--bg-hover);
+  color: var(--text-strong);
+}
+.home[aria-current="page"] {
+  background: var(--bg);
+  color: var(--text-strong);
+}
+.tabs {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  min-width: 0;
+  height: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 0 1 200px;
+  min-width: 90px;
+  height: 31px;
+  padding: 0 4px 0 12px;
+  border: 1px solid transparent;
+  border-bottom: 0;
+  border-radius: 8px 8px 0 0;
+  color: var(--text-dim);
+  cursor: default;
+}
+.tab:hover {
+  background: var(--bg-hover);
+}
+.tab[aria-selected="true"] {
+  position: relative;
+  top: 1px;
+  border-color: var(--line);
+  background: var(--bg);
+  color: var(--text-strong);
+}
+.name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.close {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: var(--text-faint);
+  cursor: pointer;
+}
+.close svg {
+  width: 12px;
+  height: 12px;
+}
+.close:hover {
+  background: var(--bg-hover);
+  color: var(--text-strong);
+}
+/* unsaved: a dot where the close button is, until it's hovered */
+.close[data-dirty] svg {
+  display: none;
+}
+.close[data-dirty]::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.close[data-dirty]:hover svg {
+  display: block;
+}
+.close[data-dirty]:hover::before {
+  display: none;
+}
+.add {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  margin: 0 0 3px 2px;
+  border: 0;
+  border-radius: var(--radius);
+  background: none;
+  color: var(--text-faint);
+  cursor: pointer;
+}

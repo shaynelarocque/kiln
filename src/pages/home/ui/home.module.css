@@ -1,0 +1,142 @@
+.page {
+  height: 100%;
+  overflow-y: auto;
+  background: var(--bg);
+}
+.inner {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 36px 32px 48px;
+}
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.head h1 {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: 20px;
+  font-weight: 600;
+}
+section h2 {
+  margin: 0 0 12px;
+  color: var(--text-dim);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.templates {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+.template {
+  display: grid;
+  justify-items: start;
+  gap: 3px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg-raised);
+  text-align: left;
+  cursor: pointer;
+}
+.template:hover,
+.open:hover .thumb {
+  border-color: var(--select);
+}
+.icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  background: var(--bg-input);
+  color: var(--accent);
+}
+.icon svg {
+  width: 18px;
+  height: 18px;
+}
+.template strong,
+.open strong {
+  color: var(--text-strong);
+  font-weight: 600;
+}
+.template small,
+.open small {
+  color: var(--text-dim);
+  font-size: 11px;
+}
+.note {
+  margin: 10px 0 0;
+  color: var(--text-faint);
+  font-size: 11px;
+}
+.recent {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+}
+.card {
+  position: relative;
+}
+.open {
+  display: grid;
+  gap: 3px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+.thumb {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 4 / 3;
+  margin-bottom: 6px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg-canvas);
+}
+.thumb img {
+  max-width: 70%;
+  max-height: 80%;
+  image-rendering: pixelated;
+  box-shadow: 0 6px 20px var(--shadow);
+}
+.thumb span {
+  color: var(--text-faint);
+  font-size: 28px;
+  font-weight: 600;
+}
+.forget {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--bg-float);
+  color: var(--text-dim);
+  opacity: 0;
+  cursor: pointer;
+}
+.forget svg {
+  width: 12px;
+  height: 12px;
+}
+.card:hover .forget {
+  opacity: 1;
+}

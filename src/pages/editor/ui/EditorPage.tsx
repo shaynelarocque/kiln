@@ -1,4 +1,3 @@
-import { useEffect } from "react"
 import {
   editorApi,
   PANEL_DEFAULTS,
@@ -6,7 +5,6 @@ import {
   type LeftTab,
   type Panels,
 } from "@/entities/editor"
-import { startAutosave } from "@/features/project-file"
 import { Splitter, Tabs } from "@/shared/ui"
 import { AssetsPanel } from "@/widgets/assets-panel"
 import { BoardDialog } from "@/widgets/board-dialog"
@@ -40,7 +38,6 @@ const LEFT_TABS: { value: LeftTab; label: string }[] = [
 
 export function EditorPage() {
   useShortcuts()
-  useEffect(startAutosave, [])
   const leftTab = useEditorStore(s => s.leftTab)
   const error = useEditorStore(s => s.error)
   const playing = useEditorStore(s => s.playing)

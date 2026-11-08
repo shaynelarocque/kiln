@@ -50,6 +50,8 @@ type EditorState = {
   preview: string | null
   dialog: Dialog
   error: string | null
+  /** the canvas should fit the screens as soon as it has a size (a project just opened) */
+  fitPending: boolean
   /** where LVGL laid out each node, in display pixels: screen id → node id → box */
   rects: Map<string, Map<string, Rect>>
 
@@ -76,6 +78,7 @@ export const useEditorStore = create<EditorState>()(set => ({
   preview: null,
   dialog: null,
   error: null,
+  fitPending: true,
   rects: new Map(),
 
   select: ids =>

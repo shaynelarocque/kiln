@@ -9,9 +9,12 @@ import {
 } from "@/entities/project"
 import { confirmAction, inTauri, invoke, onMac } from "@/shared/lib/tauri"
 import { withHardware } from "./hardware"
+import { forget, remember } from "./recent"
+import { activate, anyDirty, openTab, tabForPath, tabProject, workspaceApi } from "./workspace"
 
 const FILTERS = [{ name: "Kiln project", extensions: ["kiln"] }]
 const AUTOSAVE = "kiln:autosave"
+const SESSION = "kiln:session"
 
 /**
  * Reads a project file, checking it's one of ours before it replaces the open project. Fields that
@@ -40,42 +43,73 @@ export function parseProject(text: string): Project {
   return data as Project
 }
 
-const isDirty = () => {
-  const { doc, saved } = projectApi.getState()
-  return doc !== saved
-}
-
-const confirmDiscard = async () => !isDirty() || confirmAction("Discard unsaved changes?")
-
 /** What New can start from: a blank screen or one of the samples. */
 export const TEMPLATES = [
-  { value: "blank", label: "Blank project", create: () => createEmptyProject() },
-  { value: "thermostat", label: "Sample: round thermostat", create: createSampleProject },
-  { value: "pet", label: "Sample: breathalyzer pet", create: createPetProject },
+  {
+    value: "blank",
+    label: "Blank project",
+    note: "One empty screen on your board",
+    create: () => createEmptyProject(),
+  },
+  {
+    value: "thermostat",
+    label: "Round thermostat",
+    note: "A dial, a settings screen and a transition",
+    create: createSampleProject,
+  },
+  {
+    value: "pet",
+    label: "Breathalyzer pet",
+    note: "Sprites, moods and two screen sizes",
+    create: createPetProject,
+  },
 ]
 
-export async function newProject(template = "blank") {
+/** A new tab holding a fresh project: never saved, so nothing to compare against yet. */
+const fresh = (doc: Project, path: string | null = null, dirty = false) => ({
+  doc,
+  size: null,
+  path,
+  saved: dirty ? null : doc,
+  past: [],
+  future: [],
+})
+
+/** Starts a project from a template in a new tab, on the hardware set up last. */
+export function newProject(template = "blank") {
   const t = TEMPLATES.find(x => x.value === template)
-  if (!t || !(await confirmDiscard())) return
-  projectApi.getState().replace(withHardware(t.create(), t.value === "blank"))
-  editorApi.getState().select([])
+  if (t) openTab(fresh(withHardware(t.create(), t.value === "blank")))
+}
+
+const failed = (what: string, e: unknown) =>
+  editorApi.getState().set({ error: `${what}: ${e instanceof Error ? e.message : e}` })
+
+/** Opens a file from disk in its own tab, or switches to the tab that has it. */
+export async function openPath(path: string) {
+  const open = tabForPath(path)
+  if (open) return activate(open.id)
+  try {
+    const project = parseProject(await invoke<string>("read_text", { path }))
+    openTab(fresh(project, path))
+    remember(path, project, null)
+  } catch (e) {
+    forget(path)
+    failed("Couldn't open", e)
+  }
 }
 
 export async function openProject() {
-  if (!(await confirmDiscard())) return
   try {
     if (inTauri()) {
       const { open } = await import("@tauri-apps/plugin-dialog")
       const path = await open({ filters: FILTERS, multiple: false, directory: false })
-      if (typeof path !== "string") return
-      projectApi.getState().replace(parseProject(await invoke<string>("read_text", { path })), path)
+      if (typeof path === "string") await openPath(path)
     } else {
       const file = await pickFile(".kiln,application/json")
-      if (file) projectApi.getState().replace(parseProject(await file.text()))
+      if (file) openTab(fresh(parseProject(await file.text())))
     }
-    editorApi.getState().select([])
   } catch (e) {
-    editorApi.getState().set({ error: `Couldn't open: ${e instanceof Error ? e.message : e}` })
+    failed("Couldn't open", e)
   }
 }
 
@@ -93,6 +127,7 @@ export async function saveProject(saveAs = false) {
       }
       await invoke("write_text", { path: target, contents: text })
       projectApi.getState().markSaved(target)
+      remember(target, project)
     } else {
       download(`${project.name}.kiln`, text)
       projectApi.getState().markSaved(`${project.name}.kiln`)
@@ -121,39 +156,85 @@ export function download(name: string, contents: BlobPart, type = "application/j
   setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
 
-/**
- * Keeps the open project in localStorage so a crash or reload loses nothing, and restores it at
- * launch, still marked unsaved if it was. Closing with unsaved work asks first.
- */
-export function startAutosave() {
+type SavedTab = { project: Project; path: string | null; dirty: boolean }
+type Session = { tabs: SavedTab[]; active: number; home: boolean }
+
+/** The session from before tabs: one project. */
+function oldAutosave(): Session | null {
+  const saved = localStorage.getItem(AUTOSAVE)
+  if (!saved) return null
+  const { project, path, dirty } = JSON.parse(saved)
+  return { tabs: [{ project, path, dirty: dirty !== false }], active: 0, home: false }
+}
+
+let restored = false
+
+function restore() {
+  if (restored) return
+  restored = true
   try {
-    const saved = localStorage.getItem(AUTOSAVE)
-    if (saved) {
-      const { project, path, dirty } = JSON.parse(saved)
-      projectApi.getState().replace(parseProject(JSON.stringify(project)), path, dirty !== false)
+    const session: Session | null =
+      JSON.parse(localStorage.getItem(SESSION) ?? "null") ?? oldAutosave()
+    if (!session?.tabs?.length) return
+    for (const t of session.tabs) {
+      try {
+        openTab(fresh(parseProject(JSON.stringify(t.project)), t.path, t.dirty))
+      } catch {
+        // one bad tab doesn't lose the others
+      }
     }
+    const { tabs } = workspaceApi.getState()
+    const active = tabs[Math.min(Math.max(0, session.active), tabs.length - 1)]
+    if (active) activate(active.id)
+    workspaceApi.setState({ home: Boolean(session.home) })
   } catch {
-    // a bad or missing autosave just means starting from the sample
+    // a bad session just means starting from the home page
   }
+}
+
+/** Serialised tab projects, so an edit only re-serialises the tab it was made in. */
+const serialised = new WeakMap<Project, string>()
+const json = (p: Project) => {
+  let text = serialised.get(p)
+  if (text === undefined) serialised.set(p, (text = JSON.stringify(p)))
+  return text
+}
+
+/**
+ * Keeps every open tab in localStorage so a crash or reload loses nothing, and reopens them at
+ * launch, still marked unsaved if they were. Closing with unsaved work asks first.
+ */
+export function startSession() {
+  restore()
   let timer = 0
   const write = () => {
     clearTimeout(timer)
-    const s = projectApi.getState()
+    const { tabs, active, home } = workspaceApi.getState()
+    const parts = tabs.map(t => {
+      const p = tabProject(t)
+      return `{"project":${json(p.doc)},"path":${JSON.stringify(p.path)},"dirty":${p.doc !== p.saved}}`
+    })
     try {
       localStorage.setItem(
-        AUTOSAVE,
-        JSON.stringify({ project: s.doc, path: s.path, dirty: s.doc !== s.saved }),
+        SESSION,
+        `{"tabs":[${parts.join(",")}],"active":${Math.max(
+          0,
+          tabs.findIndex(t => t.id === active),
+        )},"home":${home}}`,
       )
+      localStorage.removeItem(AUTOSAVE)
     } catch {
-      // over quota (big images): the file on disk is still the source of truth
+      // over quota (big images): the files on disk are still the source of truth
     }
   }
-  const stop = projectApi.subscribe(() => {
+  const later = () => {
     clearTimeout(timer)
     timer = window.setTimeout(write, 500)
-  })
+  }
+  const stopProject = projectApi.subscribe(later)
+  const stopTabs = workspaceApi.subscribe(later)
   // leaving writes the last half second of edits too
-  const unload = (e: BeforeUnloadEvent) => (write(), isDirty() && e.preventDefault())
+  const unload = (e: BeforeUnloadEvent) => (write(), anyDirty() && e.preventDefault())
   window.addEventListener("beforeunload", unload)
   let unlisten: (() => void) | undefined
   let stopDirty: (() => void) | undefined
@@ -161,11 +242,13 @@ export function startAutosave() {
     // the app asks before quitting with unsaved work, so it needs to know
     let told: boolean | null = null
     const tell = () => {
-      const dirty = isDirty()
+      const dirty = anyDirty()
       if (dirty !== told) deviceApi.setDirty((told = dirty)).catch(() => {})
     }
     tell()
-    stopDirty = projectApi.subscribe(tell)
+    const a = projectApi.subscribe(tell)
+    const b = workspaceApi.subscribe(tell)
+    stopDirty = () => (a(), b())
     import("@tauri-apps/api/window").then(async ({ getCurrentWindow }) => {
       unlisten = await getCurrentWindow().onCloseRequested(async e => {
         write()
@@ -180,12 +263,13 @@ export function startAutosave() {
         const question = busy
           ? "A build is still running. Close Kiln and stop it?"
           : "Quit without saving? Your changes stay in Kiln's autosave."
-        if ((busy || isDirty()) && !(await confirmAction(question))) e.preventDefault()
+        if ((busy || anyDirty()) && !(await confirmAction(question))) e.preventDefault()
       })
     })
   }
   return () => {
-    stop()
+    stopProject()
+    stopTabs()
     window.removeEventListener("beforeunload", unload)
     unlisten?.()
     stopDirty?.()
