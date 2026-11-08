@@ -4,7 +4,7 @@
   z-index: 40;
   display: grid;
   grid-template-columns: 1fr 260px;
-  background: radial-gradient(circle at 40% 40%, #232a38, #12151c 70%);
+  background: var(--play-bg);
 }
 .stage {
   display: flex;

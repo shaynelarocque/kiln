@@ -125,7 +125,7 @@
   top: 13px;
   height: 4px;
   border-radius: 2px;
-  background: rgba(255, 204, 102, 0.25);
+  background: color-mix(in srgb, var(--accent) 25%, transparent);
 }
 .key {
   position: absolute;
@@ -141,7 +141,7 @@
 }
 .keyOn {
   background: var(--select);
-  box-shadow: 0 0 0 2px rgba(115, 208, 255, 0.35);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--select) 35%, transparent);
 }
 .keyEditor {
   display: grid;

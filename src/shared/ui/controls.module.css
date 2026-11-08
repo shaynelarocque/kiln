@@ -32,7 +32,7 @@
   font-weight: 600;
 }
 .primary:hover:not(:disabled) {
-  background: #ffd98a;
+  background: var(--accent-hover);
 }
 .ghost {
   background: transparent;
@@ -202,7 +202,7 @@ textarea.text {
   height: 18px;
   flex: none;
   border-radius: 4px;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text) 25%, transparent);
   cursor: pointer;
 }
 .swatch input {
@@ -327,7 +327,7 @@ textarea.text {
   z-index: 50;
   display: grid;
   place-items: center;
-  background: rgba(10, 12, 18, 0.6);
+  background: var(--backdrop);
   backdrop-filter: blur(2px);
 }
 .dialog {
@@ -338,7 +338,7 @@ textarea.text {
   border: 1px solid var(--line-strong);
   border-radius: 10px;
   background: var(--bg);
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 24px 64px var(--shadow);
 }
 .dialogWide {
   width: min(980px, calc(100vw - 48px));

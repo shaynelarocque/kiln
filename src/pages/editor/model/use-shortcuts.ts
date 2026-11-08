@@ -44,6 +44,7 @@ export function useShortcuts() {
       if (mod && key === "s") return run(() => saveProject(e.shiftKey))
       if (mod && key === "o") return run(openProject)
       const editor = editorApi.getState()
+      if (mod && key === ",") return run(() => editor.set({ dialog: "settings" }))
       if (typing(e.target) || editor.dialog) return
       if (editor.playing) return key === "escape" && run(() => editor.set({ playing: false }))
       // synthetic events (automation, some remote desktops) can leave code empty

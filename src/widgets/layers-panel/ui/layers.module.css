@@ -111,7 +111,7 @@
 .badge {
   padding: 0 5px;
   border-radius: 3px;
-  background: rgba(255, 204, 102, 0.14);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
   color: var(--accent);
   font-size: 10px;
 }

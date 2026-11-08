@@ -3,7 +3,7 @@ import { MAIN_DEFAULT, type Rect } from "@/shared/lvgl"
 
 export type LeftTab = "layers" | "data" | "styles" | "assets"
 export type RightTab = "design" | "bind" | "interact"
-export type Dialog = null | "board" | "export" | "shortcuts"
+export type Dialog = null | "board" | "export" | "shortcuts" | "settings"
 
 /** Panel sizes in px: the layers panel, the inspector and the timeline. */
 export type Panels = { left: number; right: number; timeline: number }

@@ -46,6 +46,7 @@ const GROUPS: [string, [string, string][]][] = [
     [
       ["Save / save as", "⌘S / ⇧⌘S"],
       ["Open", "⌘O"],
+      ["Settings", "⌘,"],
       ["Play", "⌘↵"],
       ["Leave Play", "Esc"],
       ["This sheet", "?"],

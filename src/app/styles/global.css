@@ -1,10 +1,16 @@
-/* Ayu Mirage, the palette of Michael's Arduino IDE port, tuned for a design tool. */
+/*
+ * Two Ayu palettes, tuned for a design tool: Mirage (the palette of Michael's Arduino IDE port)
+ * and Light. The theme follows the system unless Settings picks one; app/theme.ts sets
+ * data-theme on <html>.
+ */
 :root {
   --bg-canvas: #171b24;
   --bg: #1f2430;
   --bg-raised: #242936;
   --bg-input: #191e2a;
   --bg-hover: #2a3040;
+  --bg-log: #11141b;
+  --bg-float: rgba(23, 27, 36, 0.92);
   --line: #2d3342;
   --line-strong: #3a4152;
   --text: #cccac2;
@@ -12,15 +18,21 @@
   --text-dim: #8a919e;
   --text-faint: #5c6573;
   --accent: #ffcc66;
+  --accent-hover: #ffd98a;
   --accent-ink: #1f2430;
   --orange: #ffa659;
   --select: #73d0ff;
   --select-soft: rgba(115, 208, 255, 0.14);
+  --select-ink: #0d1a24;
   --green: #87d96c;
   --red: #f28779;
+  --red-soft: #2b1d22;
   --purple: #dfbfff;
   --cyan: #95e6cb;
   --pixel-grid: rgba(140, 150, 170, 0.28);
+  --backdrop: rgba(10, 12, 18, 0.6);
+  --shadow: rgba(0, 0, 0, 0.45);
+  --play-bg: radial-gradient(circle at 40% 40%, #232a38, #12151c 70%);
 
   --font:
     -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", system-ui, sans-serif;
@@ -35,6 +47,40 @@
   color: var(--text);
   background: var(--bg);
   -webkit-font-smoothing: antialiased;
+}
+
+:root[data-theme="light"] {
+  --bg-canvas: #eceef1;
+  --bg: #f8f9fa;
+  --bg-raised: #ffffff;
+  --bg-input: #eff1f3;
+  --bg-hover: #e6e9ed;
+  --bg-log: #ffffff;
+  --bg-float: rgba(255, 255, 255, 0.94);
+  --line: #e0e3e8;
+  --line-strong: #ccd1d8;
+  --text: #4f555b;
+  --text-strong: #1c2024;
+  --text-dim: #7d858e;
+  --text-faint: #a9b0b8;
+  --accent: #ffaa33;
+  --accent-hover: #ffbb5c;
+  --accent-ink: #2b1d00;
+  --orange: #e8772a;
+  --select: #2f8fd8;
+  --select-soft: rgba(47, 143, 216, 0.13);
+  --select-ink: #ffffff;
+  --green: #5a8f00;
+  --red: #d94848;
+  --red-soft: #fdecec;
+  --purple: #9065bd;
+  --cyan: #2fa383;
+  --pixel-grid: rgba(60, 70, 90, 0.2);
+  --backdrop: rgba(40, 46, 56, 0.28);
+  --shadow: rgba(30, 40, 60, 0.18);
+  --play-bg: radial-gradient(circle at 40% 40%, #f4f5f7, #d9dde3 70%);
+
+  color-scheme: light;
 }
 
 * {

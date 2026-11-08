@@ -14,6 +14,14 @@ export function rememberHardware(target: Target) {
   }
 }
 
+export function forgetHardware() {
+  try {
+    localStorage.removeItem(KEY)
+  } catch {
+    // nothing was kept
+  }
+}
+
 export function savedHardware(): Target | null {
   try {
     const t = JSON.parse(localStorage.getItem(KEY) ?? "null")

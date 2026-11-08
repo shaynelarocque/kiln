@@ -8,6 +8,7 @@ import {
   Play,
   Redo2,
   Save,
+  Settings,
   Undo2,
 } from "lucide-react"
 import { useMemo, useState } from "react"
@@ -107,6 +108,12 @@ export function Toolbar() {
           onClick={() => editorApi.getState().set({ dialog: "shortcuts" })}
         >
           <Keyboard />
+        </IconButton>
+        <IconButton
+          label='Settings (⌘,)'
+          onClick={() => editorApi.getState().set({ dialog: "settings" })}
+        >
+          <Settings />
         </IconButton>
       </div>
 

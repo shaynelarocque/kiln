@@ -7,4 +7,4 @@ export {
   startAutosave,
   TEMPLATES,
 } from "./model/file"
-export { rememberHardware, savedHardware, withHardware } from "./model/hardware"
+export { forgetHardware, rememberHardware, savedHardware, withHardware } from "./model/hardware"

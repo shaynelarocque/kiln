@@ -37,7 +37,7 @@
   position: absolute;
   inset: 0;
   overflow: hidden;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 10px 40px var(--shadow);
 }
 .frameOn {
   outline: 1.5px solid var(--select);
@@ -129,7 +129,7 @@
   padding: 1px 5px;
   border-radius: 3px;
   background: var(--select);
-  color: #0d1a24;
+  color: var(--select-ink);
   font-size: 10px;
   font-weight: 600;
   white-space: nowrap;
@@ -167,8 +167,8 @@
 .textEdit {
   border: 1.5px solid var(--select);
   border-radius: 2px;
-  background: rgba(23, 27, 36, 0.92);
-  color: #fff;
+  background: var(--bg-float);
+  color: var(--text-strong);
   font-family: "Montserrat", var(--font);
   line-height: 1.2;
   resize: none;
@@ -214,7 +214,7 @@
   border: 2px solid #fff;
   border-radius: 50%;
   background: var(--select);
-  box-shadow: 0 0 0 3px rgba(115, 208, 255, 0.25);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--select) 25%, transparent);
   pointer-events: auto;
   cursor: crosshair;
 }

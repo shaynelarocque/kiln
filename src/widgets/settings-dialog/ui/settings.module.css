@@ -1,0 +1,77 @@
+.list {
+  display: flex;
+  flex-direction: column;
+}
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+}
+.row:first-child {
+  padding-top: 0;
+}
+.row:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+.row h3 {
+  margin: 0 0 3px;
+  color: var(--text-strong);
+  font-size: 12px;
+  font-weight: 600;
+}
+.row p {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 11px;
+  line-height: 1.45;
+}
+.control {
+  display: flex;
+  justify-content: flex-end;
+}
+.segmented {
+  display: inline-flex;
+  padding: 2px;
+  border-radius: var(--radius);
+  background: var(--bg-input);
+}
+.segmented button {
+  height: 24px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: var(--text-dim);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.segmented button:hover {
+  color: var(--text-strong);
+}
+.segmented button[aria-checked="true"] {
+  background: var(--bg-raised);
+  color: var(--text-strong);
+  box-shadow: 0 1px 2px var(--shadow);
+}
+.hardware {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.hardware > span {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+.hardware strong {
+  color: var(--text-strong);
+  font-weight: 600;
+}
+.hardware small {
+  color: var(--text-dim);
+  font-size: 11px;
+}

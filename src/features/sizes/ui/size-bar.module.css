@@ -63,7 +63,7 @@
   margin: 0;
   padding: 3px 8px;
   border-radius: 6px;
-  background: rgba(23, 27, 36, 0.85);
+  background: var(--bg-float);
   color: var(--select);
   font-size: 11px;
 }
