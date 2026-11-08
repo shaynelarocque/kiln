@@ -14,6 +14,9 @@ What you see is what flashes.
 
 ## What it does
 
+- **Work like Figma.** A home page holds the templates, the samples and your recent files, and each
+  project opens in a tab of its own that keeps its undo history. The session comes back at launch.
+  Light and dark themes follow macOS unless Settings (⌘,) picks one.
 - **Design like Figma.** Screens sit side by side on an infinite canvas. Insert widgets, drag with
   smart guides, resize from any handle, nest with auto layout (flexbox), group, copy and paste, undo
   everything. Click picks the top-level layer, double-click goes deeper (or edits text in place),
@@ -48,7 +51,8 @@ What you see is what flashes.
   interactive widgets, "Next widget" moves through it and "Press" clicks what has focus, so a UI with
   no touch panel works on three buttons. Pick a dev kit (the ESP32-2424S012, Waveshare's round
   S3 touch board, the "Cheap Yellow Display", LilyGO's T-Display) and the board, panel, touch and
-  buttons are all filled in.
+  buttons are all filled in. New projects start on the board you set up last, wiring and SPI clock
+  included.
 - **Play it.** Play mode runs the whole UI on real LVGL: taps, events, screen transitions,
   animations, and simulated sensors you can scrub. The board's buttons sit under the device and
   your keyboard stands in for them (Tab, Enter, arrows). With the Interact tab open, every navigation
@@ -57,14 +61,17 @@ What you see is what flashes.
   the fonts you used, a LovyanGFX panel config, the hardware glue, and a `platformio.ini`. Your code
   goes in `src/app.cpp`, which Kiln writes once and never touches again. The output uses LVGL 9.6's
   current API (`lv_subject_create`, `lv_obj_set_hidden`…), so it compiles without a single warning.
-- **Design once, for every screen.** Add sizes (a 128×160 ST7735 beside a round GC9A01, say),
+- **Design once, for every screen** (experimental, on in Settings). Add sizes (a 128×160 ST7735 beside a round GC9A01, say),
   each with its own board and panel. Pick one and every screen shows at that size; LVGL's relative
   layout (align, %, flex) does most of the work, and anything you change there stays there, like
   a CSS media query: layout, style, visibility, and graphics (an image, a sprite, their zoom),
   since a different panel usually wants different art. Images are compiled in only where shown,
   so art one size uses costs the others nothing. Play, export and the budget follow the size you're on.
-- **Build and flash it.** In the desktop app, Export writes the project, runs `pio run`, and uploads
-  to the port you pick, streaming PlatformIO's log.
+- **Build, flash and watch it.** In the desktop app, Build (⌘B) and Flash (⌘U) export the project
+  and run `pio run` in the background, like PlatformIO in VS Code: keep designing while it compiles
+  and uploads. The log streams into a panel under the canvas (⌘J) or a window of its own, and the
+  toolbar shows esptool's progress. A serial monitor (⇧⌘M) reads the board, sends to it and resets
+  it; it steps aside while a flash needs the port and reconnects after.
 - **Know if it fits.** A flash and RAM meter estimates the build against the board's real limits,
   read from PlatformIO's board definitions, counting fonts, images and TinyTTF's glyph caches.
   LVGL draws a rotated or scaled widget through a layer on its heap, which the preview's roomy heap
@@ -105,14 +112,14 @@ export.
 
 The frontend follows [Feature-Sliced Design](https://feature-sliced.design), checked by Steiger:
 
-| Layer          | What's there                                                                                                   |
-| -------------- | -------------------------------------------------------------------------------------------------------------- |
-| `app`          | entry point, global styles                                                                                     |
-| `pages/editor` | the editor layout and keyboard shortcuts                                                                       |
-| `widgets`      | canvas, layers, inspector, data, styles, assets, timeline, player, dialogs                                     |
-| `features`     | insert widget, node actions, history, project files, firmware export                                           |
-| `entities`     | `project` (document, compiler, preview), `board` (PlatformIO boards, pins, budget), `editor` (selection, view) |
-| `shared`       | `lvgl` (catalog, ops, wasm runtime, C printer), `ui` kit, Tauri bridge                                         |
+| Layer      | What's there                                                                                                                                             |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `app`      | entry point, global styles, theme, the menu bar's commands                                                                                               |
+| `pages`    | `editor` (layout and keyboard shortcuts), `home` (templates and recents), `output` (the output window)                                                   |
+| `widgets`  | canvas, layers, inspector, data, styles, assets, timeline, player, tab bar, output panel, dialogs                                                        |
+| `features` | insert widget, node actions, history, project files and tabs, firmware export and builds                                                                 |
+| `entities` | `project` (document, compiler, preview), `board` (PlatformIO boards, pins, budget), `device` (builds and the serial monitor), `editor` (selection, view) |
+| `shared`   | `lvgl` (catalog, ops, wasm runtime, C printer), `ui` kit, Tauri bridge                                                                                   |
 
 Each slice is MVVM: views in `ui/` stay dumb and read a view-model hook in `model/` (for example
 `useCanvas`, `useInspector`, `useLayers`), which is the only thing that talks to the stores.
@@ -156,6 +163,7 @@ firmware as written; that's its job. Read those before building someone else's p
 
 ## Status
 
-See [GOALS.md](GOALS.md). The export compiles for `esp32-c3-devkitm-1`, but nothing has been flashed
-to a real panel yet. Display init (inversion, colour order, offsets) is the first thing to check on
-hardware, and every one of those settings is a toggle in the board dialog.
+See [GOALS.md](GOALS.md). Michael has flashed the thermostat sample to an ESP32-C3 with a round
+GC9A01 panel, built and uploaded from Kiln. Display init (inversion, colour order, offsets) is
+still the first thing to check on a new panel, and every one of those settings is a toggle in the
+board dialog.
