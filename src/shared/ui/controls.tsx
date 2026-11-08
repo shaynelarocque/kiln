@@ -75,6 +75,50 @@ type NumberProps = {
 
 const clamp = (v: number, min = -Infinity, max = Infinity) => Math.min(max, Math.max(min, v))
 
+/**
+ * A text field's uncommitted typing. It commits on blur, and also when the field goes away with
+ * typing in it (a dialog closed by clicking outside unmounts the field before it ever blurs).
+ * Escape throws the typing away and leaves the field, without letting a dialog close on it too.
+ */
+function usePending(
+  shown: string,
+  setDraft: (text: string) => void,
+  commit: (text: string) => unknown,
+) {
+  const pending = useRef<string | null>(null)
+  const latest = useRef(commit)
+  latest.current = commit
+  useEffect(() => {
+    // a new value from outside (another layer selected, an undo) replaces the typing
+    pending.current = null
+    setDraft(shown)
+  }, [shown, setDraft])
+  useEffect(
+    () => () => {
+      if (pending.current !== null) latest.current(pending.current)
+    },
+    [],
+  )
+  return {
+    type: (text: string) => {
+      pending.current = text
+      setDraft(text)
+    },
+    flush: () => {
+      const text = pending.current
+      pending.current = null
+      if (text !== null) latest.current(text)
+    },
+    drop: () => void (pending.current = null),
+    revert: (e: React.KeyboardEvent<HTMLElement>) => {
+      e.stopPropagation()
+      pending.current = null
+      setDraft(shown)
+      e.currentTarget.blur()
+    },
+  }
+}
+
 export function NumberInput({
   value,
   onChange,
@@ -90,13 +134,12 @@ export function NumberInput({
 }: NumberProps) {
   const shown = value === null ? "" : String(Math.round((value / scale) * 100) / 100)
   const [draft, setDraft] = useState(shown)
-  useEffect(() => setDraft(shown), [shown])
-
   const commit = (text: string) => {
     const n = parseFloat(text)
     if (!Number.isFinite(n)) return setDraft(shown)
     onChange(clamp(Math.round(n * scale), min, max))
   }
+  const pending = usePending(shown, setDraft, commit)
 
   const scrub = (e: React.PointerEvent) => {
     if (disabled || value === null) return
@@ -135,13 +178,14 @@ export function NumberInput({
         placeholder={placeholder ?? "–"}
         disabled={disabled}
         inputMode='decimal'
-        onChange={e => setDraft(e.target.value)}
-        onBlur={e => commit(e.target.value)}
+        onChange={e => pending.type(e.target.value)}
+        onBlur={pending.flush}
         onKeyDown={e => {
           if (e.key === "Enter") (e.target as HTMLInputElement).blur()
-          if (e.key === "Escape") setDraft(shown)
+          if (e.key === "Escape") pending.revert(e)
           if ((e.key === "ArrowUp" || e.key === "ArrowDown") && value !== null) {
             e.preventDefault()
+            pending.drop()
             const d = (e.key === "ArrowUp" ? 1 : -1) * step * (e.shiftKey ? 10 : 1)
             onChange(clamp(Math.round(value + d * scale), min, max))
           }
@@ -166,24 +210,28 @@ export function TextInput({
   mono?: boolean
 }) {
   const [draft, setDraft] = useState(value)
-  useEffect(() => setDraft(value), [value])
+  const pending = usePending(value, setDraft, text => text !== value && onChange(text))
   const props = {
     value: draft,
     placeholder,
     className: `${s.text} ${mono ? s.mono : ""}`,
     onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
-      setDraft(e.target.value),
-    onBlur: () => draft !== value && onChange(draft),
+      pending.type(e.target.value),
+    onBlur: pending.flush,
     spellCheck: false,
   }
   return multiline ? (
-    <textarea {...props} rows={Math.min(6, Math.max(2, draft.split("\n").length))} />
+    <textarea
+      {...props}
+      rows={Math.min(6, Math.max(2, draft.split("\n").length))}
+      onKeyDown={e => e.key === "Escape" && pending.revert(e)}
+    />
   ) : (
     <input
       {...props}
       onKeyDown={e => {
         if (e.key === "Enter") (e.target as HTMLInputElement).blur()
-        if (e.key === "Escape") setDraft(value)
+        if (e.key === "Escape") pending.revert(e)
       }}
     />
   )
