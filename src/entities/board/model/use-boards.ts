@@ -13,6 +13,9 @@ const store = create<BoardsState>()(() => ({
 let started = false
 
 /** The board catalog; asks PlatformIO once per session, falls back to the bundled snapshot. */
+/** The board list outside React; whatever has loaded so far. */
+export const boardsApi = store
+
 export function useBoards() {
   if (!started) {
     started = true

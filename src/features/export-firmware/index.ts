@@ -7,12 +7,15 @@ export {
   type FirmwareFile,
 } from "./lib/firmware"
 export { pinClaims, spiHosts, touchSharesBus, wiringProblems } from "./lib/pins"
+export { pickFolder, pioInfo, writeProject } from "./api/firmware-api"
 export {
-  pickFolder,
-  pioInfo,
-  pioPorts,
-  pioRun,
-  writeProject,
-  type RunEvent,
-  type SerialPort,
-} from "./api/firmware-api"
+  build,
+  currentFirmware,
+  exportFolder,
+  exportTo,
+  openMonitor,
+  showOutput,
+  stopBuild,
+  toggleMonitor,
+  toggleOutput,
+} from "./model/build"

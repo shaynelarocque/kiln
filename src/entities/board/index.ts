@@ -26,4 +26,4 @@ export {
   type BudgetInput,
 } from "./lib/budget"
 export { loadBoards } from "./api/pio"
-export { useBoards } from "./model/use-boards"
+export { boardsApi, useBoards } from "./model/use-boards"

@@ -21,6 +21,7 @@ import { ComponentMenu } from "@/features/components"
 import { InsertBar } from "@/features/insert-widget"
 import { TEMPLATES, newProject, openProject, saveProject } from "@/features/project-file"
 import { Button, IconButton } from "@/shared/ui"
+import { DeviceControls } from "./DeviceControls"
 import s from "./toolbar.module.css"
 
 export function Toolbar() {
@@ -144,6 +145,7 @@ export function Toolbar() {
             <Meter label='RAM' value={ram} />
           </span>
         </button>
+        <DeviceControls />
         <Button
           icon={<Play />}
           onClick={() => editorApi.getState().set({ playing: true })}
@@ -155,6 +157,7 @@ export function Toolbar() {
           icon={<Download />}
           variant='primary'
           onClick={() => editorApi.getState().set({ dialog: "export" })}
+          title='Export code (⌘E)'
         >
           Export
         </Button>

@@ -1,13 +1,10 @@
-import { Copy, Download, FolderOpen, Hammer, RefreshCw, Upload } from "lucide-react"
-import { useEffect, useRef } from "react"
-import { Button, Dialog, Hint, IconButton, Select } from "@/shared/ui"
+import { Copy, Download, FolderOpen, Hammer, Upload } from "lucide-react"
+import { Button, Dialog, Hint, IconButton } from "@/shared/ui"
 import { useExport } from "../model/use-export"
 import s from "./export-dialog.module.css"
 
 export function ExportDialog() {
   const vm = useExport()
-  const logEnd = useRef<HTMLDivElement>(null)
-  useEffect(() => logEnd.current?.scrollIntoView({ block: "end" }), [vm.log.length])
 
   const footer = vm.desktop ? (
     <>
@@ -23,31 +20,19 @@ export function ExportDialog() {
           <Button
             icon={<Hammer />}
             onClick={vm.build}
-            disabled={!vm.pio?.path || Boolean(vm.running)}
+            disabled={!vm.pio?.path}
+            title='Export, then build in the background (⌘B)'
           >
-            {vm.running === "build" ? "Building…" : "Build"}
+            Build
           </Button>
-          <span className={s.port}>
-            <Select
-              value={vm.port}
-              placeholder='Auto-detect port'
-              options={vm.ports.map(p => ({
-                value: p.port,
-                label: `${p.port} ${p.description !== "n/a" ? `· ${p.description}` : ""}`,
-              }))}
-              onChange={vm.setPort}
-            />
-            <IconButton label='Refresh ports' onClick={vm.refreshPorts}>
-              <RefreshCw />
-            </IconButton>
-          </span>
           <Button
             icon={<Upload />}
             variant='primary'
-            onClick={vm.upload}
-            disabled={!vm.pio?.path || Boolean(vm.running)}
+            onClick={vm.flash}
+            disabled={!vm.pio?.path}
+            title='Export, build and flash in the background (⌘U)'
           >
-            {vm.running === "upload" ? "Flashing…" : "Build & flash"}
+            Build & flash
           </Button>
         </>
       )}
@@ -108,28 +93,7 @@ export function ExportDialog() {
           </pre>
         </div>
       </div>
-      {vm.status && (
-        <Hint tone={/fail|exited|error/i.test(vm.status) ? "error" : "ok"}>{vm.status}</Hint>
-      )}
-      {vm.log.length > 0 && (
-        <div className={s.log}>
-          {vm.log.map((line, i) => (
-            <div
-              key={i}
-              className={
-                /error|failed/i.test(line)
-                  ? s.err
-                  : /SUCCESS|Wrote|Hash of data verified/i.test(line)
-                    ? s.good
-                    : ""
-              }
-            >
-              {line}
-            </div>
-          ))}
-          <div ref={logEnd} />
-        </div>
-      )}
+      {vm.status && <Hint tone={/fail|error/i.test(vm.status) ? "error" : "ok"}>{vm.status}</Hint>}
     </Dialog>
   )
 }

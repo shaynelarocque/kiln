@@ -14,6 +14,7 @@ import { Canvas } from "@/widgets/canvas"
 import { DataPanel } from "@/widgets/data-panel"
 import { ExportDialog } from "@/widgets/export-dialog"
 import { Inspector } from "@/widgets/inspector"
+import { OutputPanel } from "@/widgets/output-panel"
 import { LayersPanel } from "@/widgets/layers-panel"
 import { Player } from "@/widgets/player"
 import { SettingsDialog } from "@/widgets/settings-dialog"
@@ -45,6 +46,7 @@ export function EditorPage() {
   const playing = useEditorStore(s => s.playing)
   const dialog = useEditorStore(s => s.dialog)
   const timelineOpen = useEditorStore(s => s.timelineOpen)
+  const outputOpen = useEditorStore(s => s.outputOpen)
   const panels = useEditorStore(s => s.panels)
   const widest = (other: number) => Math.max(200, window.innerWidth - other - CANVAS_MIN)
   return (
@@ -89,6 +91,20 @@ export function EditorPage() {
               onChange={timeline => setPanels({ timeline })}
             />
             <Timeline />
+          </div>
+        )}
+        {outputOpen && (
+          <div className={s.dock} style={{ height: panels.output }}>
+            <Splitter
+              label='Build output height'
+              edge='top'
+              value={panels.output}
+              min={120}
+              max={Math.max(120, window.innerHeight - 44 - 200)}
+              initial={PANEL_DEFAULTS.output}
+              onChange={output => setPanels({ output })}
+            />
+            <OutputPanel docked />
           </div>
         )}
         {error && (

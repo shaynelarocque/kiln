@@ -1,3 +1,4 @@
+import { deviceApi, deviceStore } from "@/entities/device"
 import { editorApi } from "@/entities/editor"
 import {
   createEmptyProject,
@@ -6,7 +7,7 @@ import {
   projectApi,
   type Project,
 } from "@/entities/project"
-import { confirmAction, inTauri, invoke } from "@/shared/lib/tauri"
+import { confirmAction, inTauri, invoke, onMac } from "@/shared/lib/tauri"
 import { withHardware } from "./hardware"
 
 const FILTERS = [{ name: "Kiln project", extensions: ["kiln"] }]
@@ -155,20 +156,38 @@ export function startAutosave() {
   const unload = (e: BeforeUnloadEvent) => (write(), isDirty() && e.preventDefault())
   window.addEventListener("beforeunload", unload)
   let unlisten: (() => void) | undefined
-  if (inTauri())
+  let stopDirty: (() => void) | undefined
+  if (inTauri()) {
+    // the app asks before quitting with unsaved work, so it needs to know
+    let told: boolean | null = null
+    const tell = () => {
+      const dirty = isDirty()
+      if (dirty !== told) deviceApi.setDirty((told = dirty)).catch(() => {})
+    }
+    tell()
+    stopDirty = projectApi.subscribe(tell)
     import("@tauri-apps/api/window").then(async ({ getCurrentWindow }) => {
       unlisten = await getCurrentWindow().onCloseRequested(async e => {
         write()
-        if (
-          isDirty() &&
-          !(await confirmAction("Quit without saving? Your changes stay in Kiln's autosave."))
-        )
+        // a Mac app outlives its window: a flash in progress keeps going, and the Dock icon
+        // (or any menu item) brings the editor back
+        if (onMac()) {
           e.preventDefault()
+          await getCurrentWindow().hide()
+          return
+        }
+        const busy = deviceStore.getState().job?.running
+        const question = busy
+          ? "A build is still running. Close Kiln and stop it?"
+          : "Quit without saving? Your changes stay in Kiln's autosave."
+        if ((busy || isDirty()) && !(await confirmAction(question))) e.preventDefault()
       })
     })
+  }
   return () => {
     stop()
     window.removeEventListener("beforeunload", unload)
     unlisten?.()
+    stopDirty?.()
   }
 }

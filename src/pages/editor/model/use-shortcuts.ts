@@ -16,7 +16,9 @@ import {
   selectAllSiblings,
   type AlignEdge,
 } from "@/features/node-actions"
+import { build, stopBuild, toggleMonitor, toggleOutput } from "@/features/export-firmware"
 import { openProject, saveProject } from "@/features/project-file"
+import { inTauri } from "@/shared/lib/tauri"
 
 /** Figma's align keys, by physical key: ⌥ turns e.key into symbols on a Mac */
 const ALIGN_KEYS: Record<string, AlignEdge> = {
@@ -45,6 +47,17 @@ export function useShortcuts() {
       if (mod && key === "o") return run(openProject)
       const editor = editorApi.getState()
       if (mod && key === ",") return run(() => editor.set({ dialog: "settings" }))
+      // build keys work from anywhere but a text field, like the menu bar's
+      if (mod && !typing(e.target)) {
+        if (key === "e") return run(() => editor.set({ dialog: "export" }))
+        if (key === "j") return run(toggleOutput)
+        if (inTauri()) {
+          if (key === "b") return run(() => build(false))
+          if (key === "u") return run(() => build(true))
+          if (key === ".") return run(stopBuild)
+          if (key === "m" && e.shiftKey) return run(toggleMonitor)
+        }
+      }
       if (typing(e.target) || editor.dialog) return
       if (editor.playing) return key === "escape" && run(() => editor.set({ playing: false }))
       // synthetic events (automation, some remote desktops) can leave code empty

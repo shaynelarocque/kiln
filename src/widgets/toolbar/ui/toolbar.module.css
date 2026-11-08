@@ -150,3 +150,44 @@
   opacity: 0;
   cursor: pointer;
 }
+
+.device {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.jobStatus {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 26px;
+  margin-right: 2px;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg-raised);
+  color: var(--text);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.jobStatus svg {
+  width: 13px;
+  height: 13px;
+}
+.jobStatus[data-tone="good"] {
+  color: var(--green);
+}
+.jobStatus[data-tone="error"] {
+  border-color: color-mix(in srgb, var(--red) 50%, transparent);
+  color: var(--red);
+}
+.spin {
+  animation: spin 0.9s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

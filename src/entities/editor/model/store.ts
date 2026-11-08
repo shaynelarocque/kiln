@@ -4,10 +4,11 @@ import { MAIN_DEFAULT, type Rect } from "@/shared/lvgl"
 export type LeftTab = "layers" | "data" | "styles" | "assets"
 export type RightTab = "design" | "bind" | "interact"
 export type Dialog = null | "board" | "export" | "shortcuts" | "settings"
+export type OutputTab = "build" | "monitor"
 
-/** Panel sizes in px: the layers panel, the inspector and the timeline. */
-export type Panels = { left: number; right: number; timeline: number }
-export const PANEL_DEFAULTS: Panels = { left: 248, right: 280, timeline: 236 }
+/** Panel sizes in px: the layers panel, the inspector, the timeline and the build output. */
+export type Panels = { left: number; right: number; timeline: number; output: number }
+export const PANEL_DEFAULTS: Panels = { left: 248, right: 280, timeline: 236, output: 220 }
 const PANELS_KEY = "kiln.panels"
 
 /** This viewer's panel sizes from last time, if the browser kept them. */
@@ -16,7 +17,12 @@ function savedPanels(): Panels {
     const saved = JSON.parse(localStorage.getItem(PANELS_KEY) ?? "{}")
     const valid = (k: keyof Panels) =>
       Number.isFinite(saved[k]) && saved[k] > 0 ? saved[k] : PANEL_DEFAULTS[k]
-    return { left: valid("left"), right: valid("right"), timeline: valid("timeline") }
+    return {
+      left: valid("left"),
+      right: valid("right"),
+      timeline: valid("timeline"),
+      output: valid("output"),
+    }
   } catch {
     return PANEL_DEFAULTS
   }
@@ -35,6 +41,9 @@ type EditorState = {
   /** the part:state the style inspector edits, like CSS :pressed */
   selector: string
   timelineOpen: boolean
+  /** the build output and serial monitor, docked under the canvas */
+  outputOpen: boolean
+  outputTab: OutputTab
   panels: Panels
   animation: string | null
   /** an animation to start as soon as Play opens */
@@ -60,6 +69,8 @@ export const useEditorStore = create<EditorState>()(set => ({
   rightTab: "design",
   selector: MAIN_DEFAULT,
   timelineOpen: false,
+  outputOpen: false,
+  outputTab: "build",
   panels: savedPanels(),
   animation: null,
   preview: null,
