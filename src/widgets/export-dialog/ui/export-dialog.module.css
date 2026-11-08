@@ -18,6 +18,8 @@
 .body {
   display: grid;
   grid-template-columns: 240px 1fr;
+  /* the panes scroll inside the row; without minmax(0) they grow past it and under the log */
+  grid-template-rows: minmax(0, 1fr);
   gap: 12px;
   height: 52vh;
   min-height: 320px;
