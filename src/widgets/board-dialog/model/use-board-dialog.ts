@@ -21,7 +21,7 @@ import {
   type TouchConfig,
   type TouchDriver,
 } from "@/entities/project"
-import { budgetFor, pinClaims, wiringProblems } from "@/features/export-firmware"
+import { budgetFor, currentFirmware, pinClaims, wiringProblems } from "@/features/export-firmware"
 import { rememberHardware } from "@/features/project-file"
 import { kitIndex, type Kit } from "./kits"
 
@@ -86,8 +86,19 @@ export function useBoardDialog() {
       fitScreens(d)
     }, phase)
 
+  const size = useProjectStore(s => s.doc.sizes.find(z => z.id === s.size))
+  const claims = pinClaims(project)
+
   return {
     project,
+    /** the size whose hardware this is, when not the base */
+    sizeName: size?.name ?? null,
+    claims: claims.filter(c => c.pin >= 0).sort((a, b) => a.pin - b.pin),
+    /** platformio.ini and the panel config, as the export writes them */
+    pioFiles: () =>
+      currentFirmware().filter(
+        f => f.path === "platformio.ini" || f.path.endsWith("lgfx_user.hpp"),
+      ),
     board,
     boards,
     source,
@@ -97,7 +108,7 @@ export function useBoardDialog() {
     mcu,
     display,
     pins: pinMap(mcu),
-    problems: [...checkPins(mcu, pinClaims(project)), ...wiringProblems(project, mcu)],
+    problems: [...checkPins(mcu, claims), ...wiringProblems(project, mcu)],
     budget: budgetFor(project, board, nodeBoxes(rects)),
     close: () => editorApi.getState().set({ dialog: null }),
     selectBoard: (id: string) => edit(d => void (d.target.board = id)),
