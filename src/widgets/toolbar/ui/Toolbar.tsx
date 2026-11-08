@@ -22,6 +22,7 @@ import { InsertBar } from "@/features/insert-widget"
 import { openProject, saveProject, showHome } from "@/features/project-file"
 import { Button, IconButton } from "@/shared/ui"
 import { DeviceControls } from "./DeviceControls"
+import { MainMenu } from "./MainMenu"
 import s from "./toolbar.module.css"
 
 export function Toolbar() {
@@ -41,9 +42,7 @@ export function Toolbar() {
   return (
     <header className={s.bar} data-tauri-drag-region>
       <div className={s.group} data-tauri-drag-region>
-        <span className={s.logo} aria-hidden>
-          ◆
-        </span>
+        <MainMenu />
         {naming ? (
           <input
             className={s.name}

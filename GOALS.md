@@ -53,6 +53,6 @@ Each flag was set in a review against the code and the checks, not from memory. 
   6. A layer moved off its screen became invisible and unclickable. It shows as an outline outside the screen that can be dragged back.
   7. The dot grid was noise nothing snapped to: replaced by a pixel grid when zoomed in.
   8. Light theme: Ayu Light, following macOS.
-  9. A heading with nothing under it (the inspector's folded sections) and Tauri's mostly empty menus: folded sections show a chevron, and the menu bar has File, View, Board and Help menus.
+  9. "I don't know what this is, menu not populated": the ◆ logo, which looks like Figma's main-menu button but did nothing. It opens a main menu now, with a chevron to say so. Along the way, the inspector's folded sections got a chevron (they read as empty headings), and the menu bar got File, View, Board and Help menus.
   10. A home page and tabs per project, like Figma (G16).
   11. Screen sizes: behind a setting, not removed (G13).

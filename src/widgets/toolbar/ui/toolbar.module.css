@@ -20,10 +20,16 @@
   background: var(--bg-input);
   overflow-x: auto;
 }
+.mainMenu {
+  margin-right: 4px;
+}
 .logo {
   color: var(--accent);
   font-size: 15px;
-  margin-right: 6px;
+}
+.menuChevron {
+  width: 12px;
+  height: 12px;
 }
 .title {
   display: flex;

@@ -17,3 +17,4 @@ export {
   type Token,
 } from "./controls"
 export { StyleProps, StyleValueInput, defaultFor, DISPLAY } from "./StyleProps"
+export { Menu, type MenuItem } from "./Menu"
