@@ -25,6 +25,25 @@ export function hitChain(screen: Node, rects: Rects, x: number, y: number): Node
   }
 }
 
+/**
+ * Layers that reach past the screen's edge, outermost first: LVGL draws nothing outside the
+ * display, so the canvas outlines these instead and lets them be clicked there. A layer that
+ * qualifies stands in for its children.
+ */
+export function offscreen(screen: Node, rects: Rects, w: number, h: number) {
+  const out: { node: Node; rect: Rect }[] = []
+  const visit = (n: Node) => {
+    for (const child of n.children) {
+      const r = rects.get(child.id)
+      if (!r || r.hidden || child.hidden || child.locked) continue
+      if (r.x < 0 || r.y < 0 || r.x + r.w > w || r.y + r.h > h) out.push({ node: child, rect: r })
+      else visit(child)
+    }
+  }
+  visit(screen)
+  return out
+}
+
 /** The screen's top-level layers a marquee touches; like Figma, overlapping is enough. */
 export function marqueeHits(screen: Node, rects: Rects, box: Rect): string[] {
   return screen.children

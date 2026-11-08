@@ -3,7 +3,6 @@
   overflow: hidden;
   height: 100%;
   background-color: var(--bg-canvas);
-  background-image: radial-gradient(circle, #2a3040 1px, transparent 1.2px);
   touch-action: none;
 }
 .panning,
@@ -53,6 +52,27 @@
   image-rendering: pixelated;
 }
 
+/* layers past the screen's edge: drawn under the frame, so only the part outside shows */
+.offscreen {
+  position: absolute;
+  border: 1px dashed var(--text-faint);
+  background: color-mix(in srgb, var(--text-faint) 10%, transparent);
+}
+.offscreen:hover {
+  border-color: var(--select);
+}
+.offscreen em {
+  position: absolute;
+  overflow: hidden;
+  padding: 2px 4px;
+  color: var(--text-dim);
+  font-size: 10px;
+  font-style: normal;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+
 .overlay {
   position: absolute;
   inset: 0;
@@ -60,6 +80,12 @@
 }
 .overlay > * {
   position: absolute;
+}
+.pixelGrid {
+  inset: 0;
+  background-image:
+    linear-gradient(to right, var(--pixel-grid) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--pixel-grid) 1px, transparent 1px);
 }
 .hover {
   outline: 1px solid var(--select);

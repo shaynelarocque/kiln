@@ -4,11 +4,14 @@ import { SizeBar } from "@/features/sizes"
 import { fontFamily } from "@/shared/lib/font-faces"
 import { parseTtfFont } from "@/shared/lvgl"
 import { IconButton } from "@/shared/ui"
-import type { Handle } from "../model/interactions"
+import { offscreen, type Handle } from "../model/interactions"
 import { useCanvas, type CanvasViewModel, type Flow } from "../model/use-canvas"
 import s from "./canvas.module.css"
 
 const HANDLES: Handle[] = ["nw", "n", "ne", "e", "se", "s", "sw", "w"]
+
+/** Zoom at which display pixels are big enough to draw a grid between them. */
+const PIXEL_GRID_ZOOM = 6
 
 /** Rounds to the nearest device pixel, so layers and outlines don't land between pixels. */
 const snap = (v: number) => Math.round(v * devicePixelRatio) / devicePixelRatio
@@ -21,10 +24,6 @@ export function Canvas() {
       ref={vm.viewport}
       className={`${s.viewport} ${vm.spaceDown ? s.panning : ""}`}
       onPointerDown={vm.onViewportPointerDown}
-      style={{
-        backgroundPosition: `${vm.pan.x}px ${vm.pan.y}px`,
-        backgroundSize: `${16 * vm.zoom}px ${16 * vm.zoom}px`,
-      }}
     >
       {/* The world only ever translates. Everything in it is laid out at screen size (canvas
           units × zoom), because a CSS scale makes WebKit stretch a 1× bitmap of the layer:
@@ -88,10 +87,12 @@ function Artboard({
       : undefined
   const drag = vm.dragState?.screen === screen.id ? vm.dragState : null
   const z = vm.zoom
+  const outside = rects ? offscreen(screen, rects, width, height) : []
 
   return (
     <div
       className={s.artboard}
+      data-artboard
       style={{
         left: snap(screen.frame.x * z),
         top: snap(screen.frame.y * z),
@@ -105,6 +106,18 @@ function Artboard({
       >
         {screen.name}
       </div>
+      {outside.map(({ node, rect }) => (
+        <Offscreen
+          key={node.id}
+          name={node.name}
+          rect={rect}
+          z={z}
+          screen={{ w: width, h: height }}
+          onPointerDown={e => vm.onOffscreenPointerDown(screen, node.id, e)}
+          onPointerEnter={() => vm.setHover(node.id)}
+          onPointerLeave={() => vm.setHover(null)}
+        />
+      ))}
       <div
         className={`${s.frame} ${round ? s.round : ""} ${selected ? s.frameOn : ""} ${vm.noodle?.target === screen.id ? s.noodleTarget : ""}`}
         onPointerDown={e => vm.onArtboardPointerDown(screen, e)}
@@ -120,6 +133,12 @@ function Artboard({
         />
       </div>
       <div className={s.overlay}>
+        {vm.pixelGrid && z >= PIXEL_GRID_ZOOM && (
+          <span
+            className={`${s.pixelGrid} ${round ? s.round : ""}`}
+            style={{ backgroundSize: `${z}px ${z}px` }}
+          />
+        )}
         {hover && <Box rect={hover} z={z} className={s.hover} />}
         {nodes.map(id => {
           const r = rects!.get(id)!
@@ -226,6 +245,61 @@ function TextEditor({
       }}
       onPointerDown={e => e.stopPropagation()}
     />
+  )
+}
+
+type Box = { x: number; y: number; w: number; h: number }
+
+/**
+ * A layer that reaches past the screen's edge, where LVGL can't draw it: a dashed outline
+ * under the artboard (so only the part outside shows), named in its biggest part outside.
+ */
+function Offscreen({
+  name,
+  rect,
+  z,
+  screen,
+  ...events
+}: {
+  name: string
+  rect: Box
+  z: number
+  screen: { w: number; h: number }
+} & Pick<
+  React.HTMLAttributes<HTMLSpanElement>,
+  "onPointerDown" | "onPointerEnter" | "onPointerLeave"
+>) {
+  const r = rect
+  const parts: Box[] = [
+    { x: r.x, y: r.y, w: Math.min(r.w, -r.x), h: r.h },
+    { x: Math.max(r.x, screen.w), y: r.y, w: r.x + r.w - Math.max(r.x, screen.w), h: r.h },
+    { x: r.x, y: r.y, w: r.w, h: Math.min(r.h, -r.y) },
+    { x: r.x, y: Math.max(r.y, screen.h), w: r.w, h: r.y + r.h - Math.max(r.y, screen.h) },
+  ].filter(p => p.w > 0 && p.h > 0)
+  const label = parts.reduce((a, b) => (b.w * b.h > a.w * a.h ? b : a), parts[0] ?? r)
+  const [x, y] = [snap(r.x * z), snap(r.y * z)]
+  return (
+    <span
+      className={s.offscreen}
+      title={`${name} is past the screen's edge, so the board won't show it. Drag it back.`}
+      style={{
+        left: x,
+        top: y,
+        width: snap((r.x + r.w) * z) - x,
+        height: snap((r.y + r.h) * z) - y,
+      }}
+      {...events}
+    >
+      <em
+        style={{
+          left: (label.x - r.x) * z,
+          top: (label.y - r.y) * z,
+          maxWidth: label.w * z,
+        }}
+      >
+        {name}
+      </em>
+    </span>
   )
 }
 

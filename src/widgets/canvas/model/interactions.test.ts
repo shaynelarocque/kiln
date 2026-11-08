@@ -5,6 +5,7 @@ import {
   flexDrop,
   hitChain,
   marqueeHits,
+  offscreen,
   pickDeeper,
   pickTarget,
   resizeLayout,
@@ -63,6 +64,31 @@ describe("hit testing", () => {
     expect(marqueeHits(screen, rects, { x: 160, y: 160, w: 10, h: 10 })).toEqual([])
     top.locked = true
     expect(marqueeHits(screen, rects, { x: 90, y: 90, w: 20, h: 20 })).toEqual([card.id])
+  })
+})
+
+describe("layers past the screen's edge", () => {
+  it("lists the outermost layer that spills over, not its children", () => {
+    const { screen, card, label, top, rects } = tree()
+    rects.set(card.id, { x: -40, y: 20, w: 100, h: 100 })
+    rects.set(label.id, { x: -30, y: 30, w: 40, h: 20 })
+    expect(offscreen(screen, rects, 240, 240).map(o => o.node)).toEqual([card])
+    rects.set(top.id, { x: 200, y: 230, w: 60, h: 60 })
+    expect(offscreen(screen, rects, 240, 240).map(o => o.node)).toEqual([card, top])
+  })
+
+  it("finds a child that spills over from a parent inside the screen", () => {
+    const { screen, label, rects } = tree()
+    rects.set(label.id, { x: 30, y: 230, w: 40, h: 20 })
+    expect(offscreen(screen, rects, 240, 240).map(o => o.node)).toEqual([label])
+  })
+
+  it("leaves out hidden and locked layers", () => {
+    const { screen, card, top, rects } = tree()
+    rects.set(card.id, { x: 300, y: 20, w: 100, h: 100, hidden: true })
+    rects.set(top.id, { x: 300, y: 100, w: 60, h: 60 })
+    top.locked = true
+    expect(offscreen(screen, rects, 240, 240)).toEqual([])
   })
 })
 

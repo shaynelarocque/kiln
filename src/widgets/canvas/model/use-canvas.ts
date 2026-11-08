@@ -14,6 +14,7 @@ import {
   type Screen,
 } from "@/entities/project"
 import { navigateOnClick } from "@/features/node-actions"
+import { useSettings } from "@/shared/config"
 import type { Rect } from "@/shared/lvgl"
 import {
   flexDrop,
@@ -216,6 +217,10 @@ export function useCanvas() {
       if (e.key === "=" || e.key === "+") return run(() => zoomCenter(zoom * 1.25))
       if (e.key === "-" || e.key === "_") return run(() => zoomCenter(zoom / 1.25))
       if (!e.shiftKey || e.metaKey || e.ctrlKey || e.altKey) return
+      if (e.code === "Quote")
+        return run(() =>
+          useSettings.getState().update({ pixelGrid: !useSettings.getState().pixelGrid }),
+        )
       if (e.code === "Digit1") return run(fit)
       if (e.code === "Digit2") return run(fitSelection)
       if (e.code === "Digit0") return run(() => zoomCenter(1))
@@ -260,6 +265,11 @@ export function useCanvas() {
     const z = editorApi.getState().zoom
     return [(e.clientX - box.left) / z, (e.clientY - box.top) / z] as const
   }
+
+  /** The artboard an event happened on, whichever of its parts caught it. */
+  const artboardOf = (e: React.PointerEvent) =>
+    (e.currentTarget as HTMLElement).closest<HTMLElement>("[data-artboard]") ??
+    (e.currentTarget as HTMLElement)
 
   const chainAt = (screen: Screen, e: React.PointerEvent | React.MouseEvent) => {
     const [x, y] = local(e, e.currentTarget as HTMLElement)
@@ -323,7 +333,7 @@ export function useCanvas() {
 
     // inside auto layout, dragging reorders instead of moving
     if (parent.layout.flex && ids.length === 1) {
-      const [px, py] = local(e, e.currentTarget as HTMLElement)
+      const [px, py] = local(e, artboardOf(e))
       drag(
         e,
         (dx, dy, phase) => {
@@ -376,6 +386,23 @@ export function useCanvas() {
       },
       onClick,
     )
+  }
+
+  /** A layer past the screen's edge, caught by its outline there: select it and drag it back. */
+  const onOffscreenPointerDown = (screen: Screen, id: string, e: React.PointerEvent) => {
+    if (spaceDown || e.button === 1) return panBy(e)
+    if (e.button !== 0) return
+    e.stopPropagation()
+    const { selection, select } = editorApi.getState()
+    if (e.shiftKey)
+      return select(
+        selection.includes(id)
+          ? selection.filter(x => x !== id)
+          : [...selection.filter(x => x !== screen.id), id],
+      )
+    const ids = selection.includes(id) ? selection : [id]
+    select(ids)
+    startMove(screen, ids, e, () => select([id]))
   }
 
   /** Double-click: edit a selected text in place, otherwise select one level deeper. */
@@ -503,6 +530,9 @@ export function useCanvas() {
     onArtboardPointerLeave: () => editorApi.getState().setHover(null),
     onHandlePointerDown,
     onTitlePointerDown,
+    onOffscreenPointerDown,
+    setHover: editorApi.getState().setHover,
+    pixelGrid: useSettings(s => s.pixelGrid),
     showFlows,
     flows,
     noodle,

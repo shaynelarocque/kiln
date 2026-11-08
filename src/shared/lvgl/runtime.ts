@@ -4,8 +4,18 @@ import type { Arg, Op } from "./ops"
 type Fn = (...args: number[]) => number
 type Exports = Record<string, Fn> & { memory: WebAssembly.Memory }
 
-/** A laid-out box in display pixels; `hidden` when LVGL isn't drawing it right now (its own or a parent's flag). */
-export type Rect = { x: number; y: number; w: number; h: number; hidden?: boolean }
+/**
+ * A laid-out box in display pixels. `hidden` when LVGL isn't drawing it because of its own or a
+ * parent's hidden flag; `clipped` when it isn't drawn only because it lies outside its parent.
+ */
+export type Rect = {
+  x: number
+  y: number
+  w: number
+  h: number
+  hidden?: boolean
+  clipped?: boolean
+}
 
 const encoder = new TextEncoder()
 const decoder = new TextDecoder()

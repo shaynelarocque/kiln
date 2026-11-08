@@ -20,6 +20,7 @@
   --red: #f28779;
   --purple: #dfbfff;
   --cyan: #95e6cb;
+  --pixel-grid: rgba(140, 150, 170, 0.28);
 
   --font:
     -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", system-ui, sans-serif;

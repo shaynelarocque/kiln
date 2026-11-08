@@ -9,6 +9,7 @@ const GROUPS: [string, [string, string][]][] = [
       ["Pan", "Space-drag · scroll"],
       ["Zoom", "Pinch · ⌘-scroll · + / −"],
       ["Zoom to fit / selection / 100%", "⇧1 / ⇧2 / ⇧0"],
+      ["Pixel grid (zoomed in)", "⇧'"],
       ["Select deeper / edit text", "Double-click"],
       ["Select deepest", "⌘-click"],
       ["Add to selection", "⇧-click"],

@@ -95,10 +95,21 @@ export class ProjectPreview {
       for (const [id, h] of scene.objects()) {
         const r: Rect = this.rt.coords(h)
         // bindings can hide parts of a design; clicks shouldn't land on what isn't drawn
-        if (!this.rt.x.lv_obj_is_visible(h)) r.hidden = true
+        if (!this.rt.x.lv_obj_is_visible(h)) {
+          if (this.flagged(h)) r.hidden = true
+          else r.clipped = true
+        }
         out.set(id, r)
       }
     return out
+  }
+
+  /** Whether it or a parent has LVGL's hidden flag, as opposed to just lying off its parent. */
+  private flagged(obj: number) {
+    const hidden = this.rt.const("LV_OBJ_FLAG_HIDDEN")
+    for (let o = obj; o; o = this.rt.x.lv_obj_get_parent(o))
+      if (this.rt.x.lv_obj_has_flag(o, hidden)) return true
+    return false
   }
 
   private drop(id: string, board: Board) {
