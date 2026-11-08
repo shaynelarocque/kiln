@@ -12,6 +12,8 @@ export type Settings = {
   pixelGrid: boolean
   /** baud rate the serial monitor opens at when the project doesn't say */
   baud: number
+  /** the screen-size bar, for projects that don't have sizes yet */
+  sizes: boolean
 }
 
 export const SETTINGS_DEFAULTS: Settings = {
@@ -19,6 +21,7 @@ export const SETTINGS_DEFAULTS: Settings = {
   output: "panel",
   pixelGrid: true,
   baud: 115200,
+  sizes: false,
 }
 
 const KEY = "kiln.settings"
@@ -33,6 +36,7 @@ function load(): Settings {
       output: pick("output", v => v === "panel" || v === "window"),
       pixelGrid: pick("pixelGrid", v => typeof v === "boolean"),
       baud: pick("baud", v => Number.isInteger(v) && (v as number) > 0),
+      sizes: pick("sizes", v => typeof v === "boolean"),
     }
   } catch {
     return SETTINGS_DEFAULTS

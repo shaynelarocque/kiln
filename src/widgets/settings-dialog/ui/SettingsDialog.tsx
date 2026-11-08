@@ -68,6 +68,17 @@ export function SettingsDialog() {
         </Row>
 
         <Row
+          title='Screen sizes'
+          note='Experimental. One UI for several displays, each with its own board, like CSS breakpoints. Off hides the size bar for projects without sizes.'
+        >
+          <Toggle
+            label='Screen sizes'
+            checked={settings.sizes}
+            onChange={sizes => settings.update({ sizes })}
+          />
+        </Row>
+
+        <Row
           title='New projects'
           note={
             hardware

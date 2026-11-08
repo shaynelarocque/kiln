@@ -36,6 +36,16 @@
   background: var(--select-soft);
   color: var(--select);
 }
+.rename {
+  width: 110px;
+  height: 26px;
+  padding: 0 8px;
+  border: 1px solid var(--select);
+  border-radius: 6px;
+  outline: none;
+  background: var(--bg-input);
+  color: var(--text-strong);
+}
 .add {
   position: relative;
   display: grid;
