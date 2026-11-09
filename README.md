@@ -81,6 +81,11 @@ What you see is what flashes.
   read from PlatformIO's board definitions, counting fonts, images and TinyTTF's glyph caches.
   LVGL draws a rotated or scaled widget through a layer on its heap, which the preview's roomy heap
   would never show; Kiln sizes the board's heap for the biggest one and says which widget it is.
+- **Work with Claude.** Turn on AI assistants (MCP) in Settings and Kiln runs an MCP server on
+  this Mac. Claude reads the project, sees any screen as LVGL draws it, adds and changes layers,
+  styles, variables, bindings and navigation, builds, flashes and reads the serial monitor. Its
+  edits show on the canvas as it works, and each one undoes with ⌘Z; flashing asks you first.
+  Connect Claude Code once with `claude mcp add --transport http kiln http://127.0.0.1:7358/mcp`.
 
 | Components                         | Board, display and pins         | Export                     |
 | ---------------------------------- | ------------------------------- | -------------------------- |
@@ -119,15 +124,25 @@ The frontend follows [Feature-Sliced Design](https://feature-sliced.design), che
 
 | Layer      | What's there                                                                                                                                             |
 | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `app`      | entry point, global styles, theme, the menu bar's commands                                                                                               |
+| `app`      | entry point, global styles, theme, the menu bar's commands, the MCP tools                                                                                |
 | `pages`    | `editor` (layout and keyboard shortcuts), `home` (templates and recents), `output` (the output window)                                                   |
 | `widgets`  | canvas, layers, inspector, data, styles, assets, timeline, player, tab bar, output panel, dialogs                                                        |
-| `features` | insert widget, node actions, history, project files and tabs, firmware export and builds                                                                 |
+| `features` | insert widget, node actions, history, project files and tabs, firmware export and builds, the MCP server switch                                          |
 | `entities` | `project` (document, compiler, preview), `board` (PlatformIO boards, pins, budget), `device` (builds and the serial monitor), `editor` (selection, view) |
 | `shared`   | `lvgl` (catalog, ops, wasm runtime, C printer), `ui` kit, Tauri bridge                                                                                   |
 
 Each slice is MVVM: views in `ui/` stay dumb and read a view-model hook in `model/` (for example
 `useCanvas`, `useInspector`, `useLayers`), which is the only thing that talks to the stores.
+
+### The MCP server
+
+`src-tauri/src/mcp.rs` speaks MCP's Streamable HTTP transport on `127.0.0.1:7358` (`KILN_MCP_PORT`
+moves it; `KILN_MCP=1` turns it on whatever Settings say). It answers the protocol itself and hands
+`tools/list` and `tools/call` to the editor window as `mcp` events. The tools live in
+`src/app/mcp/tools.ts` and edit through the same store as the UI, so every call is one undo step;
+`render_screen` draws on an LVGL instance of its own, so screenshots never disturb the canvas. The
+server only answers this machine: requests naming another host, or carrying a web page's origin,
+are refused.
 
 ## The LVGL runtime
 
