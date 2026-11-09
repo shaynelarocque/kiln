@@ -1,5 +1,7 @@
 import { Maximize, Minus, Plus } from "lucide-react"
 import { findNode, type Screen } from "@/entities/project"
+import { ComponentMenu } from "@/features/components"
+import { InsertBar } from "@/features/insert-widget"
 import { SizeBar } from "@/features/sizes"
 import { fontFamily } from "@/shared/lib/font-faces"
 import { parseTtfFont } from "@/shared/lvgl"
@@ -46,6 +48,11 @@ export function Canvas() {
       </div>
       <SizeBar />
       <div className={s.zoom}>
+      {/* docked to the bottom of the canvas, like Figma's */}
+      <div className={s.insert} role='toolbar' aria-label='Insert'>
+        <InsertBar />
+        <ComponentMenu />
+      </div>
         <IconButton label='Zoom out (−)' onClick={() => vm.zoomCenter(vm.zoom / 1.25)}>
           <Minus />
         </IconButton>

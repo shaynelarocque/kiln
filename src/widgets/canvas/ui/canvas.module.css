@@ -145,10 +145,30 @@
   height: 1px;
 }
 
+.insert {
+  position: absolute;
+  left: 50%;
+  bottom: 12px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  max-width: calc(100% - 24px);
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--bg);
+  box-shadow: 0 6px 20px var(--shadow);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.insert > * {
+  flex: none;
+}
 .zoom {
   position: absolute;
+  top: 12px;
   right: 12px;
-  bottom: 12px;
   display: flex;
   align-items: center;
   padding: 2px;

@@ -14,12 +14,6 @@
   gap: 2px;
   min-width: 0;
 }
-.insert {
-  padding: 2px;
-  border-radius: 8px;
-  background: var(--bg-input);
-  overflow-x: auto;
-}
 .mainMenu {
   margin-right: 4px;
 }
