@@ -65,9 +65,10 @@ const fail = (what: string, e: unknown) =>
 /**
  * Exports the project and runs PlatformIO on it in the background (with `upload`, flashing the
  * board too). The editor stays usable; the log streams into the output panel or window. The
- * first time, it asks where the project goes.
+ * first time, it asks where the project goes. `debug` makes kiln-debug's Debug build (Settings
+ * says by default).
  */
-export async function build(upload: boolean) {
+export async function build(upload: boolean, debug = useSettings.getState().debugBuild) {
   if (!deviceApi.available()) return
   if (deviceStore.getState().job?.running) return showOutput("build")
   const dir = exportFolder() ?? (await pickFolder())
@@ -79,7 +80,7 @@ export async function build(upload: boolean) {
   }
   await showOutput("build")
   try {
-    await deviceApi.jobStart(dir, upload, deviceStore.getState().port || null)
+    await deviceApi.jobStart(dir, upload, deviceStore.getState().port || null, debug)
   } catch (e) {
     fail("Couldn't start PlatformIO", e)
   }

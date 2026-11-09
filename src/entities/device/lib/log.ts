@@ -3,10 +3,12 @@ const ANSI = /\x1b\[[0-9;?]*[A-Za-z]/g
 
 export const stripAnsi = (text: string) => text.replace(ANSI, "")
 
-export type Tone = "error" | "warn" | "good" | null
+export type Tone = "error" | "warn" | "good" | "trace" | null
 
 /** How a line of build output or board log reads at a glance. */
 export function toneOf(line: string): Tone {
+  // kiln-debug's own lines: quieter than the app's logging, except its errors
+  if (line.startsWith("@K ")) return /^@K \d+ err /.test(line) ? "error" : "trace"
   if (
     /\b(error|failed|fatal)\b|^E \(\d+\)|\[E\]|\[Error\]|Guru Meditation|abort\(\)/i.test(line) &&
     !/\b0 errors?\b/i.test(line)

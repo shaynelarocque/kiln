@@ -84,14 +84,20 @@ pub fn forward(pipe: impl Read, mut on_line: impl FnMut(String)) {
     }
 }
 
+/// PlatformIO's env for kiln-debug, Kiln's Debug build (see kiln.ini in an export).
+pub const DEBUG_ENV: &str = "kiln_debug";
+
 /// `pio run` (or `pio run -t upload`) in an exported project, in a process group of its own so
-/// stopping it also stops the compilers and esptool it starts.
-pub fn run_command(dir: &str, upload: bool, port: Option<&str>) -> Result<Command, String> {
+/// stopping it also stops the compilers and esptool it starts. `debug` builds the kiln_debug env.
+pub fn run_command(dir: &str, upload: bool, port: Option<&str>, debug: bool) -> Result<Command, String> {
     let mut cmd = pio()?;
     cmd.arg("run")
         .current_dir(dir)
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());
+    if debug {
+        cmd.args(["-e", DEBUG_ENV]);
+    }
     if upload {
         cmd.args(["-t", "upload"]);
         if let Some(port) = port.filter(|p| !p.is_empty()) {
@@ -194,7 +200,7 @@ mod tests {
         let dir = std::env::var("KILN_TEST_PROJECT")
             .expect("set KILN_TEST_PROJECT to an exported project");
         let (on_line, lines) = collect();
-        let code = run_streaming(run_command(&dir, false, None).unwrap(), |_| {}, on_line).unwrap();
+        let code = run_streaming(run_command(&dir, false, None, false).unwrap(), |_| {}, on_line).unwrap();
         let lines = lines.lock().unwrap();
         assert_eq!(code, 0);
         assert!(

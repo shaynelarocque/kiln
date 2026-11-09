@@ -164,6 +164,11 @@ typedef struct {
     bool reverse;
 } play_t;
 
+#ifdef KILN_DEBUG
+/* kiln_debug.cpp: traces a timeline starting, in the Debug build only */
+void kiln_debug_played(lv_anim_timeline_t * at, uint32_t delay);
+#endif
+
 static void play_cb(lv_event_t * e)
 {
     play_t * p = lv_event_get_user_data(e);
@@ -172,6 +177,9 @@ static void play_cb(lv_event_t * e)
     lv_anim_timeline_set_reverse(p->at, p->reverse);
     lv_anim_timeline_set_progress(p->at, p->reverse ? LV_ANIM_TIMELINE_PROGRESS_MAX : 0);
     lv_anim_timeline_start(p->at);
+#ifdef KILN_DEBUG
+    kiln_debug_played(p->at, p->delay);
+#endif
 }
 
 void kiln_obj_add_play_event(lv_obj_t * obj, lv_event_code_t trigger, lv_anim_timeline_t * at, uint32_t delay, bool reverse)

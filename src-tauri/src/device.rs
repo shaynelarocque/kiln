@@ -30,6 +30,8 @@ pub struct JobInfo {
     /// the exit code once done; -1 when stopped
     code: Option<i32>,
     stopped: bool,
+    /// kiln-debug's build (the kiln_debug env)
+    debug: bool,
 }
 
 #[derive(Clone, Serialize)]
@@ -90,7 +92,9 @@ pub fn job_start(
     dir: String,
     upload: bool,
     port: Option<String>,
+    debug: Option<bool>,
 ) -> Result<(), String> {
+    let debug = debug.unwrap_or(false);
     let jobs = app.state::<Jobs>();
     {
         let mut info = jobs.info.lock().unwrap();
@@ -104,10 +108,12 @@ pub fn job_start(
             running: true,
             code: None,
             stopped: false,
+            debug,
         };
         *info = Some(job.clone());
         let command = format!(
-            "$ pio run{}{}",
+            "$ pio run{}{}{}",
+            if debug { format!(" -e {}", pio::DEBUG_ENV) } else { String::new() },
             if upload { " -t upload" } else { "" },
             job.port
                 .as_ref()
@@ -120,11 +126,11 @@ pub fn job_start(
         let _ = app.emit("job", JobEvent::Start { job });
         let _ = app.emit("job", JobEvent::Line { text: command });
     }
-    std::thread::spawn(move || run_job(app, dir, upload, port));
+    std::thread::spawn(move || run_job(app, dir, upload, port, debug));
     Ok(())
 }
 
-fn run_job(app: AppHandle, dir: String, upload: bool, port: Option<String>) {
+fn run_job(app: AppHandle, dir: String, upload: bool, port: Option<String>, debug: bool) {
     let jobs = app.state::<Jobs>();
     let monitor = app.state::<Monitor>();
     let line_app = app.clone();
@@ -142,7 +148,7 @@ fn run_job(app: AppHandle, dir: String, upload: bool, port: Option<String>) {
     if paused {
         on_line("Serial monitor paused for the upload.".into());
     }
-    let result = pio::run_command(&dir, upload, port.as_deref()).and_then(|cmd| {
+    let result = pio::run_command(&dir, upload, port.as_deref(), debug).and_then(|cmd| {
         pio::run_streaming(
             cmd,
             |pid| *jobs.pid.lock().unwrap() = Some(pid),

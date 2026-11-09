@@ -147,6 +147,10 @@ select.picker {
 .log [data-tone="good"] {
   color: var(--green);
 }
+/* kiln-debug's traces: there to read, quieter than the app's own logging */
+.log [data-tone="trace"] {
+  color: color-mix(in srgb, var(--cyan) 70%, var(--text-faint));
+}
 .empty {
   margin: 0;
   padding: 10px 2px;

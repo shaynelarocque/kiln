@@ -9,6 +9,8 @@ export type Job = {
   /** exit code once done; -1 when stopped */
   code: number | null
   stopped: boolean
+  /** kiln-debug's build: traces over serial and replays (the kiln_debug env) */
+  debug: boolean
 }
 
 export type JobEvent =
@@ -27,8 +29,8 @@ export type PortInfo = { port: string; description: string; usb: boolean }
 
 export const deviceApi = {
   available: inTauri,
-  jobStart: (dir: string, upload: boolean, port: string | null) =>
-    invoke<void>("job_start", { dir, upload, port }),
+  jobStart: (dir: string, upload: boolean, port: string | null, debug = false) =>
+    invoke<void>("job_start", { dir, upload, port, debug }),
   jobStop: () => invoke<void>("job_stop"),
   jobState: () => invoke<{ job: Job | null; log: string[] }>("job_state"),
   ports: () => invoke<PortInfo[]>("serial_ports"),

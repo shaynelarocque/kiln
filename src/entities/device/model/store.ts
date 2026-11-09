@@ -8,9 +8,12 @@ import {
   type PortInfo,
 } from "../api/device-api"
 import { splitLines, uploadProgress } from "../lib/log"
+import { parseTrace, type Trace } from "../lib/trace"
 
 /** Lines of serial output the monitor keeps on screen. */
 const MONITOR_LINES = 3000
+/** kiln-debug traces kept for replays and timings. */
+const TRACES = 3000
 const PORT_KEY = "kiln.port"
 
 const savedPort = () => {
@@ -34,6 +37,10 @@ type DeviceState = {
   /** serial output, as complete lines plus the line still arriving */
   lines: string[]
   partial: string
+  /** what a kiln-debug build reported, parsed from those lines */
+  traces: Trace[]
+  /** traces ever received: tells a listener how many of `traces` are new */
+  traceCount: number
   ports: PortInfo[]
   /** the port to upload to and monitor; "" lets PlatformIO find the board */
   port: string
@@ -50,6 +57,8 @@ export const useDevice = create<DeviceState>()(set => ({
   monitor: null,
   lines: [],
   partial: "",
+  traces: [],
+  traceCount: 0,
   ports: [],
   port: savedPort(),
   setPort: port => {
@@ -96,7 +105,14 @@ function onMonitor(e: MonitorEvent) {
     const { lines, partial } = splitLines(s.partial, e.text)
     if (!lines.length) return { partial }
     const all = s.lines.concat(lines)
-    return { lines: all.length > MONITOR_LINES ? all.slice(-MONITOR_LINES) : all, partial }
+    const traces = lines.map(parseTrace).filter(t => t !== null)
+    const kept = traces.length ? s.traces.concat(traces).slice(-TRACES) : s.traces
+    return {
+      lines: all.length > MONITOR_LINES ? all.slice(-MONITOR_LINES) : all,
+      partial,
+      traces: kept,
+      traceCount: s.traceCount + traces.length,
+    }
   })
 }
 

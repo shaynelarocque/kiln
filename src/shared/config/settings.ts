@@ -16,6 +16,8 @@ export type Settings = {
   sizes: boolean
   /** Kiln's MCP server, for Claude and other AI assistants on this machine */
   mcp: boolean
+  /** Build and Flash make kiln-debug's Debug build: traces over serial, and replays */
+  debugBuild: boolean
 }
 
 export const SETTINGS_DEFAULTS: Settings = {
@@ -25,6 +27,7 @@ export const SETTINGS_DEFAULTS: Settings = {
   baud: 115200,
   sizes: false,
   mcp: false,
+  debugBuild: false,
 }
 
 const KEY = "kiln.settings"
@@ -41,6 +44,7 @@ function load(): Settings {
       baud: pick("baud", v => Number.isInteger(v) && (v as number) > 0),
       sizes: pick("sizes", v => typeof v === "boolean"),
       mcp: pick("mcp", v => typeof v === "boolean"),
+      debugBuild: pick("debugBuild", v => typeof v === "boolean"),
     }
   } catch {
     return SETTINGS_DEFAULTS

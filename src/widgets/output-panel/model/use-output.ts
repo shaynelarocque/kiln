@@ -17,7 +17,8 @@ const folderName = (dir: string) => dir.split(/[\\/]/).filter(Boolean).at(-1) ??
 /** "Flashing Beermagochi · 45%", "Built in 14.9 s", "Build failed (exit 1)". */
 function describe(job: Job | null, progress: number | null, ms: number | null) {
   if (!job) return { text: "Nothing built yet", tone: "idle" as const }
-  const name = folderName(job.dir)
+  // kiln-debug's build says so, so nobody ships it by mistake
+  const name = `${folderName(job.dir)}${job.debug ? " (debug)" : ""}`
   const upload = job.kind === "upload"
   if (job.running)
     return {

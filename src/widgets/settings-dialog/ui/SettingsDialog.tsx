@@ -69,6 +69,17 @@ export function SettingsDialog() {
         </Row>
 
         <Row
+          title='Debug builds (kiln-debug)'
+          note='Build and Flash make a Debug build: it reports taps, screen changes, animation timings and frame times over serial, and takes replays from Kiln. Heavier, so leave it off for the real thing.'
+        >
+          <Toggle
+            label='Debug builds'
+            checked={settings.debugBuild}
+            onChange={debugBuild => settings.update({ debugBuild })}
+          />
+        </Row>
+
+        <Row
           title='Screen sizes'
           note='Experimental. One UI for several displays, each with its own board, like CSS breakpoints. Off hides the size bar for projects without sizes.'
         >
