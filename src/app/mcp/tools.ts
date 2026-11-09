@@ -33,8 +33,10 @@ import {
   type Screen,
   type StyleMap,
 } from "@/entities/project"
+import { describeTimings, replayOnBoard, type Step } from "@/features/board-replay"
 import { build, exportFolder, openMonitor } from "@/features/export-firmware"
 import { activate, newProject, TEMPLATES, workspaceApi } from "@/features/project-file"
+import { useSettings } from "@/shared/config"
 import { pngDataUrl } from "@/shared/lib/png"
 import { confirmAction } from "@/shared/lib/tauri"
 import {
@@ -833,8 +835,8 @@ export const TOOLS: Tool[] = [
     name: "build",
     title: "Build (and flash)",
     description:
-      "Exports the project and runs PlatformIO in the background; with flash, uploads it to the board too, after the person says yes in Kiln. Returns at once: follow it with build_status.",
-    properties: { flash: { type: "boolean" } },
+      "Exports the project and runs PlatformIO in the background; with flash, uploads it to the board too, after the person says yes in Kiln. debug makes kiln-debug's Debug build, which run_on_board needs (default: Kiln's Debug builds setting). Returns at once: follow it with build_status.",
+    properties: { flash: { type: "boolean" }, debug: { type: "boolean" } },
     run: async a => {
       const p = project()
       needsDesktop()
@@ -848,17 +850,18 @@ export const TOOLS: Tool[] = [
         )
         if (!ok) throw new ToolError("The person said no to flashing")
       }
+      const debug = bool(a, "debug") ?? useSettings.getState().debugBuild
       if (!exportFolder()) {
-        void build(flash)
+        void build(flash, debug)
         return text(
           "Kiln is asking the person where to put the PlatformIO project; the build starts once they pick a folder. Follow it with build_status.",
         )
       }
-      await build(flash)
+      await build(flash, debug)
       const failed = editorApi.getState().error
       if (!deviceStore.getState().job?.running && failed) throw new ToolError(failed)
       return text(
-        `${flash ? "Building and flashing" : "Building"} in the background. Follow it with build_status; a first build takes a few minutes.`,
+        `${flash ? "Building and flashing" : "Building"}${debug ? " a Debug build" : ""} in the background. Follow it with build_status; a first build takes a few minutes.`,
       )
     },
   },
@@ -921,6 +924,48 @@ export const TOOLS: Tool[] = [
         lines: [...lines, ...(partial ? [partial] : [])]
           .slice(-clamp(num(a, "lines") ?? 50, 1, 1000))
           .map(stripAnsi),
+      })
+    },
+  },
+  {
+    name: "run_on_board",
+    title: "Replay on the board",
+    description:
+      'Runs steps on the real board through kiln-debug and measures them: each screen transition and animation, designed against measured, the tap-to-screen latency, and frame times. Needs a Debug build flashed (build with flash and debug) and the board on USB. Steps: {"tap": layer}, {"hold": layer, "ms"}, {"set": variable, "value"}, {"load": screen}, {"wait": ms}, {"mark": text}. Start with a load to begin from a known screen.',
+    properties: {
+      steps: { type: "array", items: { type: "object" } },
+    },
+    required: ["steps"],
+    run: async a => {
+      project()
+      needsDesktop()
+      const steps = arg<Step[]>(a, "steps", "array", true)!.map((raw, i): Step => {
+        const s = raw as Record<string, unknown>
+        const name = (k: string) => {
+          if (typeof s[k] !== "string") throw new ToolError(`steps[${i}].${k} should be a string`)
+          return s[k] as string
+        }
+        if ("tap" in s) return { tap: name("tap") }
+        if ("hold" in s) return { hold: name("hold"), ms: Number(s.ms ?? 600) }
+        if ("set" in s) return { set: name("set"), value: String(s.value ?? "") }
+        if ("load" in s) return { load: name("load") }
+        if ("wait" in s) return { wait: clamp(Number(s.wait) || 0, 0, 10000) }
+        if ("mark" in s) return { mark: name("mark") }
+        throw new ToolError(`steps[${i}] should be tap, hold, set, load, wait or mark`)
+      })
+      if (deviceStore.getState().monitor?.status !== "connected") {
+        await openMonitor()
+        await until(() => deviceStore.getState().monitor?.status === "connected", 3000)
+      }
+      const run = await replayOnBoard(steps)
+      const failed = run.results.find(r => !r.ok)
+      return json({
+        ...(failed && { stoppedAt: { step: failed.step, error: failed.error } }),
+        stepsRun: run.results.filter(r => r.ok).length,
+        summary: describeTimings(run),
+        timings: run.timings,
+        frames: run.frames,
+        traces: run.traces.length > 200 ? run.traces.slice(-200) : run.traces,
       })
     },
   },
