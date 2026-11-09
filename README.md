@@ -73,7 +73,10 @@ What you see is what flashes.
   and run `pio run` in the background, like PlatformIO in VS Code: keep designing while it compiles
   and uploads. The log streams into a panel under the canvas (⌘J) or a window of its own, and the
   toolbar shows esptool's progress. A serial monitor (⇧⌘M) reads the board, sends to it and resets
-  it; it steps aside while a flash needs the port and reconnects after.
+  it; it steps aside while a flash needs the port and reconnects after. A log file records builds
+  and flashes (with the end of a failed build's output), the monitor's connections, PlatformIO,
+  file errors, the page's errors and any crash; Help › Show Logs puts it in Finder, ready to attach
+  to a bug report.
 - **Know if it fits.** A flash and RAM meter estimates the build against the board's real limits,
   read from PlatformIO's board definitions, counting fonts, images and TinyTTF's glyph caches.
   LVGL draws a rotated or scaled widget through a layer on its heap, which the preview's roomy heap
