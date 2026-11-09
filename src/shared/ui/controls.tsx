@@ -133,12 +133,25 @@ export function NumberInput({
   disabled,
   title,
 }: NumberProps) {
-  const shown = value === null ? "" : String(Math.round((value / scale) * 100) / 100)
+  const show = (v: number) => String(Math.round((v / scale) * 100) / 100)
+  const shown = value === null ? "" : show(value)
   const [draft, setDraft] = useState(shown)
+  // typed past min or max: says so for a moment in place of the unit, instead of quietly snapping
+  const [limit, setLimit] = useState<string | null>(null)
+  useEffect(() => {
+    if (!limit) return
+    const t = setTimeout(() => setLimit(null), 2500)
+    return () => clearTimeout(t)
+  }, [limit])
   const commit = (text: string) => {
     const n = parseFloat(text)
     if (!Number.isFinite(n)) return setDraft(shown)
-    onChange(clamp(Math.round(n * scale), min, max))
+    const typed = Math.round(n * scale)
+    const v = clamp(typed, min, max)
+    if (v !== typed) setLimit(`${v === max ? "max" : "min"} ${show(v)}`)
+    // the stored value may not change (80 typed as 160 on a field already at 80), so show it here
+    setDraft(show(v))
+    onChange(v)
   }
   const pending = usePending(shown, setDraft, commit)
 
@@ -192,7 +205,13 @@ export function NumberInput({
           }
         }}
       />
-      {unit && <span className={s.unit}>{unit}</span>}
+      {limit ? (
+        <span className={s.limit} role='status'>
+          {limit}
+        </span>
+      ) : (
+        unit && <span className={s.unit}>{unit}</span>
+      )}
     </span>
   )
 }

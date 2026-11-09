@@ -152,6 +152,12 @@
   color: var(--text-faint);
   font-size: 11px;
 }
+.limit {
+  padding-right: 6px;
+  color: var(--orange);
+  font-size: 11px;
+  white-space: nowrap;
+}
 .disabled {
   opacity: 0.5;
 }

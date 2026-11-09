@@ -329,8 +329,8 @@ function DisplaySection({ vm, pinOptions }: { vm: VM; pinOptions: PinOptions }) 
             />
           </Field>
           <Hint>
-            Garbled or flickering picture? Long wires and breadboards often need a slower clock (20
-            to 40 MHz).
+            80 MHz is as fast as the ESP32's SPI bus goes, whatever the CPU clock. Garbled or
+            flickering picture? Long wires and breadboards often need a slower clock (20 to 40 MHz).
           </Hint>
         </Group>
       </div>
