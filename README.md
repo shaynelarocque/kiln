@@ -60,8 +60,10 @@ What you see is what flashes.
   Noodles enter the side of a screen that faces where they come from, spread out where they share a
   side, and keep a lane apart when two screens link both ways.
 - **Export it.** `ui.h`, `ui.c` and one file per screen in readable LVGL C, an `lv_conf.h` with only
-  the fonts you used, a LovyanGFX panel config, the hardware glue, and a `platformio.ini`. Your code
-  goes in `src/app.cpp`, which Kiln writes once and never touches again. The output uses LVGL 9.6's
+  the fonts you used, a LovyanGFX panel config, the hardware glue, and the PlatformIO config. Your
+  code goes in `src/app.cpp`, which Kiln writes once and never touches again. `platformio.ini` is
+  yours the same way: it pulls in `kiln.ini` (the board, LVGL, LovyanGFX and their flags, rewritten
+  on every export), and the build flags, libraries and upload settings you add there stay. The output uses LVGL 9.6's
   current API (`lv_subject_create`, `lv_obj_set_hidden`…), so it compiles without a single warning.
 - **Design once, for every screen** (experimental, on in Settings). Add sizes (a 128×160 ST7735 beside a round GC9A01, say),
   each with its own board and panel. Pick one and every screen shows at that size; LVGL's relative
@@ -176,7 +178,7 @@ CI (`.github/workflows/ci.yml`) runs the same checks plus the production build a
 
 ## Opening files you didn't make
 
-A `.kiln` file turns into C that gets compiled and a `platformio.ini` that `pio` runs, so Kiln
+A `.kiln` file turns into C that gets compiled and a `kiln.ini` that `pio` runs, so Kiln
 treats project files as untrusted: board ids are checked on open, and everything that reaches
 generated code is validated (catalog enums, `#rrggbb` colours, finite numbers, comment-safe text).
 The one deliberate exception is a variable's **C expression** source, which is pasted into the

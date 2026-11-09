@@ -27,7 +27,7 @@ describe("exporting a hostile project", () => {
       .map(f => f.content.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, ""))
       .join("\n")
     expect(code).not.toContain("evil")
-    const ini = files.find(f => f.path === "platformio.ini")!.content
+    const ini = files.find(f => f.path === "kiln.ini")!.content
     expect(
       ini
         .split("\n")

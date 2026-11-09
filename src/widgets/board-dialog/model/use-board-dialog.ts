@@ -94,11 +94,9 @@ export function useBoardDialog() {
     /** the size whose hardware this is, when not the base */
     sizeName: size?.name ?? null,
     claims: claims.filter(c => c.pin >= 0).sort((a, b) => a.pin - b.pin),
-    /** platformio.ini and the panel config, as the export writes them */
+    /** Kiln's PlatformIO config and the panel config, as the export writes them */
     pioFiles: () =>
-      currentFirmware().filter(
-        f => f.path === "platformio.ini" || f.path.endsWith("lgfx_user.hpp"),
-      ),
+      currentFirmware().filter(f => f.path === "kiln.ini" || f.path.endsWith("lgfx_user.hpp")),
     board,
     boards,
     source,

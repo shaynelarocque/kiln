@@ -3,7 +3,10 @@ import type { FirmwareFile } from "../lib/firmware"
 
 export const pioInfo = () => invoke<{ path: string | null; version: string | null }>("pio_info")
 
-/** Writes the project into `dir`; files marked overwrite: false are left alone if they exist. */
+/**
+ * Writes the project into `dir`. Files marked overwrite: false are left alone if they exist,
+ * unless they start with their `replaces` (an older Kiln's version of them).
+ */
 export const writeProject = (dir: string, files: FirmwareFile[]) =>
   invoke<string[]>("write_project", { dir, files })
 

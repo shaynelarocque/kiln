@@ -101,7 +101,7 @@ export function BoardDialog() {
       tone:
         vm.budget.flash.used > vm.budget.flash.total || vm.budget.heapShort ? "warn" : undefined,
     },
-    { id: "platformio", title: "PlatformIO", summary: "platformio.ini and the panel config" },
+    { id: "platformio", title: "PlatformIO", summary: "kiln.ini and the panel config" },
   ]
 
   return (
@@ -555,8 +555,9 @@ function PlatformioSection({ vm }: { vm: VM }) {
   return (
     <>
       <Heading title='PlatformIO'>
-        What these settings become in the exported project. Kiln regenerates both files on every
-        export.
+        What these settings become in the exported project. Kiln rewrites both on every export.
+        platformio.ini is yours: it builds on kiln.ini, and the flags and libraries you add there
+        stay.
       </Heading>
       {files.map(f => (
         <div key={f.path} className={s.file}>
