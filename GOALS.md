@@ -56,3 +56,10 @@ Each flag was set in a review against the code and the checks, not from memory. 
   9. "I don't know what this is, menu not populated": the ◆ logo, which looks like Figma's main-menu button but did nothing. It opens a main menu now, with a chevron to say so. Along the way, the inspector's folded sections got a chevron (they read as empty headings), and the menu bar got File, View, Board and Help menus.
   10. A home page and tabs per project, like Figma (G16).
   11. Screen sizes: behind a setting, not removed (G13).
+- **Review 4, Michael's second round** (2026-11-08):
+  1. "It does NOT want to remember 160 for SPI clock." 80 MHz is as fast as an ESP32's SPI bus goes, and the field snapped back without a word. Number fields now say "max 80" when they cap what was typed (and no longer leave "160" on show when the stored value didn't change), and the hint gives the reason.
+  2. The ESP32-2424S012 read as 1 MB of flash instead of 4 MB: the meter showed the default table's 1.25 MB app partition. 4 MB ESP32s now build with `huge_app.csv` (3 MB for the app, no OTA), checked with `pio run`, and the Memory section says how much of the chip that is.
+  3. The insert bar floats at the bottom of the canvas, like Figma's toolbar.
+  4. Zoom moved to the top right of the canvas.
+  5. Prototype noodles crossed and doubled back. They now leave towards their target, enter the side facing their source, spread out on a shared side in source order, and keep a lane apart when two screens link both ways.
+  6. The serial port and baud pickers were unstyled native selects. They use the shared Select.

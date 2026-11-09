@@ -57,6 +57,8 @@ What you see is what flashes.
   animations, and simulated sensors you can scrub. The board's buttons sit under the device and
   your keyboard stands in for them (Tab, Enter, arrows). With the Interact tab open, every navigation
   shows on the canvas as a prototype noodle, and dragging one from a widget to a screen makes it.
+  Noodles enter the side of a screen that faces where they come from, spread out where they share a
+  side, and keep a lane apart when two screens link both ways.
 - **Export it.** `ui.h`, `ui.c` and one file per screen in readable LVGL C, an `lv_conf.h` with only
   the fonts you used, a LovyanGFX panel config, the hardware glue, and a `platformio.ini`. Your code
   goes in `src/app.cpp`, which Kiln writes once and never touches again. The output uses LVGL 9.6's
@@ -148,8 +150,9 @@ The suite runs the sample project on the real wasm LVGL (bindings, taps, screen 
 "kitchen sink" project uses every widget, binding, action, animated property, image format and
 component feature; it plays on the wasm LVGL without a logged error, and its export compiles against
 the LVGL 9.6 headers with clang, failing on any deprecated API. Both the sample and the kitchen sink
-have also been built with `pio run` for `esp32-c3-devkitm-1` (956 KB and 814 KB of the 1.25 MB app
-partition, 27% RAM), with no warnings from the generated code.
+have also been built with `pio run` for `esp32-c3-devkitm-1` (958 KB and 814 KB, 31% RAM), with no
+warnings from the generated code. A 4 MB ESP32 builds with `huge_app.csv`, so the app gets 3 MB of
+the chip instead of the default table's 1.25 MB; there's no OTA slot, since Kiln flashes over USB.
 
 CI (`.github/workflows/ci.yml`) runs the same checks plus the production build and the Rust tests.
 
