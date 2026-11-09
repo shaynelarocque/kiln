@@ -12,7 +12,7 @@ import {
 } from "lucide-react"
 import { useLayoutEffect, useRef } from "react"
 import { toneOf } from "@/entities/device"
-import { Button, IconButton } from "@/shared/ui"
+import { Button, IconButton, Select } from "@/shared/ui"
 import { BAUDS, useOutput, type OutputViewModel } from "../model/use-output"
 import s from "./output.module.css"
 
@@ -74,23 +74,23 @@ export function OutputPanel({ docked }: { docked: boolean }) {
 function PortPicker({ vm, auto }: { vm: OutputViewModel; auto: string }) {
   return (
     <span className={s.port}>
-      <select
+      <Select
+        className={s.picker}
+        label='Port'
         value={vm.port}
-        onChange={e => vm.setPort(e.target.value)}
+        placeholder={auto}
+        onChange={vm.setPort}
         onFocus={vm.refreshPorts}
-        aria-label='Port'
-      >
-        <option value=''>{auto}</option>
-        {vm.port && !vm.ports.some(p => p.port === vm.port) && (
-          <option value={vm.port}>{vm.port} (not connected)</option>
-        )}
-        {vm.ports.map(p => (
-          <option key={p.port} value={p.port}>
-            {p.port.replace(/^\/dev\//, "")}
-            {p.description ? ` · ${p.description}` : ""}
-          </option>
-        ))}
-      </select>
+        options={[
+          ...(vm.port && !vm.ports.some(p => p.port === vm.port)
+            ? [{ value: vm.port, label: `${vm.port} (not connected)` }]
+            : []),
+          ...vm.ports.map(p => ({
+            value: p.port,
+            label: `${p.port.replace(/^\/dev\//, "")}${p.description ? ` · ${p.description}` : ""}`,
+          })),
+        ]}
+      />
       <IconButton label='Look for boards again' onClick={vm.refreshPorts}>
         <RefreshCw />
       </IconButton>
@@ -158,18 +158,13 @@ function MonitorTools({ vm }: { vm: OutputViewModel }) {
       )}
       {vm.available && (
         <>
-          <select
-            className={s.baud}
-            value={vm.baud}
-            onChange={e => vm.setBaud(Number(e.target.value))}
-            aria-label='Speed'
-          >
-            {BAUDS.map(b => (
-              <option key={b} value={b}>
-                {b} baud
-              </option>
-            ))}
-          </select>
+          <Select
+            className={s.picker}
+            label='Speed'
+            value={String(vm.baud)}
+            onChange={v => vm.setBaud(Number(v))}
+            options={BAUDS.map(b => ({ value: String(b), label: `${b} baud` }))}
+          />
           {vm.monitorOpen && (
             <IconButton
               label='Reset the board'

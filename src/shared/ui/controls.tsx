@@ -264,14 +264,27 @@ export function Select({
   options,
   onChange,
   placeholder,
+  label,
+  onFocus,
+  className,
 }: {
   value: string
   options: Option[]
   onChange: (v: string) => void
   placeholder?: string
+  /** for screen readers, when no Field labels it */
+  label?: string
+  onFocus?: () => void
+  className?: string
 }) {
   return (
-    <select className={s.select} value={value} onChange={e => onChange(e.target.value)}>
+    <select
+      className={className ? `${s.select} ${className}` : s.select}
+      value={value}
+      aria-label={label}
+      onFocus={onFocus}
+      onChange={e => onChange(e.target.value)}
+    >
       {placeholder !== undefined && <option value=''>{placeholder}</option>}
       {options.map(o => (
         <option key={o.value} value={o.value}>

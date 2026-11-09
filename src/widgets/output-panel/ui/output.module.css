@@ -116,14 +116,10 @@
   align-items: center;
   min-width: 0;
 }
-.port select,
-.baud {
-  height: 26px;
+/* the shared Select, sized for the bar */
+select.picker {
+  flex: none;
   max-width: 240px;
-  padding: 0 6px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--bg-input);
   color: var(--text);
   font-size: 11px;
 }
