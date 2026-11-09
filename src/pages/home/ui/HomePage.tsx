@@ -70,7 +70,16 @@ export function HomePage() {
                   <div key={r.path} className={s.card}>
                     <button className={s.open} onClick={() => openPath(r.path)} title={r.path}>
                       <span className={s.thumb}>
-                        {r.thumb ? <img src={r.thumb} alt='' /> : <span>{r.name.slice(0, 1)}</span>}
+                        {r.thumb ? (
+                          // a round panel's picture is the square the canvas draws it in
+                          <img
+                            src={r.thumb}
+                            alt=''
+                            data-round={r.display.endsWith(" round") || undefined}
+                          />
+                        ) : (
+                          <span>{r.name.slice(0, 1)}</span>
+                        )}
                       </span>
                       <strong>{r.name}</strong>
                       <small>

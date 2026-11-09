@@ -113,6 +113,9 @@ section h2 {
   image-rendering: pixelated;
   box-shadow: 0 6px 20px var(--shadow);
 }
+.thumb img[data-round] {
+  border-radius: 50%;
+}
 .thumb span {
   color: var(--text-faint);
   font-size: 28px;
