@@ -149,3 +149,42 @@
   outline: 2px solid var(--select);
   outline-offset: 3px;
 }
+
+/* recording taps and replaying them on the board */
+.replay {
+  display: grid;
+  gap: 8px;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+.replay h3 {
+  margin: 0;
+}
+.script {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg-input);
+  color: var(--text-strong);
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1.5;
+  resize: vertical;
+}
+.replayTools {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.timings {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--text);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}

@@ -1,6 +1,6 @@
-import { RotateCw, X } from "lucide-react"
+import { Circle, Copy, RotateCw, Square, X, Zap } from "lucide-react"
 import { BUTTON_KEYS } from "@/shared/lvgl"
-import { Hint, IconButton } from "@/shared/ui"
+import { Button, Hint, IconButton } from "@/shared/ui"
 import { usePlayer } from "../model/use-player"
 import s from "./player.module.css"
 
@@ -95,7 +95,67 @@ export function Player() {
               {v.sim.kind !== "none" && <small>simulated: {v.sim.kind}</small>}
             </label>
           ))}
+        <Replay vm={vm} />
       </aside>
     </div>
+  )
+}
+
+/** Record what's done here as steps, and replay them on the board through kiln-debug. */
+function Replay({ vm }: { vm: ReturnType<typeof usePlayer> }) {
+  const r = vm.recorder
+  return (
+    <section className={s.replay}>
+      <h3>Replay</h3>
+      {r.recording ? (
+        <Button icon={<Square />} onClick={r.stop}>
+          Stop · {r.stepCount} steps
+        </Button>
+      ) : (
+        <Button icon={<Circle />} onClick={r.start}>
+          Record taps
+        </Button>
+      )}
+      {r.script !== null && !r.recording && (
+        <>
+          <textarea
+            className={s.script}
+            value={r.script}
+            onChange={e => r.setScript(e.target.value)}
+            spellCheck={false}
+            aria-label='Replay steps'
+            rows={Math.min(12, r.script.split("\n").length + 1)}
+          />
+          <span className={s.replayTools}>
+            {r.canReplay && (
+              <Button
+                icon={<Zap />}
+                variant='primary'
+                onClick={r.replayOnBoard}
+                disabled={r.replay?.running}
+              >
+                {r.replay?.running ? "Replaying…" : "Replay on board"}
+              </Button>
+            )}
+            <IconButton label='Copy the steps' onClick={r.copy}>
+              <Copy />
+            </IconButton>
+          </span>
+        </>
+      )}
+      {r.replay?.error && <Hint tone='error'>{r.replay.error}</Hint>}
+      {r.replay && r.replay.lines.length > 0 && (
+        <ul className={s.timings}>
+          {r.replay.lines.map((line, i) => (
+            <li key={i}>{line}</li>
+          ))}
+        </ul>
+      )}
+      <Hint>
+        {r.canReplay
+          ? "Replaying needs a Debug build on the board (Settings › Debug builds, then Flash). It times each transition and animation against the design."
+          : "Replaying on the board needs the desktop app."}
+      </Hint>
+    </section>
   )
 }

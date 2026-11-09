@@ -8,6 +8,7 @@ import {
   type HardwareButton,
 } from "@/entities/project"
 import { BUTTON_KEYS, getRuntime, resetRuntime } from "@/shared/lvgl"
+import { useRecorder } from "./use-recorder"
 
 /** Keyboard keys that stand in for the board's buttons, by what the button sends. */
 const KEYBOARD: Record<string, ButtonKey> = {
@@ -37,6 +38,7 @@ export function usePlayer() {
   /** what the held buttons send, to light them up */
   const [held, setHeld] = useState<ButtonKey[]>([])
   const buttons = project.target.buttons ?? []
+  const recorder = useRecorder(project, player)
 
   useEffect(() => {
     let alive = true
@@ -167,7 +169,11 @@ export function usePlayer() {
       setRun(r => r + 1)
     },
     close: () => editorApi.getState().set({ playing: false }),
-    setValue: (id: string, v: number) => guarded(p => p.set(id, v)),
+    setValue: (id: string, v: number) => {
+      guarded(p => p.set(id, v))
+      recorder.set(id, v)
+    },
+    recorder,
     buttons,
     isHeld: (b: HardwareButton) => held.includes(b.key),
     buttonDown: (b: HardwareButton) => press(b.key, true),
@@ -176,6 +182,7 @@ export function usePlayer() {
       e.currentTarget.setPointerCapture(e.pointerId)
       const at = point(e)
       guarded(p => p.pointer(...at, true))
+      recorder.down(...at)
     },
     onPointerMove: (e: React.PointerEvent<HTMLCanvasElement>) => {
       const at = point(e)
@@ -184,6 +191,7 @@ export function usePlayer() {
     onPointerUp: (e: React.PointerEvent<HTMLCanvasElement>) => {
       const at = point(e)
       guarded(p => p.pointer(...at, false))
+      recorder.up()
     },
   }
 }

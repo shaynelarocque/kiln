@@ -282,6 +282,21 @@ export class ProjectPlayer {
     return [...this.scene.objects()].find(([, h]) => h === active)?.[0]
   }
 
+  /**
+   * The node a tap at (x, y) lands on, by LVGL's own hit test, up to the nearest clickable one
+   * (a button's label taps the button). Null on a screen's background.
+   */
+  layerAt(x: number, y: number) {
+    const screen = this.rt.x.lv_display_get_screen_active(this.display.ptr)
+    this.rt.x.lv_obj_update_layout(screen)
+    new Int32Array(this.rt.memory, this.rt.scratchPtr, 2).set([Math.round(x), Math.round(y)])
+    let obj = this.rt.x.lv_indev_search_obj(screen, this.rt.scratchPtr)
+    while (obj && obj !== screen && !this.rt.x.lv_obj_is_clickable(obj))
+      obj = this.rt.x.lv_obj_get_parent(obj)
+    if (!obj || obj === screen) return null
+    return [...this.scene.objects()].find(([, h]) => h === obj)?.[0] ?? null
+  }
+
   dispose() {
     this.display.release()
     this.scene.dispose()
