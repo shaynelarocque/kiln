@@ -1,3 +1,4 @@
+import { current, isDraft } from "immer"
 import { WIDGETS } from "@/shared/lvgl"
 import { newId } from "./factory"
 import type { Node, Project, Screen } from "./types"
@@ -79,7 +80,8 @@ export function moveNode(project: Project, id: string, parentId: string, index: 
 
 /** A deep copy with fresh ids and names that don't clash. */
 export function cloneNode(project: Project, node: Node): Node {
-  const copy: Node = structuredClone(node)
+  // a node from a draft is a Proxy, which structuredClone refuses
+  const copy: Node = structuredClone(isDraft(node) ? current(node) : node)
   const taken = new Set<string>()
   for (const s of project.screens) visitAll(s, n => taken.add(n.name))
   visitAll(copy, n => {

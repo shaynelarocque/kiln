@@ -8,7 +8,13 @@ import {
   findNode,
   projectApi,
 } from "@/entities/project"
-import { addBootScreen, alignSelection, distributeSelection, navigateOnClick } from "./actions"
+import {
+  addBootScreen,
+  alignSelection,
+  distributeSelection,
+  duplicateSelection,
+  navigateOnClick,
+} from "./actions"
 
 /** Three 20×10 buttons at x 10, 50, 100, with the boxes the preview would publish. */
 function setup() {
@@ -117,4 +123,17 @@ it("makes a boot screen: the sprite plays once, as big as fits, then opens the o
     trigger: "LV_EVENT_READY",
     action: { type: "navigate", screen: home.id },
   })
+})
+
+it("duplicates the selection beside itself, and selects the copies", () => {
+  const { ids } = setup()
+  editorApi.getState().select([ids[0]])
+  duplicateSelection()
+  const screen = projectApi.getState().project.screens[0]
+  const copy = screen.children[1]
+  expect(screen.children).toHaveLength(4)
+  expect(copy.id).not.toBe(ids[0])
+  expect(copy.name).toBe("b0_2")
+  expect([copy.layout.x, copy.layout.y]).toEqual([20, 10])
+  expect(editorApi.getState().selection).toEqual([copy.id])
 })
