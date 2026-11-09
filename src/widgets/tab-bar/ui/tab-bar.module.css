@@ -1,24 +1,30 @@
+/*
+ * Figma's tab strip: full-height cells (home, the tabs, +) split by hairlines, everything centred
+ * on the bar's middle, where the traffic lights sit too (trafficLightPosition in tauri.conf.json).
+ * The current cell takes the page's colour and covers the bar's bottom line, opening into it.
+ */
 .bar {
   display: flex;
-  align-items: flex-end;
-  gap: 4px;
+  align-items: stretch;
   height: 38px;
-  padding: 0 8px 0 80px; /* room for the macOS traffic lights */
+  padding-left: 80px; /* room for the macOS traffic lights */
   border-bottom: 1px solid var(--line);
   background: var(--bg-canvas);
 }
-.home {
+.home,
+.add {
   display: grid;
   place-items: center;
   flex: none;
-  width: 32px;
-  height: 30px;
-  margin-bottom: 3px;
+  width: 38px;
   border: 0;
-  border-radius: var(--radius);
   background: none;
   color: var(--text-dim);
   cursor: pointer;
+}
+.home {
+  border-left: 1px solid var(--line);
+  border-right: 1px solid var(--line);
 }
 .home svg,
 .add svg {
@@ -26,20 +32,22 @@
   height: 15px;
 }
 .home:hover,
-.add:hover {
+.add:hover,
+.tab:hover {
   background: var(--bg-hover);
   color: var(--text-strong);
 }
-.home[aria-current="page"] {
+.home[aria-current="page"],
+.tab[aria-selected="true"] {
+  margin-bottom: -1px;
+  padding-bottom: 1px;
   background: var(--bg);
   color: var(--text-strong);
 }
 .tabs {
   display: flex;
-  align-items: flex-end;
-  gap: 2px;
+  align-items: stretch;
   min-width: 0;
-  height: 100%;
   overflow-x: auto;
   scrollbar-width: none;
 }
@@ -49,23 +57,10 @@
   gap: 4px;
   flex: 0 1 200px;
   min-width: 90px;
-  height: 31px;
-  padding: 0 4px 0 12px;
-  border: 1px solid transparent;
-  border-bottom: 0;
-  border-radius: 8px 8px 0 0;
+  padding: 0 8px 0 14px;
+  border-right: 1px solid var(--line);
   color: var(--text-dim);
   cursor: default;
-}
-.tab:hover {
-  background: var(--bg-hover);
-}
-.tab[aria-selected="true"] {
-  position: relative;
-  top: 1px;
-  border-color: var(--line);
-  background: var(--bg);
-  color: var(--text-strong);
 }
 .name {
   flex: 1;
@@ -110,17 +105,4 @@
 }
 .close[data-dirty]:hover::before {
   display: none;
-}
-.add {
-  display: grid;
-  place-items: center;
-  flex: none;
-  width: 28px;
-  height: 28px;
-  margin: 0 0 3px 2px;
-  border: 0;
-  border-radius: var(--radius);
-  background: none;
-  color: var(--text-faint);
-  cursor: pointer;
 }
