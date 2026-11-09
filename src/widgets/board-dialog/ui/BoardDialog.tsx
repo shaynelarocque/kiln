@@ -531,8 +531,10 @@ function MemorySection({ vm }: { vm: VM }) {
         parts={vm.budget.ram.parts}
       />
       <Hint>
-        Flash is the app partition PlatformIO gives this board. LVGL's heap is set to{" "}
-        {formatBytes(vm.budget.lvglHeap)} in the exported lv_conf.h
+        {vm.board && vm.board.rom > vm.budget.flash.total
+          ? `Flash is the room for the app: ${formatBytes(vm.budget.flash.total)} of the chip's ${formatBytes(vm.board.rom)}. The rest holds the bootloader, settings and storage.`
+          : "Flash is the room for the app."}{" "}
+        LVGL's heap is set to {formatBytes(vm.budget.lvglHeap)} in the exported lv_conf.h
         {vm.budget.layer && (
           <>
             , with {formatBytes(vm.budget.layer.bytes)} of it for drawing “{vm.budget.layer.name}”

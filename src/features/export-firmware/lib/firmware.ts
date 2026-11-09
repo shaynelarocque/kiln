@@ -6,6 +6,7 @@ import {
   appPartition,
   estimateBudget,
   transformLayerBytes,
+  usesHugeApp,
   type Board,
 } from "@/entities/board"
 import {
@@ -789,6 +790,12 @@ function platformioIni(project: Project, board: Board | undefined) {
     `platform = ${platform}`,
     `board = ${env}`,
     "framework = arduino",
+    ...(board && usesHugeApp(platform, board.rom)
+      ? [
+          "; 3 MB for the app instead of 1.25 MB. No OTA slot: Kiln flashes over USB.",
+          "board_build.partitions = huge_app.csv",
+        ]
+      : []),
     "monitor_speed = 115200",
     "lib_deps =",
     `    lvgl/lvgl@${LVGL_VERSION}`,

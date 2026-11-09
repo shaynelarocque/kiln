@@ -5,7 +5,7 @@ import { dirname, join } from "node:path"
 import { describe, expect, it } from "vitest"
 import { BUNDLED_BOARDS, findBoard } from "@/entities/board"
 import { createSampleProject } from "@/entities/project"
-import { generateFirmware, usedFonts } from "./firmware"
+import { budgetFor, generateFirmware, usedFonts } from "./firmware"
 
 const lvgl = new URL("../../../../runtime/lvgl", import.meta.url).pathname
 const project = createSampleProject()
@@ -32,6 +32,21 @@ describe("firmware export", () => {
     expect(files.find(f => f.path === "src/app.cpp")!.overwrite).toBe(false)
     expect(file("platformio.ini")).toContain("board = esp32-c3-devkitm-1")
     expect(file("include/lgfx_user.hpp")).toContain("lgfx::Panel_GC9A01")
+  })
+
+  it("gives a 4 MB ESP32's flash to the app, and leaves bigger chips their own table", () => {
+    const ini = (board: string) => {
+      const p = structuredClone(project)
+      p.target.board = board
+      return generateFirmware(p, findBoard(BUNDLED_BOARDS, board)).find(
+        f => f.path === "platformio.ini",
+      )!.content
+    }
+    expect(ini("esp32-c3-devkitm-1")).toContain("board_build.partitions = huge_app.csv")
+    expect(ini("esp32-s3-devkitc-1")).not.toContain("board_build.partitions")
+    expect(budgetFor(project, findBoard(BUNDLED_BOARDS, "esp32-c3-devkitm-1")).flash.total).toBe(
+      3 * 1024 * 1024,
+    )
   })
 
   it("compiles in only the fonts the UI uses", () => {

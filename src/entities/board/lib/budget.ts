@@ -77,10 +77,19 @@ export const fontBytes = (font: string) => {
   return font.includes("unscii") ? size * 256 : Math.round(45 * size * size)
 }
 
-/** ESP32 Arduino builds use the default partition table: 1.25 MB for the app on a 4 MB chip. */
+/**
+ * 4 MB ESP32s build with Arduino's huge_app.csv: 3 MB for the app instead of the default table's
+ * 1.25 MB, and no second slot for OTA updates (Kiln flashes over USB).
+ */
+export const usesHugeApp = (platform: string, rom: number) =>
+  platform === "espressif32" && rom === 4 * 1024 * KB
+
+/** Room for the app on this board's flash: what the build has to fit in. */
 export function appPartition(platform: string, rom: number) {
   if (platform !== "espressif32") return rom
-  return rom <= 4 * 1024 * KB ? 1310720 : Math.round(rom * 0.4)
+  if (usesHugeApp(platform, rom)) return 3 * 1024 * KB
+  // other sizes keep their board's table: Arduino's defaults give the app about 40% of a big chip
+  return rom < 4 * 1024 * KB ? 1310720 : Math.round(rom * 0.4)
 }
 
 export function estimateBudget(i: BudgetInput): Budget {

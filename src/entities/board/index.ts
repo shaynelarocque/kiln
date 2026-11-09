@@ -22,6 +22,7 @@ export {
   fontBytes,
   formatBytes,
   transformLayerBytes,
+  usesHugeApp,
   type Budget,
   type BudgetInput,
 } from "./lib/budget"
