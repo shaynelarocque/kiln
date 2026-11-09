@@ -1,0 +1,35 @@
+.connect {
+  display: grid;
+  gap: 6px;
+  margin-top: -6px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+  color: var(--text-dim);
+  font-size: 11px;
+}
+.command {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 2px 2px 8px;
+  border-radius: var(--radius);
+  background: var(--bg-input);
+}
+.command code {
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  color: var(--text-strong);
+  font-family: var(--mono);
+  font-size: 11px;
+  white-space: nowrap;
+  user-select: all;
+  -webkit-user-select: all;
+}
+.error {
+  margin: -6px 0 0;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+  color: var(--red);
+  font-size: 11px;
+}

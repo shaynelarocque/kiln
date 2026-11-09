@@ -11,4 +11,4 @@ export {
   usesAnim,
   type Declaration,
 } from "./c"
-export { getRuntime, onRuntimeReset, resetRuntime } from "./instance"
+export { getRuntime, loadRuntime, onRuntimeReset, resetRuntime } from "./instance"

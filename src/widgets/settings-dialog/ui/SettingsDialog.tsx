@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { editorApi } from "@/entities/editor"
+import { McpConnect, McpToggle } from "@/features/mcp"
 import { forgetHardware, savedHardware } from "@/features/project-file"
 import { useSettings, type OutputPlace, type Theme } from "@/shared/config"
 import { inTauri } from "@/shared/lib/tauri"
@@ -77,6 +78,18 @@ export function SettingsDialog() {
             onChange={sizes => settings.update({ sizes })}
           />
         </Row>
+
+        <Row
+          title='AI assistants (MCP)'
+          note={
+            inTauri()
+              ? "Lets Claude and other MCP clients on this Mac read and edit the open project, see its screens as LVGL draws them, build it and read the serial monitor. Every edit can be undone; flashing asks you first."
+              : "Needs the desktop app."
+          }
+        >
+          <McpToggle />
+        </Row>
+        <McpConnect />
 
         <Row
           title='New projects'

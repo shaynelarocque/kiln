@@ -18,7 +18,13 @@ export {
   DEFAULT_DISPLAY,
   newId,
 } from "./model/factory"
-export { ProjectPreview, ProjectPlayer, playableExprs, simulate } from "./model/preview"
+export {
+  ProjectPreview,
+  ProjectPlayer,
+  playableExprs,
+  renderScreen,
+  simulate,
+} from "./model/preview"
 export { parseExpr, type ExprEnv, type ParsedExpr } from "./lib/expr"
 export { createPetProject } from "./model/pet"
 export { compile, safeFormat, usedAssets, type CompileMode } from "./lib/compile"

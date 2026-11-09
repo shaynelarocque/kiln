@@ -1,6 +1,7 @@
 mod device;
 mod files;
 mod logs;
+mod mcp;
 mod menu;
 mod pio;
 
@@ -53,8 +54,10 @@ pub fn run() {
         .manage(device::Jobs::default())
         .manage(device::Monitor::default())
         .manage(Dirty::default())
+        .manage(mcp::Mcp::default())
         .setup(|app| {
             logs::hello(app.handle());
+            mcp::start_if_asked(app.handle());
             Ok(())
         })
         .menu(menu::build)
@@ -86,6 +89,8 @@ pub fn run() {
             device::monitor_state,
             device::open_output_window,
             logs::reveal_logs,
+            mcp::mcp_enable,
+            mcp::mcp_reply,
             set_dirty,
         ])
         .build(tauri::generate_context!())
@@ -106,6 +111,7 @@ pub fn run() {
             RunEvent::Exit => {
                 app.state::<device::Jobs>().stop();
                 app.state::<device::Monitor>().close();
+                app.state::<mcp::Mcp>().stop();
             }
             _ => {}
         });

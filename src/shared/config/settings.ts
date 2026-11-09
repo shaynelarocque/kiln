@@ -14,6 +14,8 @@ export type Settings = {
   baud: number
   /** the screen-size bar, for projects that don't have sizes yet */
   sizes: boolean
+  /** Kiln's MCP server, for Claude and other AI assistants on this machine */
+  mcp: boolean
 }
 
 export const SETTINGS_DEFAULTS: Settings = {
@@ -22,6 +24,7 @@ export const SETTINGS_DEFAULTS: Settings = {
   pixelGrid: true,
   baud: 115200,
   sizes: false,
+  mcp: false,
 }
 
 const KEY = "kiln.settings"
@@ -37,6 +40,7 @@ function load(): Settings {
       pixelGrid: pick("pixelGrid", v => typeof v === "boolean"),
       baud: pick("baud", v => Number.isInteger(v) && (v as number) > 0),
       sizes: pick("sizes", v => typeof v === "boolean"),
+      mcp: pick("mcp", v => typeof v === "boolean"),
     }
   } catch {
     return SETTINGS_DEFAULTS

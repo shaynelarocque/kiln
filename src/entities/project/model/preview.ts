@@ -127,6 +127,42 @@ export class ProjectPreview {
   }
 }
 
+/**
+ * One screen as the board would show it, drawn by LVGL on a display of its own: its RGBA pixels,
+ * and where each node landed. Leaves nothing behind in `rt`.
+ */
+export function renderScreen(rt: LvglRuntime, project: Project, screenId: string) {
+  const program = compile(project, "edit")
+  const ops = program.screens.find(s => s.id === screenId)?.ops
+  if (!ops) throw new Error(`There's no screen ${screenId}`)
+  const { width, height } = project.target.display
+  const display = rt.createDisplay(width, height)
+  display.setTheme(project.theme)
+  display.makeDefault()
+  const setup = new Scene(rt)
+  const scene = new Scene(rt, setup)
+  try {
+    setup.run(program.setup)
+    scene.run(ops)
+    rt.x.lv_screen_load(scene.screen())
+    // one tick lays out, the next draws
+    rt.tick(50)
+    rt.tick(50)
+    const rects = new Map<string, Rect>()
+    for (const [id, h] of scene.objects()) {
+      const r: Rect = rt.coords(h)
+      if (!rt.x.lv_obj_is_visible(h)) r.hidden = true
+      rects.set(id, r)
+    }
+    return { width, height, rgba: display.pixels(), rects }
+  } finally {
+    display.release()
+    scene.dispose()
+    setup.dispose()
+    display.delete()
+  }
+}
+
 /** The value a simulated variable has `t` ms into play mode. */
 export function simulate(v: Variable, t: number, prev: number): number {
   const { min, max } = v

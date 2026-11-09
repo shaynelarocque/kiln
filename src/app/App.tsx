@@ -7,6 +7,7 @@ import { OutputPage } from "@/pages/output"
 import { windowLabel } from "@/shared/lib/tauri"
 import { TabBar } from "@/widgets/tab-bar"
 import { startLogging } from "./log"
+import { startMcp } from "./mcp/bridge"
 import { startMenu } from "./menu"
 import s from "./app.module.css"
 
@@ -19,10 +20,12 @@ export function App() {
     if (output) return stopLogging
     const stopSession = startSession()
     const stopMenu = startMenu()
+    const stopMcp = startMcp()
     return () => {
       stopLogging()
       stopSession()
       stopMenu?.()
+      stopMcp()
     }
   }, [])
   return output ? <OutputPage /> : <Workspace />
