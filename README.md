@@ -79,6 +79,13 @@ What you see is what flashes.
   and flashes (with the end of a failed build's output), the monitor's connections, PlatformIO,
   file errors, the page's errors and any crash; Help › Show Logs puts it in Finder, ready to attach
   to a bug report.
+- **Replay it on the board, and time it** (kiln-debug). Turn on Settings › Debug builds and Build
+  and Flash make a Debug build (`pio run -e kiln_debug`): it reports taps, screen changes,
+  animations, variable changes and frame times over serial as `@K` lines, and takes commands that
+  tap widgets, set variables and load screens. Record taps in Play mode, then Replay on board: Kiln
+  plays them on the real hardware and sets each transition and animation against the design ("300
+  ms designed, 342 ms on the board, 18 ms after the tap") and flags slow frames. A normal build
+  compiles none of it. Claude can do the same through MCP (`run_on_board`).
 - **Know if it fits.** A flash and RAM meter estimates the build against the board's real limits,
   read from PlatformIO's board definitions, counting fonts, images and TinyTTF's glyph caches.
   LVGL draws a rotated or scaled widget through a layer on its heap, which the preview's roomy heap
@@ -173,6 +180,12 @@ the LVGL 9.6 headers with clang, failing on any deprecated API. Both the sample 
 have also been built with `pio run` for `esp32-c3-devkitm-1` (958 KB and 814 KB, 31% RAM), with no
 warnings from the generated code. A 4 MB ESP32 builds with `huge_app.csv`, so the app gets 3 MB of
 the chip instead of the default table's 1.25 MB; there's no OTA slot, since Kiln flashes over USB.
+
+kiln-debug's device side runs without a board too: `KILN_HOST_TESTS=1 pnpm test` exports the
+sample, compiles it natively with LVGL and a stand-in for Arduino (`runtime/kiln-debug-host`), and
+replays taps on it, checking the traces and the measured transition. The Debug build itself has
+been built with `pio run -e kiln_debug` (18 KB more flash than the normal build, which comes out
+the same size, to the byte, as before kiln-debug).
 
 CI (`.github/workflows/ci.yml`) runs the same checks plus the production build and the Rust tests.
 
