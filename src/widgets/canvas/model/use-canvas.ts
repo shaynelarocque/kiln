@@ -28,13 +28,14 @@ import {
   type Guide,
   type Handle,
 } from "./interactions"
+import { routeFlows, type FlowInput, type Route } from "./flows"
 import { usePreview } from "./use-preview"
 
 export type DragState = { screen: string; guides: Guide[]; drop: Rect | null; marquee?: Rect }
 
 type Point = { x: number; y: number }
 /** A navigation drawn as Figma's prototype noodle, in canvas coordinates. */
-export type Flow = { id: string; from: Point; to: Point; selected: boolean }
+export type Flow = Route & { selected: boolean }
 
 const MIN_ZOOM = 0.1
 const MAX_ZOOM = 16
@@ -85,8 +86,10 @@ export function useCanvas() {
   /** Each navigation from a widget to the screen it opens, entering it from the side it faces. */
   const flows = useMemo(() => {
     if (!showFlows) return []
-    const { width, height } = project.target.display
-    const out: Flow[] = []
+    const { width: w, height: h } = project.target.display
+    const box = (sc: Screen) => ({ id: sc.id, box: { x: sc.frame.x, y: sc.frame.y, w, h } })
+    const input: FlowInput[] = []
+    const selected = new Set<string>()
     for (const screen of project.screens)
       walk(screen, n => {
         const r = rects.get(screen.id)?.get(n.id)
@@ -95,17 +98,16 @@ export function useCanvas() {
           const target =
             action.type === "navigate" && project.screens.find(s => s.id === action.screen)
           if (!target || !r) continue
-          const from = { x: screen.frame.x + r.x + r.w, y: screen.frame.y + r.y + r.h / 2 }
-          const x = target.frame.x >= from.x ? target.frame.x : target.frame.x + width
-          out.push({
+          input.push({
             id: ev.id,
-            from,
-            to: { x, y: target.frame.y + height / 2 },
-            selected: selection.includes(n.id),
+            widget: { x: screen.frame.x + r.x, y: screen.frame.y + r.y, w: r.w, h: r.h },
+            screen: box(screen),
+            target: box(target),
           })
+          if (selection.includes(n.id)) selected.add(ev.id)
         }
       })
-    return out
+    return routeFlows(input).map(r => ({ ...r, selected: selected.has(r.id) }))
   }, [showFlows, project, rects, selection])
 
   const setView = editorApi.getState().setView

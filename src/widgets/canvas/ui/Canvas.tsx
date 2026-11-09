@@ -6,6 +6,7 @@ import { SizeBar } from "@/features/sizes"
 import { fontFamily } from "@/shared/lib/font-faces"
 import { parseTtfFont } from "@/shared/lvgl"
 import { IconButton } from "@/shared/ui"
+import { arrowhead, noodlePath } from "../model/flows"
 import { offscreen, type Handle } from "../model/interactions"
 import { useCanvas, type CanvasViewModel, type Flow } from "../model/use-canvas"
 import s from "./canvas.module.css"
@@ -47,12 +48,12 @@ export function Canvas() {
         {vm.showFlows && <Flows vm={vm} />}
       </div>
       <SizeBar />
-      <div className={s.zoom}>
       {/* docked to the bottom of the canvas, like Figma's */}
       <div className={s.insert} role='toolbar' aria-label='Insert'>
         <InsertBar />
         <ComponentMenu />
       </div>
+      <div className={s.zoom}>
         <IconButton label='Zoom out (−)' onClick={() => vm.zoomCenter(vm.zoom / 1.25)}>
           <Minus />
         </IconButton>
@@ -334,25 +335,15 @@ function Box({
   )
 }
 
-/** One noodle: leaves the widget rightwards and enters the screen from the side facing it. */
-function noodlePath(from: { x: number; y: number }, to: { x: number; y: number }) {
-  const ahead = to.x >= from.x
-  const reach = Math.max(40, Math.abs(to.x - from.x) / 2)
-  return `M ${from.x} ${from.y} C ${from.x + reach} ${from.y}, ${ahead ? to.x - reach : to.x + reach} ${to.y}, ${to.x} ${to.y}`
-}
-
-/** An arrowhead at `to`, sized for the screen rather than the canvas. */
-function head(from: { x: number; y: number }, to: { x: number; y: number }, zoom: number) {
-  const dir = to.x >= from.x ? 1 : -1
-  const size = 8 / zoom
-  return `${to.x},${to.y} ${to.x - dir * size},${to.y - size * 0.6} ${to.x - dir * size},${to.y + size * 0.6}`
-}
-
 /** Prototype noodles over the canvas: every navigation, plus the one being dragged out. */
 function Flows({ vm }: { vm: CanvasViewModel }) {
   const all: (Flow & { live?: boolean })[] = [...vm.flows]
-  if (vm.noodle)
-    all.push({ id: "live", from: vm.noodle.from, to: vm.noodle.to, selected: true, live: true })
+  if (vm.noodle) {
+    const { from, to } = vm.noodle
+    // the one being dragged leaves rightwards and arrives at the pointer, facing where it went
+    const ahead = { x: to.x >= from.x ? 1 : -1, y: 0 }
+    all.push({ id: "live", from, to, out: { x: 1, y: 0 }, in: ahead, selected: true, live: true })
+  }
   // an SVG transform, unlike a CSS one, is drawn as vectors at the final size
   return (
     <svg className={s.flows} width='1' height='1' aria-hidden>
@@ -363,8 +354,8 @@ function Flows({ vm }: { vm: CanvasViewModel }) {
             className={`${s.flow} ${f.selected ? s.flowOn : ""} ${f.live ? s.flowLive : ""}`}
           >
             <circle cx={f.from.x} cy={f.from.y} r={3 / vm.zoom} />
-            <path d={noodlePath(f.from, f.to)} vectorEffect='non-scaling-stroke' />
-            <polygon points={head(f.from, f.to, vm.zoom)} />
+            <path d={noodlePath(f)} vectorEffect='non-scaling-stroke' />
+            <polygon points={arrowhead(f.to, f.in, 8 / vm.zoom)} />
           </g>
         ))}
       </g>
