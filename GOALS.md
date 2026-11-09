@@ -63,3 +63,5 @@ Each flag was set in a review against the code and the checks, not from memory. 
   4. Zoom moved to the top right of the canvas.
   5. Prototype noodles crossed and doubled back. They now leave towards their target, enter the side facing their source, spread out on a shared side in source order, and keep a lane apart when two screens link both ways.
   6. The serial port and baud pickers were unstyled native selects. They use the shared Select.
+  7. "Misalignment kills me": the traffic lights, home icon and tab sat on three different lines. The tab strip is now Figma's (full-height cells split by hairlines) and `trafficLightPosition` puts the lights on the same centre, measured from a screen capture of the running app: every item within a point of 18.5.
+  8. ⌥-drag duplicates the selection and drags the copies, like Figma (one undo step; in auto layout it drops a copy). Ignoring snapping moved from ⌥ to ⌃. Along the way: ⌘D had never worked, because cloning a node inside an edit handed `structuredClone` an immer Proxy. `cloneNode` unwraps drafts, and duplicate has a test.
