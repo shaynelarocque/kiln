@@ -1,5 +1,6 @@
 mod device;
 mod files;
+mod logs;
 mod menu;
 mod pio;
 
@@ -43,12 +44,19 @@ fn quit<R: Runtime>(app: &AppHandle<R>) {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    logs::catch_panics();
     tauri::Builder::default()
+        // first, so the other plugins' setup can log
+        .plugin(logs::plugin())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .manage(device::Jobs::default())
         .manage(device::Monitor::default())
         .manage(Dirty::default())
+        .setup(|app| {
+            logs::hello(app.handle());
+            Ok(())
+        })
         .menu(menu::build)
         .on_menu_event(|app, event| menu::handle(app, event.id().as_ref()))
         // elsewhere than macOS, the app is its editor window: the output window goes with it
@@ -77,6 +85,7 @@ pub fn run() {
             device::monitor_reset,
             device::monitor_state,
             device::open_output_window,
+            logs::reveal_logs,
             set_dirty,
         ])
         .build(tauri::generate_context!())

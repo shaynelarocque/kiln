@@ -46,6 +46,11 @@ pub async fn pio_info() -> PioInfo {
         c.arg("--version");
         output(c).ok().map(|v| v.trim().to_string())
     });
+    match (&path, &version) {
+        (Some(p), Some(v)) => log::info!("{v} at {}", p.display()),
+        (Some(p), None) => log::warn!("pio at {} didn't say its version", p.display()),
+        _ => log::warn!("PlatformIO isn't installed"),
+    }
     PioInfo {
         path: path.map(|p| p.display().to_string()),
         version,
@@ -58,7 +63,7 @@ pub async fn pio_boards() -> Result<String, String> {
     tauri::async_runtime::spawn_blocking(|| {
         let mut cmd = pio()?;
         cmd.args(["boards", "--json-output"]);
-        output(cmd)
+        output(cmd).inspect_err(|e| log::warn!("pio boards failed: {e}"))
     })
     .await
     .map_err(|e| e.to_string())?

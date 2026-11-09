@@ -4,6 +4,7 @@ import { editorApi, useEditorStore } from "@/entities/editor"
 import { build, stopBuild, toggleMonitor, toggleOutput } from "@/features/export-firmware"
 import { newProject, openProject, saveProject, showHome } from "@/features/project-file"
 import { useSettings } from "@/shared/config"
+import { revealLogs } from "@/shared/lib/log"
 import { Menu, type MenuItem } from "@/shared/ui"
 import s from "./toolbar.module.css"
 
@@ -56,6 +57,7 @@ export function MainMenu() {
     null,
     { label: "Settings…", keys: "⌘,", onSelect: open("settings") },
     { label: "Keyboard shortcuts", keys: "?", onSelect: open("shortcuts") },
+    ...(desktop ? [{ label: "Show logs", onSelect: () => void revealLogs() }] : []),
   ]
 
   return (

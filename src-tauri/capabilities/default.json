@@ -10,6 +10,7 @@
     "core:window:allow-set-theme",
     "core:window:allow-hide",
     "dialog:default",
+    "log:default",
     "opener:default"
   ]
 }

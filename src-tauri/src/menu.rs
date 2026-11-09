@@ -84,6 +84,7 @@ pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
 
     let help = SubmenuBuilder::new(app, "Help")
         .item(&item("shortcuts", "Keyboard Shortcuts", None)?)
+        .item(&item("logs", "Show Logs", None)?)
         .build()?;
 
     Menu::with_items(app, &[&kiln, &file, &edit, &view, &device, &window, &help])
@@ -93,6 +94,12 @@ pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
 pub fn handle<R: Runtime>(app: &AppHandle<R>, id: &str) {
     if id == "quit" {
         return crate::quit(app);
+    }
+    if id == "logs" {
+        if let Err(e) = crate::logs::reveal_logs(app.clone()) {
+            log::warn!("couldn't show the logs: {e}");
+        }
+        return;
     }
     // ⌘W in the output window closes that window, not a project
     if id == "close-tab" {

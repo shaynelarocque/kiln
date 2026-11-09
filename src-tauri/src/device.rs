@@ -61,6 +61,7 @@ impl Jobs {
     pub fn stop(&self) {
         self.stopping.store(true, Ordering::SeqCst);
         if let Some(pid) = *self.pid.lock().unwrap() {
+            log::info!("stopping the build");
             pio::kill_tree(pid);
         }
     }
@@ -113,6 +114,7 @@ pub fn job_start(
                 .map(|p| format!(" --upload-port {p}"))
                 .unwrap_or_default()
         );
+        log::info!("{} in {dir}", &command[2..]);
         *jobs.log.lock().unwrap() = vec![command.clone()];
         jobs.stopping.store(false, Ordering::SeqCst);
         let _ = app.emit("job", JobEvent::Start { job });
@@ -149,6 +151,7 @@ fn run_job(app: AppHandle, dir: String, upload: bool, port: Option<String>) {
     });
     *jobs.pid.lock().unwrap() = None;
     let code = result.unwrap_or_else(|e| {
+        log::error!("pio didn't run: {e}");
         on_line(e);
         -1
     });
@@ -163,6 +166,16 @@ fn run_job(app: AppHandle, dir: String, upload: bool, port: Option<String>) {
         job.stopped = jobs.stopping.load(Ordering::SeqCst);
         job.clone()
     };
+    if job.stopped {
+        log::info!("{} stopped", job.kind);
+    } else if code == 0 {
+        log::info!("{} done", job.kind);
+    } else {
+        // the end of the log is where pio says what went wrong
+        let log = jobs.log.lock().unwrap();
+        let tail = log[log.len().saturating_sub(30)..].join("\n");
+        log::warn!("{} failed with exit code {code}. Last lines:\n{tail}", job.kind);
+    }
     let _ = app.emit("job", JobEvent::Done { job });
 }
 
@@ -302,6 +315,12 @@ fn set_state<R: Runtime>(
     };
     let mut current = monitor.info.lock().unwrap();
     if current.as_ref() != Some(&info) {
+        log::info!(
+            "serial monitor {} at {}: {status}{}",
+            info.port,
+            info.baud,
+            info.error.as_ref().map(|e| format!(" ({e})")).unwrap_or_default()
+        );
         *current = Some(info.clone());
         let _ = app.emit("monitor", MonitorEvent::State { monitor: info });
     }
@@ -504,7 +523,10 @@ pub fn open_output_window(app: AppHandle) -> Result<(), String> {
         .min_inner_size(420.0, 220.0)
         .build()
         .map(|_| ())
-        .map_err(|e| e.to_string())
+        .map_err(|e| {
+            log::warn!("couldn't open the output window: {e}");
+            e.to_string()
+        })
 }
 
 #[cfg(test)]

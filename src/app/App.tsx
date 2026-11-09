@@ -6,6 +6,7 @@ import { HomePage } from "@/pages/home"
 import { OutputPage } from "@/pages/output"
 import { windowLabel } from "@/shared/lib/tauri"
 import { TabBar } from "@/widgets/tab-bar"
+import { startLogging } from "./log"
 import { startMenu } from "./menu"
 import s from "./app.module.css"
 
@@ -13,11 +14,13 @@ const output = windowLabel() === "output"
 
 export function App() {
   useEffect(() => {
+    const stopLogging = startLogging()
     startDevice()
-    if (output) return
+    if (output) return stopLogging
     const stopSession = startSession()
     const stopMenu = startMenu()
     return () => {
+      stopLogging()
       stopSession()
       stopMenu?.()
     }
