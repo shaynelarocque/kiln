@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { editorApi, useEditorStore } from "@/entities/editor"
 import {
+  cloneNode,
   edit,
   findNode,
   findParent,
@@ -336,18 +337,26 @@ export function useCanvas() {
     const parent = findParent(project, ids[0])
     if (!parent) return
 
-    // inside auto layout, dragging reorders instead of moving
+    // inside auto layout, dragging reorders instead of moving (⌥ drops a copy there instead)
     if (parent.layout.flex && ids.length === 1) {
       const [px, py] = local(e, artboardOf(e))
       drag(
         e,
-        (dx, dy, phase) => {
+        (dx, dy, phase, ev) => {
           const { index, line } = flexDrop(parent, screenRects, ids[0], px + dx, py + dy)
           setDragState({ screen: screen.id, guides: [], drop: line })
-          if (phase === "end") {
-            setDragState(null)
-            edit(d => moveNode(d, ids[0], parent.id, index))
-          }
+          if (phase !== "end") return
+          setDragState(null)
+          if (!ev.altKey) return edit(d => moveNode(d, ids[0], parent.id, index))
+          let copy = ""
+          edit(d => {
+            const hit = locate(d, ids[0])
+            if (!hit?.parent) return
+            const c = cloneNode(d, hit.node)
+            hit.parent.children.splice(index, 0, c)
+            copy = c.id
+          })
+          if (copy) editorApi.getState().select([copy])
         },
         onClick,
       )
@@ -373,13 +382,23 @@ export function useCanvas() {
       e,
       (dx, dy, phase, ev) => {
         const zoom = editorApi.getState().zoom
-        const snapped = ev.altKey
+        const snapped = ev.ctrlKey
           ? { dx, dy, guides: [] }
           : snapMove(box, targets, Math.round(dx), Math.round(dy), 5 / zoom)
         setDragState(
           phase === "end" ? null : { screen: screen.id, guides: snapped.guides, drop: null },
         )
+        // ⌥ as the drag starts leaves the originals in place and drags copies, like Figma
+        const copying = phase === "start" && ev.altKey
         edit(d => {
+          if (copying)
+            for (const s of starts) {
+              const hit = locate(d, s.id)
+              if (!hit?.parent) continue
+              const copy = cloneNode(d, hit.node)
+              hit.parent.children.splice(hit.index + 1, 0, copy)
+              s.id = copy.id
+            }
           for (const s of starts) {
             const n = locate(d, s.id)?.node
             if (n) {
@@ -388,6 +407,7 @@ export function useCanvas() {
             }
           }
         }, phase)
+        if (copying) editorApi.getState().select(starts.map(s => s.id))
       },
       onClick,
     )
