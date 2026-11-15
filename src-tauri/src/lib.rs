@@ -4,6 +4,7 @@ mod logs;
 mod mcp;
 mod menu;
 mod pio;
+mod titlebar;
 
 use std::sync::atomic::{AtomicBool, Ordering};
 use tauri::{AppHandle, Manager, RunEvent, Runtime};
@@ -64,6 +65,9 @@ pub fn run() {
         .on_menu_event(|app, event| menu::handle(app, event.id().as_ref()))
         // elsewhere than macOS, the app is its editor window: the output window goes with it
         .on_window_event(|window, event| {
+            if let tauri::WindowEvent::Focused(_) = event {
+                titlebar::focus_changed(window);
+            }
             if cfg!(not(target_os = "macos"))
                 && window.label() == "main"
                 && matches!(event, tauri::WindowEvent::Destroyed)
@@ -92,6 +96,7 @@ pub fn run() {
             mcp::mcp_enable,
             mcp::mcp_reply,
             set_dirty,
+            titlebar::tabs_set,
         ])
         .build(tauri::generate_context!())
         .expect("error while running Kiln")

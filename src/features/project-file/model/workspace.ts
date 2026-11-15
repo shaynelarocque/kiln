@@ -89,6 +89,16 @@ export function activate(id: string) {
 export const tabForPath = (path: string) =>
   useWorkspace.getState().tabs.find(t => tabProject(t).path === path)
 
+/** Moves a tab to a new position in the strip. */
+export function moveTab(id: string, to: number) {
+  const { tabs } = useWorkspace.getState()
+  const from = tabs.findIndex(t => t.id === id)
+  if (from < 0 || from === to || to < 0 || to >= tabs.length) return
+  const next = [...tabs]
+  next.splice(to, 0, next.splice(from, 1)[0])
+  useWorkspace.setState({ tabs: next })
+}
+
 export const showHome = () => useWorkspace.setState({ home: true })
 
 /** Closes a tab, asking first if it has unsaved changes. Resolves false if kept open. */

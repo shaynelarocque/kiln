@@ -106,3 +106,9 @@
 .close[data-dirty]:hover::before {
   display: none;
 }
+
+/* macOS: the native strip covers this space (see titlebar.rs) */
+.native {
+  flex: none;
+  height: 38px;
+}
