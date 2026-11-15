@@ -14,6 +14,7 @@ export {
   activate,
   closeActive,
   closeTab,
+  moveTab,
   showHome,
   tabProject,
   useWorkspace,

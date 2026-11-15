@@ -8,6 +8,7 @@ import {
   useWorkspace,
   type Tab,
 } from "@/features/project-file"
+import { nativeTabs, useNativeTabs } from "./native-tabs"
 import s from "./tab-bar.module.css"
 
 /** Figma's tab strip: home, then one tab per open project. It's also the window's title bar. */
@@ -16,6 +17,9 @@ export function TabBar() {
   // the live tab's name and dirty dot follow its edits
   useProjectStore(st => st.doc)
   useProjectStore(st => st.saved)
+  useNativeTabs()
+  // on macOS the strip is native, laid over this bar's space
+  if (nativeTabs()) return <div className={s.native} data-tauri-drag-region />
   return (
     <div className={s.bar} data-tauri-drag-region>
       <button
