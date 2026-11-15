@@ -142,6 +142,8 @@ mod mac {
         hover: Option<Hit>,
         /// the tab being dragged
         drag: Option<String>,
+        drag_x: f64,
+        grab: f64,
         colors: Colors,
     }
 
@@ -264,7 +266,13 @@ mod mac {
                     Some(Hit::Add) => self.emit("add", None),
                     Some(Hit::Tab(i)) => {
                         let id = self.ivars().st.borrow().tabs.get(i).map(|t| t.id.clone());
-                        self.ivars().st.borrow_mut().drag = id;
+                        let tw = tab_width(self.bounds().size.width, self.ivars().st.borrow().tabs.len());
+                        let left = LEFT + CELL + tw * i as f64;
+                        let mut st = self.ivars().st.borrow_mut();
+                        st.drag = id;
+                        st.drag_x = left;
+                        st.grab = self.point(e).x - left;
+                        drop(st);
                         self.emit_tab("activate", i);
                     }
                     Some(Hit::Close(i)) => self.emit_tab("close", i),
@@ -288,7 +296,14 @@ mod mac {
                 };
                 let Some(id) = id else { return };
                 let tw = tab_width(self.bounds().size.width, n);
-                let to = ((self.point(e).x - LEFT - CELL) / tw).floor().clamp(0.0, n as f64 - 1.0) as usize;
+                let first = LEFT + CELL;
+                let left = {
+                    let mut st = self.ivars().st.borrow_mut();
+                    st.drag_x = (self.point(e).x - st.grab).clamp(first, first + tw * (n as f64 - 1.0));
+                    st.drag_x
+                };
+                self.setNeedsDisplay(true);
+                let to = ((left + tw / 2.0 - first) / tw).floor().clamp(0.0, n as f64 - 1.0) as usize;
                 let from = self.ivars().st.borrow().tabs.iter().position(|t| t.id == id);
                 if from.is_some_and(|f| f != to) {
                     let _ = self
@@ -303,6 +318,7 @@ mod mac {
             #[unsafe(method(mouseUp:))]
             fn mouse_up(&self, _e: &NSEvent) {
                 self.ivars().st.borrow_mut().drag = None;
+                self.setNeedsDisplay(true);
             }
 
             #[unsafe(method(otherMouseDown:))]
@@ -409,8 +425,17 @@ mod mac {
             );
 
             // tabs
-            for (i, t) in st.tabs.iter().enumerate() {
-                let x = LEFT + CELL + tw * i as f64;
+            let dragged = st
+                .drag
+                .as_ref()
+                .and_then(|d| st.tabs.iter().position(|t| &t.id == d));
+            // the dragged tab is drawn last, under the pointer, over its neighbours
+            let order = (0..st.tabs.len())
+                .filter(|i| Some(*i) != dragged)
+                .chain(dragged);
+            for i in order {
+                let t = &st.tabs[i];
+                let x = if Some(i) == dragged { st.drag_x } else { LEFT + CELL + tw * i as f64 };
                 let sel = !st.home && st.active.as_deref() == Some(t.id.as_str());
                 cell(x, tw, Hit::Tab(i), sel);
                 fill(line.clone(), rect(x + tw - 1.0, 0.0, 1.0, BAR - 1.0));
@@ -521,6 +546,8 @@ mod mac {
                 home: true,
                 hover: None,
                 drag: None,
+                drag_x: 0.0,
+                grab: 0.0,
                 colors: colors(&state.palette),
             },
         );
