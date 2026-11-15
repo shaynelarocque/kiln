@@ -29,4 +29,4 @@ tauri = { version = "2", features = ["test"] }
 [target."cfg(target_os = \"macos\")".dependencies]
 objc2 = "0.6"
 objc2-foundation = { version = "0.3", features = ["NSString", "NSDictionary", "NSGeometry", "NSValue", "NSArray", "NSObject"] }
-objc2-app-kit = { version = "0.3", features = ["NSView", "NSResponder", "NSVisualEffectView", "NSWindow", "NSColor", "NSFont", "NSEvent", "NSBezierPath", "NSStringDrawing", "NSGraphics", "NSTrackingArea", "NSText", "NSCursor", "NSApplication", "objc2-core-foundation"] }
+objc2-app-kit = { version = "0.3", features = ["NSView", "NSResponder", "NSVisualEffectView", "NSWindow", "NSColor", "NSFont", "NSEvent", "NSBezierPath", "NSStringDrawing", "NSGraphics", "NSTrackingArea", "NSText", "NSCursor", "NSApplication", "NSButton", "NSControl", "NSGraphicsContext", "NSAccessibility", "NSAccessibilityConstants", "NSAccessibilityElement", "NSAccessibilityProtocols", "objc2-core-foundation"] }

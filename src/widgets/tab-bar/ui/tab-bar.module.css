@@ -1,6 +1,6 @@
 /*
  * Figma's tab strip: full-height cells (home, the tabs, +) split by hairlines, everything centred
- * on the bar's middle, where the traffic lights sit too (trafficLightPosition in tauri.conf.json).
+ * on the bar's middle, where the traffic lights sit too (on macOS, titlebar.rs centres them).
  * The current cell takes the page's colour and covers the bar's bottom line, opening into it.
  */
 .bar {

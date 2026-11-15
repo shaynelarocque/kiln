@@ -59,6 +59,7 @@ pub fn run() {
         .setup(|app| {
             logs::hello(app.handle());
             mcp::start_if_asked(app.handle());
+            titlebar::setup(app.handle());
             Ok(())
         })
         .menu(menu::build)

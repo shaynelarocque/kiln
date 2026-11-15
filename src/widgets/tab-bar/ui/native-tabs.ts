@@ -43,7 +43,7 @@ export function useNativeTabs() {
         state: {
           tabs: tabs.map(t => {
             const p = tabProject(t)
-            return { id: t.id, title: p.doc.name, dirty: p.doc !== p.saved }
+            return { id: t.id, title: p.doc.name, path: p.path ?? null, dirty: p.doc !== p.saved }
           }),
           active,
           home,
