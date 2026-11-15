@@ -64,12 +64,15 @@ export function useNativeTabs() {
 
   useEffect(() => {
     if (!on) return
-    const un = listen<{ kind: string; id: string | null; to: number | null }>("tabs-action", ({ payload: a }) => {
-      if (a.kind === "home" || a.kind === "add") showHome()
-      else if (a.kind === "activate" && a.id) activate(a.id)
-      else if (a.kind === "move" && a.id && a.to != null) moveTab(a.id, a.to)
-      else if (a.kind === "close" && a.id) void closeTab(a.id)
-    })
+    const un = listen<{ kind: string; id: string | null; to: number | null }>(
+      "tabs-action",
+      ({ payload: a }) => {
+        if (a.kind === "home" || a.kind === "add") showHome()
+        else if (a.kind === "activate" && a.id) activate(a.id)
+        else if (a.kind === "move" && a.id && a.to != null) moveTab(a.id, a.to)
+        else if (a.kind === "close" && a.id) void closeTab(a.id)
+      },
+    )
     return () => void un.then(f => f())
   }, [on])
 }

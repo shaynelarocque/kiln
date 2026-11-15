@@ -451,7 +451,7 @@ mod mac {
                     c.hover.ns(a).setFill();
                     p.fill();
                 }
-                if t.dirty && !over_close && st.hover != Some(Hit::Tab(i)) || t.dirty && !over_close {
+                if t.dirty && !over_close {
                     let dot = rect(cx - 3.5, cy - 3.5, 7.0, 7.0);
                     c.accent.ns(a).setFill();
                     NSBezierPath::bezierPathWithOvalInRect(dot).fill();
